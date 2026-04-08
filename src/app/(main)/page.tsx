@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import MaintenancePage from '@/components/MaintenancePage'
+import MainLanding from '@/components/Landing/Main.landing'
 
 export const metadata: Metadata = {
   title: 'FlowCraft',
@@ -8,9 +8,5 @@ export const metadata: Metadata = {
 }
 
 export default async function Home() {
-  return (
-    <>
-      <MaintenancePage />
-    </>
-  )
+  return <MainLanding />
 }

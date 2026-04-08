@@ -1,7 +1,18 @@
 import stripe from '@/lib/stripe'
+import { createClient } from '@/lib/supabase-auth/server'
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient()
+    const { data: userData, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Please log in first' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
+
     const { product, isYearly } = await req.json()
 
     let productId = process.env.STRIPE_PRO_PLAN_ID
@@ -27,6 +38,7 @@ export async function POST(req: Request) {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      customer_email: userData.user.email ?? undefined,
       line_items: [
         {
           price: productId,
