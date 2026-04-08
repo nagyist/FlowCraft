@@ -64,6 +64,18 @@ export async function GET(req: Request) {
     }
 
     const data = await res.json()
+
+    // Also check subscription status from the local DB (source of truth)
+    const { data: userRow } = await supabaseClient
+      .from('users')
+      .select('subscribed')
+      .eq('user_id', session.user.id)
+      .single()
+
+    if (userRow) {
+      data.subscribed = userRow.subscribed
+    }
+
     return new Response(JSON.stringify(data), {
       headers: {
         'content-type': 'application/json',
