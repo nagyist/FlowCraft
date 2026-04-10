@@ -47,6 +47,7 @@ export async function GET() {
     const settings = {
       email: userData.user.email || userInfo?.email,
       user_id: userInfo?.user_id,
+      display_name: userData.user.user_metadata?.display_name || null,
       subscription: {
         plan: userInfo?.subscribed ? 'pro' : 'free',
         subscribed: userInfo?.subscribed || false,
@@ -96,18 +97,37 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Currently, all fields in the users table are system-managed
-    // plan, subscribed, date_subscribed, date_cancelled are managed by payment system
-    // This endpoint exists for future extensibility when user-editable fields are added
+    const body = await request.json()
+    const { display_name } = body
+
+    if (typeof display_name !== 'string' || display_name.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid display name' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
+
+    if (display_name.trim().length > 50) {
+      return new Response(
+        JSON.stringify({ error: 'Display name must be 50 characters or less' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const { error: updateError } = await supabaseClient.auth.updateUser({
+      data: { display_name: display_name.trim() },
+    })
+
+    if (updateError) {
+      return new Response(
+        JSON.stringify({ error: `Failed to update: ${updateError.message}` }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
 
     return new Response(
-      JSON.stringify({
-        message: 'Settings are currently managed by the system. User profile fields will be available in a future update.',
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      },
+      JSON.stringify({ message: 'Settings updated successfully' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
   } catch (error: any) {
     console.error('Error updating settings:', error)

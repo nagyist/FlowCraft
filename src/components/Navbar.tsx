@@ -44,7 +44,7 @@ const authenticatedNavigation = [
 ]
 
 const ProfileMenu = [
-  // { title: 'Settings', link: '/dashboard/settings' },
+  { title: 'Settings', link: '/dashboard/settings' },
   { title: 'Help Center', link: '/support' },
   { title: 'Sign Out', link: '/auth/logout', danger: true },
 ]
@@ -68,7 +68,8 @@ export default function Navbar() {
         setIsAuthenticated(true)
         const email = data.user.email || ''
         setUserEmail(email)
-        setUserName(email.split('@')[0] || 'User')
+        const displayName = data.user.user_metadata?.display_name
+        setUserName(displayName || email.split('@')[0] || 'User')
 
         // Fetch subscription status
         try {
@@ -262,7 +263,13 @@ export default function Navbar() {
                     aria-label="Open user menu"
                   >
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100">
-                      <UserIcon className="h-4 w-4 text-gray-500" />
+                      {userName ? (
+                        <span className="text-xs font-semibold text-gray-600">
+                          {userName.charAt(0).toUpperCase()}
+                        </span>
+                      ) : (
+                        <UserIcon className="h-4 w-4 text-gray-500" />
+                      )}
                     </div>
                     <span className="text-sm font-medium text-gray-700">
                       {userName}
