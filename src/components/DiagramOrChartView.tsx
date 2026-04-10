@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useState,
   useMemo,
+  useRef,
 } from 'react'
 import { DiagramContext } from '@/lib/Contexts/DiagramContext'
 import {
@@ -16,12 +17,12 @@ import {
   MarkerType,
   Edge,
   Node,
+  NodeChange,
 } from 'reactflow'
 import mermaid from 'mermaid'
 import 'reactflow/dist/style.css'
 import Chart from 'chart.js/auto'
 import { toPng } from 'html-to-image'
-import dagre from 'dagre'
 import clsx from 'clsx'
 
 // Icons
@@ -34,11 +35,9 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline'
 
-// Internal Components (Preserved imports)
+// Internal Components
 import SuccessDialog from './SuccessDialog'
 import { nodeStyle } from '@/lib/react-flow.code'
-// import Whiteboard from './Whiteboard/Whiteboard'
-// import { scenarios } from '@/components/Whiteboard/scenarios'
 import { DiagramOrChartType } from '@/lib/utils'
 import ShareableLinksModal from './ShareableLinkModal'
 import SimpleNotification from './SimpleNotification'
@@ -53,6 +52,13 @@ import StarRatingInput from './StarRatingInput'
 import ConnectionLineComponent from './ReactFlow/ConnectionLineComponent'
 import CodeEditorDialog from './Mermaid/CodeEditorDialog.mermaid'
 import VisualizationContainer from './VisualizationContainer'
+
+// Editor features
+import { useUndoRedo } from '@/hooks/useUndoRedo'
+import { useAutoSave } from '@/hooks/useAutoSave'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import { getLayoutedElements } from '@/lib/dagre-layout'
+import { exportAsPng, exportAsSvg, exportAsPdf } from '@/lib/export-utils'
 
 // --- Utility: Apple Design System Primitives ---
 const Button = ({
@@ -96,9 +102,6 @@ const LoadingState = () => (
 )
 
 // --- Logic Helpers ---
-const dagreGraph = new dagre.graphlib.Graph()
-dagreGraph.setDefaultEdgeLabel(() => ({}))
-
 const checkIfMermaidDiagram = (type: string | null) => {
   const mermaidTypes = [
     'classDiagram',
@@ -156,6 +159,52 @@ export default function DiagramOrChartView({
   })
   const [copied, setCopied] = useState<boolean>(false)
 
+  // Editor hooks
+  const { takeSnapshot, undo, redo, canUndo, canRedo } = useUndoRedo()
+  const isMobile = useIsMobile()
+  const { status: saveStatus } = useAutoSave(
+    context.diagramId,
+    nodes,
+    edges,
+    context.type === 'Flow Diagram' && !isMobile,
+  )
+
+  // Track drag state to snapshot only on drag start
+  const isDraggingRef = useRef(false)
+
+  // Wrap onNodesChange to capture undo snapshots on drag start and deletions
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      for (const change of changes) {
+        if (change.type === 'position' && change.dragging && !isDraggingRef.current) {
+          isDraggingRef.current = true
+          takeSnapshot(nodes, edges)
+        }
+        if (change.type === 'position' && !change.dragging && isDraggingRef.current) {
+          isDraggingRef.current = false
+        }
+        if (change.type === 'remove') {
+          takeSnapshot(nodes, edges)
+        }
+      }
+      onNodesChange(changes)
+    },
+    [nodes, edges, onNodesChange, takeSnapshot],
+  )
+
+  // Wrap onEdgesChange to capture undo snapshots on deletions
+  const handleEdgesChange = useCallback(
+    (changes: any[]) => {
+      for (const change of changes) {
+        if (change.type === 'remove') {
+          takeSnapshot(nodes, edges)
+        }
+      }
+      onEdgesChange(changes)
+    },
+    [nodes, edges, onEdgesChange, takeSnapshot],
+  )
+
   // --- Optimization: Memoize JSON-LD for SEO ---
   const jsonLd = useMemo(() => {
     return {
@@ -177,6 +226,7 @@ export default function DiagramOrChartView({
   // Handlers for ReactFlow
   const onConnect = useCallback(
     (params: any) => {
+      takeSnapshot(nodes, edges)
       setEdges((eds) =>
         addEdge(
           {
@@ -188,14 +238,100 @@ export default function DiagramOrChartView({
         ),
       )
     },
-    [setEdges],
+    [setEdges, nodes, edges, takeSnapshot],
   )
 
   const onEdgeUpdate = useCallback(
-    (oldEdge: any, newConnection: any) =>
-      setEdges((els) => updateEdge(oldEdge, newConnection, els)),
-    [],
+    (oldEdge: any, newConnection: any) => {
+      takeSnapshot(nodes, edges)
+      setEdges((els) => updateEdge(oldEdge, newConnection, els))
+    },
+    [nodes, edges, takeSnapshot, setEdges],
   )
+
+  // Add node handler
+  const handleAddNode = useCallback(() => {
+    takeSnapshot(nodes, edges)
+    const newNode: Node = {
+      id: `node-${Date.now()}`,
+      type: 'customNode',
+      position: {
+        x: 250 + Math.random() * 200,
+        y: 250 + Math.random() * 200,
+      },
+      data: { label: 'New Node', autoEdit: true },
+      ...nodeStyle,
+    }
+    setNodes((nds) => [...nds, newNode])
+  }, [nodes, edges, takeSnapshot, setNodes])
+
+  // Auto-layout handler
+  const handleAutoLayout = useCallback(() => {
+    takeSnapshot(nodes, edges)
+    const { nodes: layoutedNodes, edges: layoutedEdges } =
+      getLayoutedElements(nodes, edges)
+    setNodes(layoutedNodes)
+    setEdges(layoutedEdges)
+    // Trigger fitView after layout
+    setTimeout(() => {
+      const fitBtn = document.querySelector(
+        '.react-flow__controls-fitview',
+      ) as HTMLElement
+      if (fitBtn) fitBtn.click()
+    }, 50)
+  }, [nodes, edges, takeSnapshot, setNodes, setEdges])
+
+  // Undo/Redo handlers
+  const handleUndo = useCallback(() => {
+    const snapshot = undo(nodes, edges)
+    if (snapshot) {
+      setNodes(snapshot.nodes)
+      setEdges(snapshot.edges)
+    }
+  }, [nodes, edges, undo, setNodes, setEdges])
+
+  const handleRedo = useCallback(() => {
+    const snapshot = redo(nodes, edges)
+    if (snapshot) {
+      setNodes(snapshot.nodes)
+      setEdges(snapshot.edges)
+    }
+  }, [nodes, edges, redo, setNodes, setEdges])
+
+  // Export handlers
+  const getFlowViewportElement = () =>
+    document.querySelector('.react-flow__viewport') as HTMLElement | null
+
+  const handleExportPng = useCallback(() => {
+    const el = getFlowViewportElement()
+    if (el) exportAsPng(el, `${context.title || 'diagram'}.png`)
+  }, [context.title])
+
+  const handleExportSvg = useCallback(() => {
+    const el = getFlowViewportElement()
+    if (el) exportAsSvg(el, `${context.title || 'diagram'}.svg`)
+  }, [context.title])
+
+  const handleExportPdf = useCallback(() => {
+    const el = getFlowViewportElement()
+    if (el) exportAsPdf(el, `${context.title || 'diagram'}.pdf`)
+  }, [context.title])
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault()
+        if (e.shiftKey) {
+          handleRedo()
+        } else {
+          handleUndo()
+        }
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [handleUndo, handleRedo])
 
   // Consolidate Initialization Logic
   useEffect(() => {
@@ -244,23 +380,6 @@ export default function DiagramOrChartView({
       }
     }
 
-    // const handleWhiteboard = () => {
-    //   if (!context.tlDrawRecords?.length) return
-    //   // (Simplified logic for brevity - keeping original transform logic)
-    //   const records = context.tlDrawRecords.map((record: any) => ({
-    //     ...record,
-    //     parentId: 'page:page',
-    //     isLocked: false,
-    //     props: {
-    //       ...record.props,
-    //       [record.type === 'geo' ? 'url' : 'font']:
-    //         record.type === 'geo' ? '' : 'draw',
-    //     },
-    //   }))
-    //   scenarios.house_buying_process.records = records
-    //   setTlDrawInputJson(JSON.stringify(scenarios.house_buying_process))
-    // }
-
     const handleMermaid = () => {
       if (context.mermaidData && !context.loading) {
         mermaid.initialize({
@@ -279,9 +398,6 @@ export default function DiagramOrChartView({
       case 'Chart':
         handleChart()
         break
-      // case 'Whiteboard':
-      //   handleWhiteboard()
-      //   break
       default:
         if (checkIfMermaidDiagram(context.type)) handleMermaid()
     }
@@ -309,14 +425,11 @@ export default function DiagramOrChartView({
   }
 
   const handleCreateShareLink = async () => {
-    // ... (Keep original logic, just condensed for readability)
     const payload = {
       type: context.type,
       diagramData:
         context.type === 'Flow Diagram'
           ? { nodes, edges }
-          // : context.type === 'Whiteboard'
-          //   ? { tlDrawRecords: JSON.parse(tlDrawInputJson).records }
           : context.type === 'Chart'
             ? context.chartJsData
             : context.mermaidData,
@@ -356,12 +469,10 @@ export default function DiagramOrChartView({
   const handleCopyImage = async () => {
     try {
       let dataUrl = ''
-      // Selector logic based on type
       if (context.type === 'Flow Diagram') {
         const el = document.querySelector(
           '.react-flow__viewport',
         ) as HTMLElement
-        // ... (Include logic for transforms from original code)
         dataUrl = await toPng(el, {
           backgroundColor: '#ffffff',
           width: 1024,
@@ -397,6 +508,37 @@ export default function DiagramOrChartView({
       setOpenNotification(true)
     }
   }
+
+  // Toolbar props for Flow Diagram editor
+  const toolbarProps = useMemo(
+    () => ({
+      canUndo,
+      canRedo,
+      onUndo: handleUndo,
+      onRedo: handleRedo,
+      onAddNode: handleAddNode,
+      onAutoLayout: handleAutoLayout,
+      gridEnabled: toggleReactFlowGrid,
+      onToggleGrid: () => setToggleReactFlowGrid((v) => !v),
+      onExportPng: handleExportPng,
+      onExportSvg: handleExportSvg,
+      onExportPdf: handleExportPdf,
+      saveStatus: saveStatus,
+    }),
+    [
+      canUndo,
+      canRedo,
+      handleUndo,
+      handleRedo,
+      handleAddNode,
+      handleAutoLayout,
+      toggleReactFlowGrid,
+      handleExportPng,
+      handleExportSvg,
+      handleExportPdf,
+      saveStatus,
+    ],
+  )
 
   return (
     <article className="flex h-full min-h-[80vh] w-full flex-col bg-zinc-50/50">
@@ -436,15 +578,6 @@ export default function DiagramOrChartView({
                 Code
               </Button>
             )}
-            {context.type === 'Flow Diagram' && (
-              <Button
-                onClick={() => setToggleReactFlowGrid(!toggleReactFlowGrid)}
-                variant="ghost"
-                icon={TableCellsIcon}
-              >
-                {toggleReactFlowGrid ? 'Hide Grid' : 'Show Grid'}
-              </Button>
-            )}
           </div>
 
           {/* Primary Actions */}
@@ -481,8 +614,8 @@ export default function DiagramOrChartView({
               context={context}
               nodes={nodes}
               edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
+              onNodesChange={handleNodesChange}
+              onEdgesChange={handleEdgesChange}
               onConnect={onConnect}
               onEdgeUpdate={onEdgeUpdate}
               defaultEdgeOptions={defaultEdgeOptions}
@@ -492,15 +625,17 @@ export default function DiagramOrChartView({
               ConnectionLineComponent={ConnectionLineComponent}
               toggleReactFlowGird={toggleReactFlowGrid}
               tlDrawInputJson={tlDrawInputJson}
-              donwloadChart={() => {}} // Handle via main toolbar
+              donwloadChart={() => {}}
               createShareableLink={handleCreateShareLink}
               mermaidSVG={mermaidSVG}
               isMermaidError={isMermaidError}
-              downloadMermaidDiagramAsPng={() => {}} // Handle via main toolbar
+              downloadMermaidDiagramAsPng={() => {}}
               copyMermaidDiagramAsPng={handleCopyImage}
               editMermaidDiagramCode={() => setOpenMermaidEditor(true)}
               checkIfMermaidDiagram={checkIfMermaidDiagram}
               Whiteboard={null}
+              isMobile={isMobile}
+              toolbarProps={context.type === 'Flow Diagram' ? toolbarProps : undefined}
             />
           )}
 

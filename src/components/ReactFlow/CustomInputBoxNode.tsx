@@ -11,7 +11,8 @@ function CustomInputBoxNode(props: any) {
   const diagramContext = useContext(DiagramContext)
   const [isHovered, setIsHovered] = useState(false)
 
-  const [isEditing, setIsEditing] = useState(false)
+  const readOnly = props.data.readOnly === true
+  const [isEditing, setIsEditing] = useState(props.data.autoEdit === true)
   const [label, setLabel] = useState(props.data.label)
 
   const handleLabelChange = useCallback(
@@ -71,7 +72,7 @@ function CustomInputBoxNode(props: any) {
         onHoverEnd={() => setIsHovered(false)}
       >
         <AnimatePresence>
-          {isHovered && (
+          {isHovered && !readOnly && (
             <motion.button
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -135,7 +136,7 @@ function CustomInputBoxNode(props: any) {
           )}
         </AnimatePresence>
         <motion.div className="input-box-node__body">
-          {isEditing ? (
+          {isEditing && !readOnly ? (
             <motion.textarea
               className="input-box-node__input text-balance h-full w-full border-none bg-black p-2 text-white transition-all duration-300"
               value={label}

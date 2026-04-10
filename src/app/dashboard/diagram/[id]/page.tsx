@@ -336,8 +336,8 @@ export default function DiagramPage({ params }: { params: Promise<{ id: string }
         </div>
       </main>
 
-      {/* 3. Floating Toolbar (Bottom Center) */}
-      <div className="absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-gray-200 bg-white/90 p-1.5 shadow-xl shadow-gray-200/50 backdrop-blur-md">
+      {/* 3. Floating Toolbar (Bottom Center) — hidden for Flow Diagrams which have their own EditorToolbar */}
+      <div className={`absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-gray-200 bg-white/90 p-1.5 shadow-xl shadow-gray-200/50 backdrop-blur-md ${diagramMeta?.type?.toLowerCase() === 'flow diagram' ? 'hidden' : ''}`}>
         <ToolButton
           onClick={() => handleZoom('out')}
           icon={MagnifyingGlassMinusIcon}
