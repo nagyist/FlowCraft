@@ -19,11 +19,19 @@ import {
 
 // Internal
 import { DiagramContext } from '@/lib/Contexts/DiagramContext'
-import { OptionType, sanitizeMermaid, sanitizeSVG } from '@/lib/utils'
+import {
+  InputClassification,
+  OptionType,
+  sanitizeMermaid,
+  sanitizeSVG,
+} from '@/lib/utils'
 import { useLoading } from '@/lib/LoadingProvider'
 import DiagramSelectionGrid from './DiagramSelectionGrid'
 import FormStep from './FormStep'
 import UpgradePrompt from '@/components/UpgradePrompt'
+import PasteAnythingInput from './PasteAnythingInput'
+import { useClassifyInput } from './useClassifyInput'
+import { useStreamingGenerate } from './useStreamingGenerate'
 
 // --- UI Components (Apple Style) ---
 
@@ -129,6 +137,18 @@ export default function NewDiagramPage() {
   const [complexityLevel, setComplexityLevel] = useState('Medium (default)')
   const [isPublic, setIsPublic] = useState(true)
 
+  // Paste Anything state
+  const [pasteText, setPasteText] = useState('')
+  const [pasteFileName, setPasteFileName] = useState<string | null>(null)
+  const [inputMode, setInputMode] = useState<'paste' | 'manual'>('paste')
+  const {
+    classify,
+    isClassifying,
+    result: classification,
+    reset: resetClassification,
+  } = useClassifyInput()
+  const streaming = useStreamingGenerate()
+
   // Generation State
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -187,6 +207,65 @@ export default function NewDiagramPage() {
     }
   }, [mermaidCode, zoomLevel])
 
+  // Auto-select diagram type when classification comes in
+  useEffect(() => {
+    if (classification?.suggestedDiagram && inputMode === 'paste') {
+      _setSelectedOption(classification.suggestedDiagram)
+    }
+  }, [classification, inputMode])
+
+  // Handle streaming completion
+  useEffect(() => {
+    if (streaming.finalResult) {
+      const { code, title, diagramId: streamDiagramId } = streaming.finalResult
+      const sanitized = sanitizeMermaid(code)
+      setMermaidCode(sanitized)
+      if (title) setGeneratedTitle(title)
+      setDiagramId(streamDiagramId)
+      setIsGenerated(true)
+      setIsLoading(false)
+      hideLoading()
+    }
+  }, [streaming.finalResult, hideLoading])
+
+  // Handle streaming errors
+  useEffect(() => {
+    if (streaming.error) {
+      setError(streaming.error)
+      setIsLoading(false)
+      hideLoading()
+    }
+  }, [streaming.error, hideLoading])
+
+  // Incremental mermaid rendering during streaming
+  const lastRenderedRef = useRef('')
+  const streamingContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (
+      streaming.isStreaming &&
+      streaming.partialCode &&
+      streaming.partialCode !== lastRenderedRef.current &&
+      streamingContainerRef.current
+    ) {
+      const tryRender = async () => {
+        try {
+          const { svg } = await mermaid.render(
+            'mermaid-stream-preview',
+            streaming.partialCode,
+          )
+          if (streamingContainerRef.current) {
+            streamingContainerRef.current.innerHTML = svg
+            lastRenderedRef.current = streaming.partialCode
+          }
+        } catch {
+          // Partial code not yet valid — ignore
+        }
+      }
+      tryRender()
+    }
+  }, [streaming.partialCode, streaming.isStreaming])
+
   // URL Sync
   useEffect(() => {
     if (diagramId)
@@ -242,15 +321,37 @@ export default function NewDiagramPage() {
     setImageUrl('')
     setZoomLevel(1)
     setPosition({ x: 0, y: 0 })
+    setPasteText('')
+    setPasteFileName(null)
+    setInputMode('paste')
+    resetClassification()
+    streaming.reset()
+    lastRenderedRef.current = ''
     window.history.pushState({}, '', '/dashboard/diagrams/new')
   }
 
+  const handleClassificationOverride = (type: OptionType) => {
+    _setSelectedOption(type)
+  }
+
   const handleSubmit = async () => {
-    if (!visionDescription.trim()) {
-      setError('Please describe your vision.')
-      document
-        .getElementById('vision-description')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // Determine which description to use
+    const description =
+      inputMode === 'paste' && pasteText.trim()
+        ? pasteText.trim()
+        : visionDescription.trim()
+
+    if (!description) {
+      setError('Please describe your vision or paste some content.')
+      if (inputMode === 'paste') {
+        document
+          .getElementById('paste-anything-input')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      } else {
+        document
+          .getElementById('vision-description')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
       return
     }
 
@@ -270,12 +371,32 @@ export default function NewDiagramPage() {
       context.setNodes([])
       context.setEdges([])
 
+      // Use streaming for paste mode with standard diagram types (not Illustration/Infographic)
+      const useStreaming =
+        inputMode === 'paste' &&
+        selectedOption !== 'Illustration' &&
+        selectedOption !== 'Infographic'
+
+      if (useStreaming) {
+        // Streaming path — the useStreamingGenerate hook handles everything
+        // Completion is handled by the useEffect watching streaming.finalResult
+        streaming.generate({
+          type: selectedOption as string,
+          description,
+          isPublic,
+          colorPalette,
+          complexityLevel,
+        })
+        return
+      }
+
+      // Non-streaming path (original behavior)
       const response = await fetch('/api/generate-visual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: selectedOption,
-          description: visionDescription,
+          description,
           isPublic,
           colorPalette,
           complexityLevel,
@@ -421,8 +542,8 @@ export default function NewDiagramPage() {
               Create a Visual Plan
             </h1>
             <p className="mt-2 max-w-2xl text-zinc-500">
-              Turn your ideas into professional diagrams, charts, and
-              illustrations. Select a type below to get started.
+              Paste meeting notes, code, SQL, or any content — we&apos;ll detect
+              what it is and suggest the best diagram for it.
             </p>
           </div>
           <UsageBadge usage={usageData} />
@@ -456,9 +577,104 @@ export default function NewDiagramPage() {
           )}
         </AnimatePresence>
 
+        {/* Streaming Preview */}
+        <AnimatePresence>
+          {streaming.isStreaming && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <Card className="mb-6 p-6">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+                  <span className="text-sm font-medium text-zinc-700">
+                    Building your diagram...
+                  </span>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      streaming.cancel()
+                      setIsLoading(false)
+                      hideLoading()
+                    }}
+                    className="ml-auto !px-3 !py-1 !text-xs"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+
+                {/* Incremental Mermaid Preview */}
+                <div className="min-h-[200px] rounded-xl bg-zinc-50 p-4">
+                  <div
+                    ref={streamingContainerRef}
+                    className="flex items-center justify-center"
+                  />
+                  {!lastRenderedRef.current && streaming.partialCode && (
+                    <pre className="max-h-[300px] overflow-auto font-mono text-xs text-zinc-500">
+                      {streaming.partialCode}
+                    </pre>
+                  )}
+                </div>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Form Container - Full Width Card */}
         <Card className="min-h-[60vh] p-6 md:p-10">
           <div className="space-y-8">
+            {/* 0. Paste Anything Input */}
+            <section className="space-y-4" id="paste-anything-input">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-semibold text-zinc-900">
+                  Paste anything to get started
+                </label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setInputMode(inputMode === 'paste' ? 'manual' : 'paste')
+                  }
+                  className="text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-700"
+                >
+                  {inputMode === 'paste'
+                    ? 'Switch to manual mode'
+                    : 'Switch to paste mode'}
+                </button>
+              </div>
+
+              {inputMode === 'paste' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <PasteAnythingInput
+                    value={pasteText}
+                    onChange={setPasteText}
+                    onClassify={classify}
+                    classification={classification}
+                    isClassifying={isClassifying}
+                    onOverride={handleClassificationOverride}
+                    fileName={pasteFileName}
+                    onFileNameChange={setPasteFileName}
+                  />
+                </motion.div>
+              )}
+            </section>
+
+            {/* Separator */}
+            <div className="flex items-center gap-4">
+              <div className="h-px flex-1 bg-zinc-100" />
+              <span className="text-xs font-medium text-zinc-400">
+                {inputMode === 'paste'
+                  ? 'or choose a type manually'
+                  : 'select a diagram type'}
+              </span>
+              <div className="h-px flex-1 bg-zinc-100" />
+            </div>
+
             {/* 1. Type Selection */}
             <section className="space-y-4">
               <label className="block text-sm font-semibold text-zinc-900">
@@ -469,6 +685,12 @@ export default function NewDiagramPage() {
                 setVisionDescription={setVisionDescription}
                 setColorPalette={setColorPalette}
                 setComplexityLevel={setComplexityLevel}
+                highlightedType={
+                  inputMode === 'paste' && classification
+                    ? classification.suggestedDiagram
+                    : undefined
+                }
+                hideTextarea={inputMode === 'paste'}
               />
             </section>
 
@@ -482,19 +704,16 @@ export default function NewDiagramPage() {
                 </label>
                 <FormStep isPublic={isPublic} setIsPublic={setIsPublic} />
               </div>
-
-              {/* Optional: You could put a preview or helpful tips in the second column of this grid if the form allows, 
-                  otherwise the FormStep will just take up the space. */}
             </section>
 
             {/* 3. Action */}
             <div className="flex justify-end border-t border-zinc-100 pt-6">
               <Button
                 onClick={handleSubmit}
-                disabled={isLoading}
+                disabled={isLoading || streaming.isStreaming}
                 className="w-full min-w-[200px] !py-3 !text-base md:w-auto"
               >
-                {isLoading ? (
+                {isLoading || streaming.isStreaming ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     Generating...

@@ -176,6 +176,13 @@ export const getShareableLinkUrl = (id: string, origin: string) => {
   return `/shared/${id}`
 }
 
+export type InputClassification = {
+  inputType: string
+  suggestedDiagram: OptionType
+  confidence: number
+  reasoning: string
+}
+
 // export type OptionType = 'Illustration' | 'Infographic' | 'Diagram' | null
 export type OptionType =
   | 'Illustration'

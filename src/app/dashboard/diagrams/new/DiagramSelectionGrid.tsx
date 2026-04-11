@@ -49,11 +49,15 @@ const DiagramSelectionGrid = ({
   setVisionDescription,
   setColorPalette,
   setComplexityLevel,
+  highlightedType,
+  hideTextarea = false,
 }: {
   setSelectedOption: (option: OptionType) => void
   setVisionDescription: (description: string) => void
   setColorPalette: (palette: string) => void
   setComplexityLevel: (level: string) => void
+  highlightedType?: OptionType
+  hideTextarea?: boolean
 }) => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<
@@ -350,8 +354,10 @@ const DiagramSelectionGrid = ({
               className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 hover:shadow-md ${
                 hoveredCard === type || selectedOptionState === type
                   ? 'border-red-500 shadow-sm'
-                  : 'border-slate-200'
-              } ${selectedOptionState === type ? 'bg-red-50' : 'bg-white'}`}
+                  : highlightedType === type
+                    ? 'border-blue-400 shadow-sm ring-2 ring-blue-100'
+                    : 'border-slate-200'
+              } ${selectedOptionState === type ? 'bg-red-50' : highlightedType === type ? 'bg-blue-50/50' : 'bg-white'}`}
               onMouseEnter={() => setHoveredCard(type)}
               onMouseLeave={() => setHoveredCard(null)}
               onClick={() => handleOptionSelect(type)}
@@ -380,20 +386,22 @@ const DiagramSelectionGrid = ({
         </div>
       </div>
 
-      {/* Vision Description */}
-      <div className="mb-8" id="vision-description">
-        <h3 className="mb-3 text-lg font-medium text-slate-800">
-          Describe your vision
-        </h3>
-        <div className="relative overflow-hidden rounded-lg border border-slate-200 shadow-sm">
-          <textarea
-            className="min-h-36 w-full border-0 p-4 pr-20 text-base focus:ring-1 focus:ring-red-500"
-            placeholder="Describe what you want to visualize... The more details you provide, the better!"
-            rows={4}
-            onChange={(e) => setVisionDescription(e.target.value)}
-          ></textarea>
+      {/* Vision Description — hidden when paste-anything input is active */}
+      {!hideTextarea && (
+        <div className="mb-8" id="vision-description">
+          <h3 className="mb-3 text-lg font-medium text-slate-800">
+            Describe your vision
+          </h3>
+          <div className="relative overflow-hidden rounded-lg border border-slate-200 shadow-sm">
+            <textarea
+              className="min-h-36 w-full border-0 p-4 pr-20 text-base focus:ring-1 focus:ring-red-500"
+              placeholder="Describe what you want to visualize... The more details you provide, the better!"
+              rows={4}
+              onChange={(e) => setVisionDescription(e.target.value)}
+            ></textarea>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Advanced Options */}
       <div className="mb-6">
