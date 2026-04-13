@@ -254,7 +254,7 @@ export default function MainLanding() {
                 </p>
 
                 <Link
-                  href={authenticated ? '/create' : '/login'}
+                  href={authenticated ? '/dashboard/diagrams/new' : '/login'}
                   className="mt-8 flex translate-y-2 transform items-center rounded-full bg-gray-900 px-4 py-2 text-sm font-medium text-white opacity-0 transition-all duration-300 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 group-hover:translate-y-0 group-hover:opacity-100"
                 >
                   Create <ArrowRight className="ml-2 h-4 w-4" />
@@ -349,7 +349,7 @@ export default function MainLanding() {
             </p>
             <div className="mt-10">
               <Link
-                href={authenticated ? '/create' : '/login'}
+                href={authenticated ? '/dashboard/diagrams/new' : '/login'}
                 className="inline-flex items-center justify-center rounded-full bg-gray-900 px-10 py-4 text-lg font-medium text-white shadow-lg shadow-gray-200 transition-all hover:bg-gray-800"
               >
                 Get Started

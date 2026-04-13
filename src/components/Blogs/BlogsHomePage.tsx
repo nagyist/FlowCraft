@@ -54,18 +54,11 @@ export default function BlogsHomePage() {
 
       // 1. Check Admin Status
       const { data: userData } = await supabase.auth.getUser()
-      console.log(
-        'User Data:',
-        userData,
-        ' Admin ID:',
-        process.env.NEXT_PUBLIC_BLOG_ADMIN_ID,
-      )
       if (
         !!process.env.NEXT_PUBLIC_BLOG_ADMIN_ID &&
         userData?.user?.id !== undefined &&
         userData?.user?.id === process.env.NEXT_PUBLIC_BLOG_ADMIN_ID
       ) {
-        console.log('User is admin')
         setIsAdmin(true)
       }
 

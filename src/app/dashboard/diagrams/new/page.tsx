@@ -202,8 +202,12 @@ export default function NewDiagramPage() {
         .then(({ svg }) => {
           if (mermaidContainerRef.current)
             mermaidContainerRef.current.innerHTML = svg
+          document.getElementById('dmermaid-diagram')?.remove()
         })
-        .catch(() => setError('Failed to render chart.'))
+        .catch(() => {
+          document.getElementById('dmermaid-diagram')?.remove()
+          setError('Failed to render chart.')
+        })
     }
   }, [mermaidCode, zoomLevel])
 
@@ -258,11 +262,17 @@ export default function NewDiagramPage() {
             streamingContainerRef.current.innerHTML = svg
             lastRenderedRef.current = streaming.partialCode
           }
+          document.getElementById('dmermaid-stream-preview')?.remove()
         } catch {
           // Partial code not yet valid — ignore
+          document.getElementById('dmermaid-stream-preview')?.remove()
         }
       }
       tryRender()
+    }
+
+    return () => {
+      document.getElementById('dmermaid-stream-preview')?.remove()
     }
   }, [streaming.partialCode, streaming.isStreaming])
 
