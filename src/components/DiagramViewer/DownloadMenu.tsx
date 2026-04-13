@@ -6,8 +6,10 @@ import {
   ArrowDownTrayIcon,
   PhotoIcon,
   CodeBracketIcon,
+  DocumentIcon,
 } from '@heroicons/react/24/outline'
 import { toPng } from 'html-to-image'
+import { exportAsPdf } from '@/lib/export-utils'
 
 interface DownloadMenuProps {
   contentRef: React.RefObject<HTMLDivElement | null>
@@ -40,21 +42,37 @@ function downloadSVG(svgContent: string, filename = 'diagram') {
   URL.revokeObjectURL(url)
 }
 
+function getExportTarget(
+  contentRef: React.RefObject<HTMLDivElement | null>,
+  isFlowDiagram: boolean,
+): HTMLElement | null {
+  if (isFlowDiagram) {
+    return document.querySelector('.react-flow__viewport') as HTMLElement | null
+  }
+  return contentRef.current
+}
+
 export default function DownloadMenu({
   contentRef,
   title,
   type,
 }: DownloadMenuProps) {
   const filename = title.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() || 'diagram'
-  const isSvgType = ['infographic', 'mermaid'].includes(type.toLowerCase()) ||
-    (!['illustration', 'generated_image', 'flow diagram', 'chart'].includes(type.toLowerCase()))
+  const lowerType = type.toLowerCase()
+  const isFlowDiagram = lowerType === 'flow diagram'
+  const isSvgType =
+    ['infographic', 'mermaid'].includes(lowerType) ||
+    (!['illustration', 'generated_image', 'flow diagram', 'chart'].includes(
+      lowerType,
+    ))
 
   const handleDownloadPng = async () => {
-    if (!contentRef.current) return
+    const target = getExportTarget(contentRef, isFlowDiagram)
+    if (!target) return
     try {
-      const dataUrl = await toPng(contentRef.current, {
+      const dataUrl = await toPng(target, {
         backgroundColor: '#ffffff',
-        pixelRatio: 2,
+        pixelRatio: 3,
       })
       const link = document.createElement('a')
       link.download = `${filename}.png`
@@ -66,11 +84,22 @@ export default function DownloadMenu({
   }
 
   const handleDownloadSvg = () => {
-    if (!contentRef.current) return
-    const svgElement = contentRef.current.querySelector('svg')
+    const target = getExportTarget(contentRef, isFlowDiagram)
+    if (!target) return
+    const svgElement = target.querySelector('svg')
     if (!svgElement) return
     const svgContent = new XMLSerializer().serializeToString(svgElement)
     downloadSVG(svgContent, filename)
+  }
+
+  const handleDownloadPdf = async () => {
+    const target = getExportTarget(contentRef, isFlowDiagram)
+    if (!target) return
+    try {
+      await exportAsPdf(target, `${filename}.pdf`)
+    } catch (err) {
+      console.error('PDF export failed:', err)
+    }
   }
 
   return (
@@ -121,6 +150,19 @@ export default function DownloadMenu({
               )}
             </Menu.Item>
           )}
+          <Menu.Item>
+            {({ active }) => (
+              <button
+                onClick={handleDownloadPdf}
+                className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm ${
+                  active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
+                }`}
+              >
+                <DocumentIcon className="h-4 w-4 text-gray-400" />
+                Download as PDF
+              </button>
+            )}
+          </Menu.Item>
         </Menu.Items>
       </Transition>
     </Menu>

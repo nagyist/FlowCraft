@@ -228,6 +228,9 @@ export default function DiagramViewerShell({
           position={position}
           onPositionChange={setPosition}
           onZoomChange={setZoomLevel}
+          editableFlow={mode === 'owner'}
+          diagramId={diagramId}
+          title={title}
         />
       </main>
 
