@@ -1,4 +1,4 @@
-import SharedDiagramInviteCodeForm from '@/components/SharedPage/SharedPageInviteCodeForm'
+import SharedDiagramViewer from '@/components/SharedPage/SharedDiagramViewer'
 import { createClient } from '@/lib/supabase-auth/server'
 import { notFound } from 'next/navigation'
 
@@ -12,21 +12,21 @@ export default async function SharedDiagramPage({
 
   const { data, error } = await supabaseClient
     .from('shareable_links')
-    .select('id')
+    .select('id, type, data, title, created_at')
     .eq('id', id)
 
-  if (error) {
-    console.log('Error fetching data:', error)
+  if (error || !data || data.length === 0) {
     return notFound()
   }
 
-  if (!data || data.length === 0) {
-    return notFound()
-  }
+  const link = data[0]
 
   return (
-    <div>
-      <SharedDiagramInviteCodeForm linkId={id} />
-    </div>
+    <SharedDiagramViewer
+      type={link.type}
+      data={link.data}
+      title={link.title}
+      createdAt={link.created_at}
+    />
   )
 }
