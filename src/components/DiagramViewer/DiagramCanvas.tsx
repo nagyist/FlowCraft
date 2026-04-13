@@ -30,6 +30,9 @@ interface DiagramCanvasProps {
   position: { x: number; y: number }
   onPositionChange: (pos: { x: number; y: number }) => void
   onZoomChange: (zoom: number) => void
+  editableFlow?: boolean
+  diagramId?: string
+  title?: string
 }
 
 const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
@@ -45,6 +48,9 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
       position,
       onPositionChange,
       onZoomChange,
+      editableFlow,
+      diagramId,
+      title,
     },
     ref,
   ) {
@@ -173,6 +179,9 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
             <ReactFlowCanvas
               nodes={flowDiagramData.nodes}
               edges={flowDiagramData.edges}
+              editable={editableFlow}
+              diagramId={diagramId}
+              title={title}
             />
           </div>
         ) : (

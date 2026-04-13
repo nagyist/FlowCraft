@@ -12,6 +12,7 @@ import { ArrowDownIcon, ShareIcon } from 'lucide-react'
 import MermaidViewer from './MermaidChartViewer'
 import { DiagramOrChartType } from '@/lib/utils'
 import { TempMermaidDiagramType } from './Mermaid/OverviewDialog.mermaid'
+import EditorToolbar from './ReactFlow/EditorToolbar'
 
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.98 },
@@ -73,6 +74,8 @@ const FlowDiagram = ({
   edgeTypes,
   ConnectionLineComponent,
   toggleReactFlowGird,
+  isMobile,
+  toolbarProps,
 }: {
   nodes: any[]
   edges: any[]
@@ -86,6 +89,8 @@ const FlowDiagram = ({
   edgeTypes: any
   ConnectionLineComponent: any
   toggleReactFlowGird: boolean
+  isMobile: boolean
+  toolbarProps?: React.ComponentProps<typeof EditorToolbar>
 }) => (
   <ReactFlow
     attributionPosition="bottom-left"
@@ -105,11 +110,15 @@ const FlowDiagram = ({
     onNodesChange={onNodesChange}
     snapGrid={[25, 25]}
     snapToGrid={true}
+    nodesDraggable={!isMobile}
+    nodesConnectable={!isMobile}
+    elementsSelectable={!isMobile}
   >
     <Controls />
     {toggleReactFlowGird && (
       <Background color="#808080" gap={40} variant={BackgroundVariant.Cross} />
     )}
+    {!isMobile && toolbarProps && <EditorToolbar {...toolbarProps} />}
   </ReactFlow>
 )
 
@@ -175,6 +184,8 @@ const VisualizationContainer = ({
   editMermaidDiagramCode,
   checkIfMermaidDiagram,
   Whiteboard,
+  isMobile = false,
+  toolbarProps,
 }: {
   type: DiagramOrChartType | TempMermaidDiagramType | null
   context: any
@@ -202,13 +213,13 @@ const VisualizationContainer = ({
     type: DiagramOrChartType | TempMermaidDiagramType | null,
   ) => boolean
   Whiteboard: any
+  isMobile?: boolean
+  toolbarProps?: React.ComponentProps<typeof EditorToolbar>
 }) => {
   const renderContent = () => {
     if (context.loading) {
       return <Loader />
     }
-
-    console.log('Context...', context);
 
     if (context.type === 'Flow Diagram') {
       return (
@@ -225,6 +236,8 @@ const VisualizationContainer = ({
           edgeTypes={edgeTypes}
           ConnectionLineComponent={ConnectionLineComponent}
           toggleReactFlowGird={toggleReactFlowGird}
+          isMobile={isMobile}
+          toolbarProps={toolbarProps}
         />
       )
     }

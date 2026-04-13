@@ -3,7 +3,7 @@
 import { useContext, useEffect, useState, use } from 'react'
 import { DiagramContext } from '@/lib/Contexts/DiagramContext'
 import { useRouter } from 'next/navigation'
-import { DiagramOrChartType, sanitizeMermaid, sanitizeSVG } from '@/lib/utils'
+import { sanitizeMermaid, sanitizeSVG } from '@/lib/utils'
 import Link from 'next/link'
 import { DiagramViewerShell } from '@/components/DiagramViewer'
 
