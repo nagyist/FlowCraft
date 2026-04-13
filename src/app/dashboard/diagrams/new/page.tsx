@@ -141,6 +141,7 @@ export default function NewDiagramPage() {
   const [pasteText, setPasteText] = useState('')
   const [pasteFileName, setPasteFileName] = useState<string | null>(null)
   const [inputMode, setInputMode] = useState<'paste' | 'manual'>('paste')
+  const userOverrodeRef = useRef(false)
   const {
     classify,
     isClassifying,
@@ -211,12 +212,26 @@ export default function NewDiagramPage() {
     }
   }, [mermaidCode, zoomLevel])
 
-  // Auto-select diagram type when classification comes in
+  // Auto-select diagram type when classification comes in.
+  // Skip if user has explicitly overridden via grid click or chip dropdown.
   useEffect(() => {
-    if (classification?.suggestedDiagram && inputMode === 'paste') {
+    if (
+      classification?.suggestedDiagram &&
+      inputMode === 'paste' &&
+      !userOverrodeRef.current
+    ) {
       _setSelectedOption(classification.suggestedDiagram)
     }
   }, [classification, inputMode])
+
+  // Reset override flag when paste is cleared or mode changes
+  useEffect(() => {
+    if (!pasteText.trim()) userOverrodeRef.current = false
+  }, [pasteText])
+
+  useEffect(() => {
+    userOverrodeRef.current = false
+  }, [inputMode])
 
   // Handle streaming completion
   useEffect(() => {
@@ -341,6 +356,12 @@ export default function NewDiagramPage() {
   }
 
   const handleClassificationOverride = (type: OptionType) => {
+    userOverrodeRef.current = true
+    _setSelectedOption(type)
+  }
+
+  const handleGridSelect = (type: OptionType) => {
+    userOverrodeRef.current = true
     _setSelectedOption(type)
   }
 
@@ -669,6 +690,7 @@ export default function NewDiagramPage() {
                     onOverride={handleClassificationOverride}
                     fileName={pasteFileName}
                     onFileNameChange={setPasteFileName}
+                    selectedOption={selectedOption}
                   />
                 </motion.div>
               )}
@@ -691,7 +713,8 @@ export default function NewDiagramPage() {
                 What are we building?
               </label>
               <DiagramSelectionGrid
-                setSelectedOption={_setSelectedOption}
+                selectedOption={selectedOption}
+                setSelectedOption={handleGridSelect}
                 setVisionDescription={setVisionDescription}
                 setColorPalette={setColorPalette}
                 setComplexityLevel={setComplexityLevel}

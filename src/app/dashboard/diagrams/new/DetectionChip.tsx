@@ -48,9 +48,11 @@ const ALL_DIAGRAM_TYPES: OptionType[] = [
 export default function DetectionChip({
   classification,
   onOverride,
+  selectedOption,
 }: {
   classification: InputClassification
   onOverride: (type: OptionType) => void
+  selectedOption?: OptionType
 }) {
   const inputLabel =
     INPUT_TYPE_LABELS[classification.inputType] || classification.inputType
@@ -78,7 +80,7 @@ export default function DetectionChip({
 
       <Menu as="div" className="relative">
         <Menu.Button className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100">
-          {classification.suggestedDiagram}
+          {selectedOption ?? classification.suggestedDiagram}
           <ChevronDownIcon className="h-4 w-4 text-blue-500" />
         </Menu.Button>
 
@@ -99,7 +101,7 @@ export default function DetectionChip({
                     className={clsx(
                       'w-full px-3 py-2 text-left text-sm',
                       active && 'bg-blue-50',
-                      type === classification.suggestedDiagram
+                      type === (selectedOption ?? classification.suggestedDiagram)
                         ? 'font-semibold text-blue-700'
                         : 'text-zinc-700',
                     )}

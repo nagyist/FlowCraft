@@ -32,6 +32,7 @@ export default function PasteAnythingInput({
   onOverride,
   fileName,
   onFileNameChange,
+  selectedOption,
 }: {
   value: string
   onChange: (text: string) => void
@@ -41,6 +42,7 @@ export default function PasteAnythingInput({
   onOverride: (type: OptionType) => void
   fileName: string | null
   onFileNameChange: (name: string | null) => void
+  selectedOption?: OptionType
 }) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
@@ -246,6 +248,7 @@ export default function PasteAnythingInput({
           <DetectionChip
             classification={classification}
             onOverride={onOverride}
+            selectedOption={selectedOption}
           />
         )}
       </AnimatePresence>

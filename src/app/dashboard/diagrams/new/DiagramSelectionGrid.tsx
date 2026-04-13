@@ -45,6 +45,7 @@ type OptionsList = {
 }[]
 
 const DiagramSelectionGrid = ({
+  selectedOption,
   setSelectedOption,
   setVisionDescription,
   setColorPalette,
@@ -52,6 +53,7 @@ const DiagramSelectionGrid = ({
   highlightedType,
   hideTextarea = false,
 }: {
+  selectedOption: OptionType
   setSelectedOption: (option: OptionType) => void
   setVisionDescription: (description: string) => void
   setColorPalette: (palette: string) => void
@@ -63,8 +65,6 @@ const DiagramSelectionGrid = ({
   const [selectedCategory, setSelectedCategory] = useState<
     keyof typeof DIAGRAM_CATEGORIES | null
   >(null)
-  const [selectedOptionState, setSelectedOptionState] =
-    useState<OptionType>(null)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [customColor, setCustomColor] = useState('#3b82f6')
 
@@ -279,7 +279,6 @@ const DiagramSelectionGrid = ({
 
   // Handler for selecting a diagram option
   const handleOptionSelect = (option: OptionType) => {
-    setSelectedOptionState(option)
     setSelectedOption(option)
   }
 
@@ -352,12 +351,12 @@ const DiagramSelectionGrid = ({
             <div
               key={type}
               className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 hover:shadow-md ${
-                hoveredCard === type || selectedOptionState === type
+                hoveredCard === type || selectedOption === type
                   ? 'border-red-500 shadow-sm'
                   : highlightedType === type
                     ? 'border-blue-400 shadow-sm ring-2 ring-blue-100'
                     : 'border-slate-200'
-              } ${selectedOptionState === type ? 'bg-red-50' : highlightedType === type ? 'bg-blue-50/50' : 'bg-white'}`}
+              } ${selectedOption === type ? 'bg-red-50' : highlightedType === type ? 'bg-blue-50/50' : 'bg-white'}`}
               onMouseEnter={() => setHoveredCard(type)}
               onMouseLeave={() => setHoveredCard(null)}
               onClick={() => handleOptionSelect(type)}
