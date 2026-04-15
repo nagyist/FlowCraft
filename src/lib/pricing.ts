@@ -95,39 +95,32 @@ async function retrievePrice(
 }
 
 export async function fetchPricingTiers(): Promise<PricingTier[]> {
-  try {
-    const [hobbyMonthly, hobbyYearly, proMonthly, proYearly] = await Promise.all(
-      [
-        retrievePrice(process.env.STRIPE_HOBBY_MONTHLY_PLAN_ID),
-        retrievePrice(process.env.STRIPE_HOBBY_YEARLY_PLAN_ID),
-        retrievePrice(process.env.STRIPE_PRO_MONTHLY_PLAN_ID),
-        retrievePrice(process.env.STRIPE_PRO_YEARLY_PLAN_ID),
-      ],
-    )
+  const [hobbyMonthly, hobbyYearly, proMonthly, proYearly] = await Promise.all([
+    retrievePrice(process.env.STRIPE_HOBBY_MONTHLY_PLAN_ID),
+    retrievePrice(process.env.STRIPE_HOBBY_YEARLY_PLAN_ID),
+    retrievePrice(process.env.STRIPE_PRO_MONTHLY_PLAN_ID),
+    retrievePrice(process.env.STRIPE_PRO_YEARLY_PLAN_ID),
+  ])
 
-    return staticTiers.map((tier) => {
-      if (tier.id === 'tier-hobby') {
-        return {
-          ...tier,
-          price: {
-            monthly: hobbyMonthly ?? tier.price.monthly,
-            annually: hobbyYearly ?? tier.price.annually,
-          },
-        }
+  return staticTiers.map((tier) => {
+    if (tier.id === 'tier-hobby') {
+      return {
+        ...tier,
+        price: {
+          monthly: hobbyMonthly ?? tier.price.monthly,
+          annually: hobbyYearly ?? tier.price.annually,
+        },
       }
-      if (tier.id === 'tier-pro') {
-        return {
-          ...tier,
-          price: {
-            monthly: proMonthly ?? tier.price.monthly,
-            annually: proYearly ?? tier.price.annually,
-          },
-        }
+    }
+    if (tier.id === 'tier-pro') {
+      return {
+        ...tier,
+        price: {
+          monthly: proMonthly ?? tier.price.monthly,
+          annually: proYearly ?? tier.price.annually,
+        },
       }
-      return tier
-    })
-  } catch (err) {
-    console.error('[pricing] fetchPricingTiers failed, using static fallback:', err)
-    return staticTiers
-  }
+    }
+    return tier
+  })
 }
