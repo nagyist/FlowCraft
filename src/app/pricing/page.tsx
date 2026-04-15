@@ -1,31 +1,24 @@
-'use client'
-
 import FAQs from '@/components/FAQ'
 import PageWithNavbar from '@/components/PageWithNavbar'
-import PricingTemplate from '@/components/Pricing/Pricing'
-import { useSearchParams } from 'next/navigation'
+import { fetchPricingTiers } from '@/lib/pricing'
 import { Suspense } from 'react'
+import PricingContent from './PricingContent'
 
-function PricingContent() {
-  const searchParams = useSearchParams()
-  const sourcePage = searchParams.get('sourcePage') as
-    | 'landing'
-    | 'dashboard'
-    | 'mermaid'
-    | 'chart'
-  return (
-    <PricingTemplate
-      sourcePage={sourcePage || 'landing'}
-      shouldGoToCheckout={sourcePage !== 'landing'}
-    />
-  )
-}
+export const revalidate = 3600
 
-export default function Pricing() {
+export default async function Pricing() {
+  const tiers = await fetchPricingTiers()
+
   return (
     <PageWithNavbar>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-        <PricingContent />
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            Loading...
+          </div>
+        }
+      >
+        <PricingContent tiers={tiers} />
       </Suspense>
       <FAQs />
     </PageWithNavbar>
