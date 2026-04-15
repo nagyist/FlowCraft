@@ -1,66 +1,65 @@
 import { MetadataRoute } from 'next'
+import { createClient } from '@/lib/supabase-auth/server'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: 'https://flowcraft.app/',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: 'https://flowcraft.app/dashboard',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: 'https://flowcraft.app/dashboard/diagrams',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: 'https://flowcraft.app/dashboard/mermaid',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: 'https://flowcraft.app/dashboard/pricing',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: 'https://flowcraft.app/pricing',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: 'https://flowcraft.app/support',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: 'https://flowcraft.app/tools/startup-costs',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: 'https://flowcraft.app/login',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-    {
-      url: 'https://flowcraft.app/signup',
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.8,
-    },
-  ]
+const SITE = 'https://flowcraft.app'
+
+const staticRoutes: MetadataRoute.Sitemap = [
+  { url: `${SITE}/`, changeFrequency: 'daily', priority: 1 },
+  { url: `${SITE}/pricing`, changeFrequency: 'weekly', priority: 0.9 },
+  { url: `${SITE}/features`, changeFrequency: 'weekly', priority: 0.9 },
+  { url: `${SITE}/gallery`, changeFrequency: 'weekly', priority: 0.8 },
+  { url: `${SITE}/blogs`, changeFrequency: 'daily', priority: 0.8 },
+  { url: `${SITE}/support`, changeFrequency: 'monthly', priority: 0.6 },
+  {
+    url: `${SITE}/tools/startup-costs`,
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  },
+]
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date()
+  const base: MetadataRoute.Sitemap = staticRoutes.map((r) => ({
+    ...r,
+    lastModified: now,
+  }))
+
+  try {
+    const supabase = await createClient()
+
+    const [blogsRes, sharedRes] = await Promise.all([
+      supabase
+        .from('blog_posts')
+        .select('id, published_at')
+        .order('published_at', { ascending: false })
+        .limit(1000),
+      supabase
+        .from('shareable_links')
+        .select('id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5000),
+    ])
+
+    const blogEntries: MetadataRoute.Sitemap = (blogsRes.data ?? []).map(
+      (row: { id: string; published_at: string | null }) => ({
+        url: `${SITE}/blogs/${row.id}`,
+        lastModified: row.published_at ? new Date(row.published_at) : now,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      }),
+    )
+
+    const sharedEntries: MetadataRoute.Sitemap = (sharedRes.data ?? []).map(
+      (row: { id: string; created_at: string | null }) => ({
+        url: `${SITE}/shared/${row.id}`,
+        lastModified: row.created_at ? new Date(row.created_at) : now,
+        changeFrequency: 'monthly',
+        priority: 0.5,
+      }),
+    )
+
+    return [...base, ...blogEntries, ...sharedEntries]
+  } catch {
+    return base
+  }
 }

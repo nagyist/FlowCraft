@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import mermaid from 'mermaid';
+import Image from 'next/image';
 
 interface DiagramDisplayProps {
   svgCode?: string;
@@ -12,48 +12,49 @@ const DiagramDisplay: React.FC<DiagramDisplayProps> = ({ svgCode, mermaidCode, i
   const [svgOutput, setSvgOutput] = useState<string>('');
 
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'default',
-      securityLevel: 'loose',
-    });
-  }, []);
+    let cancelled = false;
+    if (!mermaidCode) return;
 
-  useEffect(() => {
-    const renderMermaid = async () => {
-      if (mermaidCode && mermaidRef.current) {
-        try {
-          // Clean the code by removing markdown code block syntax if present
-          const cleanCode = mermaidCode.replace(/^```mermaid\n/, '').replace(/\n```$/, '').trim();
-          
-          // Clear previous content
-          mermaidRef.current.innerHTML = '';
-          
-          // Modern Mermaid rendering approach
-          const { svg } = await mermaid.render(
-            'mermaid-diagram-' + Math.random().toString(36).substring(7),
-            cleanCode
-          );
-          setSvgOutput(svg);
-        } catch (error) {
-          console.error('Error rendering Mermaid diagram:', error);
-          if (mermaidRef.current) {
-            mermaidRef.current.innerHTML = '<p>Error rendering diagram</p>';
-          }
+    (async () => {
+      const { default: mermaid } = await import('mermaid');
+      if (cancelled) return;
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+      });
+
+      try {
+        const cleanCode = mermaidCode
+          .replace(/^```mermaid\n/, '')
+          .replace(/\n```$/, '')
+          .trim();
+
+        if (mermaidRef.current) mermaidRef.current.innerHTML = '';
+
+        const { svg } = await mermaid.render(
+          'mermaid-diagram-' + Math.random().toString(36).substring(7),
+          cleanCode,
+        );
+        if (!cancelled) setSvgOutput(svg);
+      } catch (error) {
+        console.error('Error rendering Mermaid diagram:', error);
+        if (!cancelled && mermaidRef.current) {
+          mermaidRef.current.innerHTML = '<p>Error rendering diagram</p>';
         }
       }
-    };
+    })();
 
-    renderMermaid();
+    return () => {
+      cancelled = true;
+    };
   }, [mermaidCode]);
 
   if (svgCode) {
-    // Clean the SVG code if it's wrapped in markdown code block
-    const cleanSvg = svgCode.replace(/^```svg\n/, '').replace(/\n```$/, '').trim();
     return (
-      <div 
+      <div
         className="w-full"
-        dangerouslySetInnerHTML={{ __html: svgCode }} 
+        dangerouslySetInnerHTML={{ __html: svgCode }}
       />
     );
   }
@@ -62,9 +63,9 @@ const DiagramDisplay: React.FC<DiagramDisplayProps> = ({ svgCode, mermaidCode, i
     return (
       <>
         {svgOutput ? (
-          <div 
+          <div
             className="w-full"
-            dangerouslySetInnerHTML={{ __html: svgOutput }} 
+            dangerouslySetInnerHTML={{ __html: svgOutput }}
           />
         ) : (
           <div ref={mermaidRef} className="mermaid-diagram" />
@@ -75,8 +76,16 @@ const DiagramDisplay: React.FC<DiagramDisplayProps> = ({ svgCode, mermaidCode, i
 
   if (imageUrl) {
     return (
-      <div className="max-w-full h-auto mx-auto">
-        <img src={imageUrl} alt="Diagram" style={{ maxWidth: '100%' }} />
+      <div className="max-w-full h-auto mx-auto relative">
+        <Image
+          src={imageUrl}
+          alt="Diagram"
+          width={1200}
+          height={800}
+          sizes="(max-width: 768px) 100vw, 80vw"
+          style={{ maxWidth: '100%', height: 'auto' }}
+          unoptimized
+        />
       </div>
     );
   }
@@ -85,5 +94,3 @@ const DiagramDisplay: React.FC<DiagramDisplayProps> = ({ svgCode, mermaidCode, i
 };
 
 export default DiagramDisplay;
-
-

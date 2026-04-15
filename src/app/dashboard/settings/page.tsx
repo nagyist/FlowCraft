@@ -32,6 +32,7 @@ interface SubscriptionDetails {
   current_period_end: number
   cancel_at_period_end: boolean
   plan: string
+  planName: string | null
 }
 
 const VALID_TABS: TabId[] = ['profile', 'billing', 'api-keys', 'account']

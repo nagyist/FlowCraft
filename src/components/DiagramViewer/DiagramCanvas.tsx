@@ -2,17 +2,19 @@
 
 import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { sanitizeMermaid, sanitizeSVG, DiagramOrChartType } from '@/lib/utils'
-import mermaid from 'mermaid'
 import dynamic from 'next/dynamic'
 import { Node, Edge } from 'reactflow'
+import DiagramSkeleton from '@/components/skeletons/DiagramSkeleton'
 
 const ReactFlowCanvas = dynamic(() => import('./ReactFlowCanvas'), {
   ssr: false,
+  loading: () => <DiagramSkeleton />,
 })
 const ChartJsComponent = dynamic(
   () => import('@/components/ChartJsComponents'),
-  { ssr: false },
+  { ssr: false, loading: () => <DiagramSkeleton /> },
 )
 
 export interface DiagramCanvasHandle {
@@ -66,41 +68,46 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
       },
     }))
 
-    // Initialize mermaid
-    useEffect(() => {
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: 'base',
-        themeVariables: {
-          primaryColor: '#ffffff',
-          primaryTextColor: '#000000',
-          primaryBorderColor: '#000000',
-          lineColor: '#333333',
-          secondaryColor: '#f4f4f5',
-          tertiaryColor: '#fff',
-        },
-        securityLevel: 'loose',
-        fontFamily: 'Inter, system-ui, sans-serif',
-      })
-    }, [])
-
-    // Render mermaid
+    // Lazy-load + render mermaid when code is available
     useEffect(() => {
       if (!mermaidCode || !mermaidContainerRef.current) return
       const container = mermaidContainerRef.current
-      container.innerHTML = ''
-      const id = `mermaid-${Date.now()}`
+      let cancelled = false
 
-      mermaid
-        .render(id, mermaidCode)
-        .then(({ svg }) => {
+      ;(async () => {
+        const { default: mermaid } = await import('mermaid')
+        if (cancelled) return
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'base',
+          themeVariables: {
+            primaryColor: '#ffffff',
+            primaryTextColor: '#000000',
+            primaryBorderColor: '#000000',
+            lineColor: '#333333',
+            secondaryColor: '#f4f4f5',
+            tertiaryColor: '#fff',
+          },
+          securityLevel: 'loose',
+          fontFamily: 'Inter, system-ui, sans-serif',
+        })
+
+        container.innerHTML = ''
+        const id = `mermaid-${Date.now()}`
+        try {
+          const { svg } = await mermaid.render(id, mermaidCode)
+          if (cancelled) return
           container.innerHTML = svg
           document.getElementById('d' + id)?.remove()
-        })
-        .catch((e) => {
+        } catch (e) {
           console.error('Mermaid render error', e)
           container.innerHTML = `<div class="p-4 text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200">Unable to render diagram.</div>`
-        })
+        }
+      })()
+
+      return () => {
+        cancelled = true
+      }
     }, [mermaidCode])
 
     // Drag to pan
@@ -216,10 +223,15 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
                 )}
 
                 {imageUrl && (
-                  <img
+                  <Image
                     src={imageUrl}
-                    alt="Diagram"
+                    alt={title || 'Diagram'}
+                    width={1200}
+                    height={800}
+                    sizes="(max-width: 768px) 100vw, 80vw"
                     className="max-h-[80vh] w-auto rounded-lg object-contain"
+                    style={{ height: 'auto' }}
+                    unoptimized
                   />
                 )}
 

@@ -5,12 +5,14 @@ import { DiagramContext } from '@/lib/Contexts/DiagramContext'
 import { useRouter } from 'next/navigation' // ✅ Use App Router version
 import PageLoader from '@/components/PageLoader'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { OptionType, sanitizeMermaid, sanitizeSVG } from '@/lib/utils'
-import mermaid from 'mermaid'
+import DiagramSkeleton from '@/components/skeletons/DiagramSkeleton'
 
-const DiagramOrChartView = dynamic(() => import('@/components/DiagramOrChartView'), {
-  ssr: false,
-})
+const DiagramOrChartView = dynamic(
+  () => import('@/components/DiagramOrChartView'),
+  { ssr: false, loading: () => <DiagramSkeleton /> },
+)
 
 export default function DiagramPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true)
@@ -127,35 +129,33 @@ export default function DiagramPage({ params }: { params: { id: string } }) {
     fetchDiagram()
   }, [params.id, diagramContext, router])
 
-  // region Mermaid
+  // region Mermaid (lazy-loaded)
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'default',
-      securityLevel: 'loose',
-    })
-  }, [])
+    let cancelled = false
+    if (!mermaidCode || !mermaidContainerRef.current) return
 
-  // Render mermaid diagram when code changes
-  useEffect(() => {
-    if (mermaidCode && mermaidContainerRef.current) {
+    ;(async () => {
+      const { default: mermaid } = await import('mermaid')
+      if (cancelled) return
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+      })
       try {
+        if (!mermaidContainerRef.current) return
         mermaidContainerRef.current.innerHTML = ''
-        mermaid
-          .render('mermaid-diagram', mermaidCode)
-          .then(({ svg }) => {
-            if (mermaidContainerRef.current) {
-              mermaidContainerRef.current.innerHTML = svg
-            }
-          })
-          .catch((error) => {
-            console.error('Mermaid rendering error:', error)
-            // setError('There was an error rendering the mermaid diagram.')
-          })
+        const { svg } = await mermaid.render('mermaid-diagram', mermaidCode)
+        if (!cancelled && mermaidContainerRef.current) {
+          mermaidContainerRef.current.innerHTML = svg
+        }
       } catch (error) {
-        console.error('Mermaid error:', error)
-        // setError('There was an error processing the mermaid diagram.')
+        console.error('Mermaid rendering error:', error)
       }
+    })()
+
+    return () => {
+      cancelled = true
     }
   }, [mermaidCode])
 
@@ -179,8 +179,16 @@ export default function DiagramPage({ params }: { params: { id: string } }) {
     )
   } else if (imageUrl) {
     return (
-      <div className="max-w-full h-auto mx-auto">
-        <img src={imageUrl} alt="Diagram" style={{ maxWidth: '100%' }} />
+      <div className="max-w-full h-auto mx-auto relative">
+        <Image
+          src={imageUrl}
+          alt={diagramContext.title || 'Diagram'}
+          width={1200}
+          height={800}
+          sizes="(max-width: 768px) 100vw, 80vw"
+          style={{ maxWidth: '100%', height: 'auto' }}
+          unoptimized
+        />
       </div>
     )
   }

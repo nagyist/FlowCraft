@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-auth/server'
 import stripe from '@/lib/stripe'
 import { NextRequest } from 'next/server'
+import type Stripe from 'stripe'
 
 /**
  * GET endpoint to fetch current subscription details
@@ -42,8 +43,59 @@ export async function GET() {
       )
     }
 
-    // If there's no plan ID, there's definitely no subscription
-    if (!userInfo.plan) {
+    let planId: string | null = userInfo.plan || null
+
+    // Self-heal: DB says subscribed but plan ID is missing (e.g. webhook missed
+    // due to email mismatch, or the post-checkout redirect didn't complete).
+    // Look the customer up in Stripe by email and backfill the subscription ID.
+    if (!planId && userInfo.subscribed) {
+      const email = userData.user.email || userInfo.email
+      if (email) {
+        try {
+          const escapedEmail = email.replace(/'/g, "\\'")
+          const customers = await stripe.customers.search({
+            query: `email:'${escapedEmail}'`,
+            limit: 10,
+          })
+
+          for (const customer of customers.data) {
+            const subs = await stripe.subscriptions.list({
+              customer: customer.id,
+              status: 'all',
+              limit: 10,
+            })
+            const recovered = subs.data.find(
+              (s) =>
+                s.status === 'active' ||
+                s.status === 'trialing' ||
+                (s.cancel_at_period_end &&
+                  s.current_period_end * 1000 > Date.now()),
+            )
+            if (recovered) {
+              planId = recovered.id
+              const updateData: Record<string, any> = { plan: recovered.id }
+              if (!userInfo.date_subscribed) {
+                updateData.date_subscribed = new Date(
+                  recovered.created * 1000,
+                ).toISOString()
+              }
+              await supabaseClient
+                .from('users')
+                .update(updateData)
+                .eq('user_id', userData.user.id)
+              break
+            }
+          }
+        } catch (searchError) {
+          console.error(
+            'Error during self-heal subscription lookup:',
+            searchError,
+          )
+        }
+      }
+    }
+
+    if (!planId) {
       return new Response(
         JSON.stringify({
           subscription: null,
@@ -56,11 +108,35 @@ export async function GET() {
       )
     }
 
-    // Always fetch from Stripe if there's a plan ID, even if database says not subscribed
-    // This ensures we get the most up-to-date status (e.g., cancelled but still active)
     try {
-      // Fetch subscription details from Stripe
-      const subscription = await stripe.subscriptions.retrieve(userInfo.plan)
+      const subscription = await stripe.subscriptions.retrieve(planId, {
+        expand: ['items.data.price.product'],
+      })
+
+      const item = subscription.items.data[0]
+      const price = item?.price
+      const product = price?.product as Stripe.Product | undefined
+
+      const productName =
+        (product && !('deleted' in product && product.deleted) && product.name) ||
+        price?.nickname ||
+        null
+
+      const interval = price?.recurring?.interval
+      const intervalLabel =
+        interval === 'month'
+          ? 'Monthly'
+          : interval === 'year'
+            ? 'Annually'
+            : interval
+              ? `${interval}ly`
+              : null
+
+      const planName = productName
+        ? intervalLabel
+          ? `${productName} (${intervalLabel})`
+          : productName
+        : null
 
       return new Response(
         JSON.stringify({
@@ -69,7 +145,8 @@ export async function GET() {
             status: subscription.status,
             current_period_end: subscription.current_period_end,
             cancel_at_period_end: subscription.cancel_at_period_end,
-            plan: subscription.items.data[0]?.price.id,
+            plan: price?.id,
+            planName,
           },
         }),
         {

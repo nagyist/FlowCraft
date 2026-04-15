@@ -6,6 +6,7 @@ import type { Metadata, ResolvingMetadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { buildMetadata, buildCanonical, SITE_NAME, SITE_URL } from '@/lib/seo'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -30,18 +31,15 @@ export async function generateMetadata(
   }
 
   const blog = data[0] as BlogPost
-  return {
+  return buildMetadata({
     title: `${blog.title} | FlowCraft`,
     description: blog.description,
+    path: `/blogs/${id}`,
+    image: blog.image_url,
+    type: 'article',
+    publishedTime: blog.published_at,
     keywords: ['flowchart', 'ai', 'diagram', 'chart', 'whiteboard'],
-    openGraph: {
-      title: blog.title,
-      description: blog.description,
-      images: [blog.image_url],
-      type: 'article',
-      publishedTime: blog.published_at,
-    },
-  }
+  })
 }
 
 // Custom MDX Components to ensure internal content matches the aesthetic
@@ -103,8 +101,57 @@ export default async function BlogPage({ params }: { params: Promise<{ id: strin
 
   const blog = data[0] as BlogPost
 
+  const blogPostingJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: blog.title,
+    description: blog.description,
+    image: blog.image_url ? [blog.image_url] : undefined,
+    datePublished: blog.published_at,
+    dateModified: blog.published_at,
+    author: {
+      '@type': 'Person',
+      name: blog.author || SITE_NAME,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/favicon.ico`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': buildCanonical(`/blogs/${id}`),
+    },
+  }
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: buildCanonical('/') },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: buildCanonical('/blogs') },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: blog.title,
+        item: buildCanonical(`/blogs/${id}`),
+      },
+    ],
+  }
+
   return (
     <main className="min-h-screen bg-white pb-20 pt-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <article className="mx-auto max-w-3xl px-6 lg:px-8">
         {/* Navigation */}
         <nav className="mb-12">

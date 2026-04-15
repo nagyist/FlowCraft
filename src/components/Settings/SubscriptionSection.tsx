@@ -30,6 +30,7 @@ interface SubscriptionDetails {
   current_period_end: number
   cancel_at_period_end: boolean
   plan: string
+  planName: string | null
 }
 
 function formatDate(dateString: string | null) {
@@ -101,7 +102,9 @@ export default function SubscriptionSection({
               )}
             >
               {hasActiveSubscription
-                ? settings.subscription.plan || 'Pro'
+                ? subscriptionDetails?.planName ||
+                  settings.subscription.plan ||
+                  'Pro'
                 : 'Free Plan'}
             </span>
           }

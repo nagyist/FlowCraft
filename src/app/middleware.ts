@@ -1,9 +1,17 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const MARKETING_PATHS = new Set([
+  '/',
+  '/home',
+  '/pricing',
+  '/features',
+  '/gallery',
+  '/blogs',
+  '/support',
+])
+
 export async function middleware(request: NextRequest) {
-  console.log('--------- Middleware ---------')
-  console.log('Middleware: ', request.url.toString())
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -88,9 +96,12 @@ export async function middleware(request: NextRequest) {
     } else if (data && path == '/login') {
       return NextResponse.redirect(new URL('/', request.url))
     }
-    return NextResponse.rewrite(
+    const rewritten = NextResponse.rewrite(
       new URL(`/app${path === '/' ? '' : path}`, request.url),
     )
+    // Prevent search engines from indexing the app subdomain (duplicate content)
+    rewritten.headers.set('X-Robots-Tag', 'noindex, nofollow')
+    return rewritten
   }
 
   // special case for `vercel.pub` domain
@@ -105,9 +116,17 @@ export async function middleware(request: NextRequest) {
     hostname === 'localhost:3000' ||
     hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN
   ) {
-    return NextResponse.rewrite(
+    const rewritten = NextResponse.rewrite(
       new URL(`/home${path === '/' ? '' : path}`, request.url),
     )
+    // Cache public marketing pages at the edge; revalidate in the background.
+    if (MARKETING_PATHS.has(url.pathname)) {
+      rewritten.headers.set(
+        'Cache-Control',
+        'public, s-maxage=3600, stale-while-revalidate=86400',
+      )
+    }
+    return rewritten
   }
 
   // rewrite everything else to `/[domain]/[slug] dynamic route

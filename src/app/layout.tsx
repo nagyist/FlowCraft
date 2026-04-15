@@ -1,14 +1,15 @@
 import { type Metadata } from 'next'
 
 import '@/styles/tailwind.css'
-import Script from 'next/script'
 
 import { GoogleAnalytics } from '@next/third-parties/google'
 import MicrosoftClarity from '@/components/MicrosoftClarity'
 import { LoadingProvider } from '@/lib/LoadingProvider'
 import { Toaster } from 'react-hot-toast'
+import { SITE_URL, SITE_NAME } from '@/lib/seo'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     template: '%s - FlowCraft',
     default:
@@ -16,6 +17,32 @@ export const metadata: Metadata = {
   },
   description:
     'Generate diagrams with a click. No more dragging and dropping from scratch.',
+}
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: SITE_URL,
+  logo: `${SITE_URL}/favicon.ico`,
+  description:
+    'FlowCraft creates flowcharts, sequence diagrams, mind maps, and knowledge graphs with AI.',
+  sameAs: [
+    'https://twitter.com/flowcraftapp',
+    'https://www.linkedin.com/company/flowcraftapp',
+  ],
+}
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: SITE_URL,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SITE_URL}/blogs?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
 }
 
 export default function RootLayout({
@@ -28,12 +55,32 @@ export default function RootLayout({
       <head>
         <link
           rel="preconnect"
+          href="https://api.fontshare.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="preconnect"
           href="https://cdn.fontshare.com"
           crossOrigin="anonymous"
         />
         <link
+          rel="preload"
+          as="style"
+          href="https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap"
+        />
+        <link
           rel="stylesheet"
           href="https://api.fontshare.com/v2/css?f[]=satoshi@700,500,400&display=swap"
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
       <GoogleAnalytics gaId="AW-16550420965" />

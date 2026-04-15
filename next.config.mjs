@@ -1,19 +1,24 @@
 import remarkGfm from 'remark-gfm'
 import createMDX from '@next/mdx'
+import withBundleAnalyzer from '@next/bundle-analyzer'
 
 const withMDX = createMDX({
-  // Add markdown plugins here, as desired
   options: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [],
   },
 })
 
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // transpilePackages: ['mermaid', 'cytoscape'],
   pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
-  // Environment variables
+  reactStrictMode: true,
+  compress: true,
+  poweredByHeader: false,
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.SUPABASE_PRIVATE_KEY,
@@ -22,9 +27,13 @@ const nextConfig = {
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_FLOWCRAFT_API: process.env.FLOWCRAFT_API_URL,
-    NEXT_PUBLIC_MICROSOFT_CLARITY: "m7btrxqq27"
+    NEXT_PUBLIC_MICROSOFT_CLARITY: 'm7btrxqq27',
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60,
     remotePatterns: [
       {
         protocol: 'https',
@@ -36,6 +45,18 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      '@heroicons/react',
+      'react-icons',
+      'chart.js',
+      'react-chartjs-2',
+      '@headlessui/react',
+    ],
+  },
   turbopack: {},
 }
-export default withMDX(nextConfig)
+
+export default bundleAnalyzer(withMDX(nextConfig))

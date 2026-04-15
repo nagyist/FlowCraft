@@ -6,6 +6,7 @@
     "dev": "next dev",
     "dev:local": "FLOWCRAFT_API_URL=http://localhost:8000 next dev",
     "build": "next build",
+    "analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -69,6 +70,7 @@
     "valibot": "^0.8.0"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^15.5.9",
     "@types/dagre": "^0.7.52",
     "@types/three": "^0.158.3",
     "eslint": "^8.57.0",
