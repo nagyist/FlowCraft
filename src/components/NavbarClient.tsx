@@ -207,7 +207,7 @@ export default function NavbarClient({ auth }: { auth: NavbarAuth }) {
                 {!isSubscribed && (
                   <div className="hidden md:block">
                     <Link
-                      href="/pricing"
+                      href="/pricing?sourcePage=dashboard"
                       className="flex items-center rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-indigo-500 hover:to-purple-500 hover:shadow-md active:scale-95"
                     >
                       Upgrade

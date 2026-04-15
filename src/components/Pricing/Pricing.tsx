@@ -37,6 +37,7 @@ export default function PricingTemplate({
   tiers: PricingTier[]
 }) {
   const [yearly, setYearly] = useState(false)
+  const [loadingTier, setLoadingTier] = useState<string | null>(null)
 
   const [notificationMessage, setNotificationMessage] = useState('')
   const [notificationType, setNotificationType] = useState<'success' | 'error'>(
@@ -62,44 +63,40 @@ export default function PricingTemplate({
     id: 'tier-pro' | 'tier-hobby' | 'tier-teams',
     isYearly: boolean,
   ) => {
-    console.log('Going to checkout', id)
+    if (loadingTier) return
+    setLoadingTier(id)
+    try {
+      const response = await fetch('/api/user', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      })
 
-    // Make sure user is logged in
-    const response = await fetch('/api/user', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+      const data = await response.json()
 
-    const data = await response.json()
+      if (data && !!data.error) {
+        window.location.href = '/login'
+        return
+      }
 
-    console.log('User data', data)
+      if (data && data.user && data.user.subscribed) {
+        setNotificationMessage('You are already subscribed to a plan.')
+        setNotificationType('success')
+        setOpenNotification(true)
+        return
+      }
 
-    if (data && !!data.error) {
-      // Send them to Login page
-      window.location.href = '/login'
-      return
-    }
+      const stripe = await loadStripe(
+        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string,
+      )
 
-    if(data && data.user && data.user.subscribed) {
-      // User is already subscribed
-      setNotificationMessage('You are already subscribed to a plan.')
-      setNotificationType('success')
-      setOpenNotification(true)
-      return
-    }
+      if (!stripe) {
+        openErrorNotification()
+        return
+      }
 
-    const stripe = await loadStripe(
-      process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string,
-    )
-
-    if (stripe) {
       const { id: sessionId } = await fetch('/api/checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product: id, isYearly: isYearly }),
       })
         .then((res) => res.json())
@@ -114,17 +111,14 @@ export default function PricingTemplate({
         return
       }
 
-      console.log('Session ID', sessionId)
-      const { error } = await stripe.redirectToCheckout({
-        sessionId,
-      })
+      const { error } = await stripe.redirectToCheckout({ sessionId })
 
       if (error) {
         console.error('Error redirecting to checkout', error)
         openErrorNotification()
       }
-    } else {
-      openErrorNotification()
+    } finally {
+      setLoadingTier(null)
     }
   }
 
@@ -264,14 +258,42 @@ export default function PricingTemplate({
                         yearly,
                       )
                     }
+                    disabled={loadingTier !== null}
                     className={cn(
                       'block w-full rounded-full px-6 py-3 text-sm font-medium transition-all',
-                      tier.featured
-                        ? 'bg-gray-900 text-white hover:bg-gray-800'
+                      loadingTier !== null && loadingTier !== tier.id
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
                         : 'bg-gray-900 text-white hover:bg-gray-800',
+                      loadingTier === tier.id && 'cursor-wait opacity-90',
                     )}
                   >
-                    {tier.cta}
+                    {loadingTier === tier.id ? (
+                      <span className="inline-flex items-center gap-2">
+                        <svg
+                          className="h-4 w-4 animate-spin"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                          />
+                        </svg>
+                        Redirecting to checkout...
+                      </span>
+                    ) : (
+                      'Upgrade'
+                    )}
                   </Button>
                 ) : (
                   <Link

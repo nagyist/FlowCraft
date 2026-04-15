@@ -83,42 +83,53 @@ function formatStripeAmount(
 
 async function retrievePrice(
   priceId: string | undefined,
-): Promise<string | null> {
-  if (!priceId) return null
+  label: string,
+): Promise<string> {
+  if (!priceId) {
+    throw new Error(
+      `[pricing] Missing Stripe price ID env var for ${label}. Check STRIPE_*_PLAN_ID vars.`,
+    )
+  }
   try {
     const price = await stripe.prices.retrieve(priceId)
-    return formatStripeAmount(price.unit_amount, price.currency)
-  } catch (err) {
-    console.error(`[pricing] Failed to retrieve Stripe price ${priceId}:`, err)
-    return null
+    const formatted = formatStripeAmount(price.unit_amount, price.currency)
+    if (!formatted) {
+      throw new Error(
+        `[pricing] Stripe price ${priceId} (${label}) has no unit_amount`,
+      )
+    }
+    console.log(
+      `[pricing] ${label} (${priceId}): ${formatted} ${price.currency}`,
+    )
+    return formatted
+  } catch (err: any) {
+    console.error(
+      `[pricing] Failed to retrieve Stripe price ${priceId} (${label}):`,
+      err?.message ?? err,
+    )
+    throw err
   }
 }
 
 export async function fetchPricingTiers(): Promise<PricingTier[]> {
   const [hobbyMonthly, hobbyYearly, proMonthly, proYearly] = await Promise.all([
-    retrievePrice(process.env.STRIPE_HOBBY_MONTHLY_PLAN_ID),
-    retrievePrice(process.env.STRIPE_HOBBY_YEARLY_PLAN_ID),
-    retrievePrice(process.env.STRIPE_PRO_MONTHLY_PLAN_ID),
-    retrievePrice(process.env.STRIPE_PRO_YEARLY_PLAN_ID),
+    retrievePrice(process.env.STRIPE_HOBBY_MONTHLY_PLAN_ID, 'Hobby monthly'),
+    retrievePrice(process.env.STRIPE_HOBBY_YEARLY_PLAN_ID, 'Hobby yearly'),
+    retrievePrice(process.env.STRIPE_PRO_MONTHLY_PLAN_ID, 'Pro monthly'),
+    retrievePrice(process.env.STRIPE_PRO_YEARLY_PLAN_ID, 'Pro yearly'),
   ])
 
   return staticTiers.map((tier) => {
     if (tier.id === 'tier-hobby') {
       return {
         ...tier,
-        price: {
-          monthly: hobbyMonthly ?? tier.price.monthly,
-          annually: hobbyYearly ?? tier.price.annually,
-        },
+        price: { monthly: hobbyMonthly, annually: hobbyYearly },
       }
     }
     if (tier.id === 'tier-pro') {
       return {
         ...tier,
-        price: {
-          monthly: proMonthly ?? tier.price.monthly,
-          annually: proYearly ?? tier.price.annually,
-        },
+        price: { monthly: proMonthly, annually: proYearly },
       }
     }
     return tier
