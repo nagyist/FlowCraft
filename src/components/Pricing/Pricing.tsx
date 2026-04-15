@@ -1,7 +1,7 @@
 'use client'
 import { cn } from '@/lib/utils'
 import { CheckIcon } from '@heroicons/react/20/solid'
-import { tiers } from './Pricing.utils'
+import type { PricingTier } from '@/lib/pricing'
 import SwitchButton from '../Switch'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -30,9 +30,11 @@ const PricingHeaderMessage = (sourcePage: PricingPageSource) => {
 export default function PricingTemplate({
   sourcePage,
   shouldGoToCheckout,
+  tiers,
 }: {
   sourcePage: PricingPageSource
   shouldGoToCheckout?: boolean
+  tiers: PricingTier[]
 }) {
   const [yearly, setYearly] = useState(false)
 
