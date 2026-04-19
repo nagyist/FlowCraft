@@ -1,0 +1,73 @@
+---
+slug: online-sequence-diagram-tool
+title: Online Sequence Diagram Tool — Free Online Tool | FlowCraft
+h1: Online Sequence Diagram Tool
+meta_description: Online sequence diagram tool. A sequence diagram is a UML diagram that shows how objects, services, or actors interact over time. Export as SVG, PNG, or…
+diagram_type: sequenceDiagram
+example_prompt: A user signs up, the API verifies their email with a third-party provider, then creates a session token and stores the user in the database.
+example_svgs:
+  - /tools/online-sequence-diagram-tool/example-1.svg
+  - /tools/online-sequence-diagram-tool/example-2.svg
+  - /tools/online-sequence-diagram-tool/example-3.svg
+keywords:
+  - online sequence diagram tool
+  - sequence diagram generator
+  - sequence diagram maker
+  - ai sequence diagram
+  - mermaid sequence diagram
+  - uml sequence diagram
+  - sequence diagram online
+  - sequence diagram from text
+related:
+  - ai-sequence-diagram-generator
+  - ai-sequence-diagram-maker
+  - free-sequence-diagram-maker
+  - ai-class-diagram-generator
+---
+
+Online Sequence Diagram Tool turns a plain-English description into a sequence diagram you can export, share, or drop straight into your docs. No drawing tools, no syntax cheat-sheets — just describe what you need and get a clean Mermaid-compatible diagram back.
+
+## What is a sequence diagram?
+
+A sequence diagram is a UML diagram that shows how objects, services, or actors interact over time. It lays out participants across the top and uses vertical lifelines with horizontal arrows to represent the messages they exchange, read top to bottom in chronological order.
+
+Sequence diagrams are especially useful for documenting API calls, authentication flows, microservice choreography, and any scenario where the order of operations matters. Instead of describing an interaction in prose, a sequence diagram shows who calls whom, what they pass, and what comes back.
+
+## Who uses sequence diagrams?
+
+- Backend and full-stack engineers designing APIs and service-to-service calls
+- Software architects mapping out distributed systems and event flows
+- Technical leads writing design docs and RFCs
+- SREs and on-call engineers debugging cross-service incidents
+- Security engineers reviewing authentication and authorisation flows
+- Integration consultants explaining how two systems will talk to each other
+- QA engineers writing end-to-end test scenarios
+- Students and candidates studying for system design interviews
+
+## Why generate sequence diagrams with AI?
+
+Sequence diagrams have a specific notation — solid arrows for synchronous calls, dashed for returns, activation bars for when a participant is busy. Getting this right by hand while also reasoning about a 15-step flow is slow, and the mental overhead is why most teams settle for bullet points instead.
+
+Describing the flow in plain English and letting AI render the Mermaid source collapses the two tasks. You think about the interaction; the tool handles the notation. Swap a participant, reorder a call, or add an alt block by saying so — no YAML indentation wrestling required.
+
+## How to use the Online Sequence Diagram Tool
+
+1. Describe the interaction in plain English — who the actors are, what messages they send, and the order they happen in.
+2. Paste the description into the Online Sequence Diagram Tool prompt box and click Generate.
+3. Review the rendered diagram; ask for specific changes like "add an error path" or "show the database response explicitly".
+4. Export as SVG, PNG, or Mermaid source for your design doc, PR description, or wiki.
+5. Save it to your workspace so you can update it when the flow changes.
+
+## FAQ
+
+### Does it support alt/opt/loop blocks?
+
+Yes. Mention them in plain English ('if the token is expired, refresh it and retry', 'loop until all pages fetched') and the generator will emit the right Mermaid alt/opt/loop syntax.
+
+### How many participants can a diagram have?
+
+Mermaid handles 10+ participants, but diagrams get hard to read past 6 or 7. If you need more, consider splitting into two diagrams — one per sub-flow.
+
+### Can I export to PlantUML or other formats?
+
+Native output is Mermaid. Mermaid source is easy to convert to PlantUML syntactically, and SVG/PNG export works everywhere.

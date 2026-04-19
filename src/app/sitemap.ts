@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@/lib/supabase-auth/server'
+import { getAllTools } from '@/lib/tools/loader'
 
 const SITE = 'https://flowcraft.app'
 
@@ -10,6 +11,7 @@ const staticRoutes: MetadataRoute.Sitemap = [
   { url: `${SITE}/gallery`, changeFrequency: 'weekly', priority: 0.8 },
   { url: `${SITE}/blogs`, changeFrequency: 'daily', priority: 0.8 },
   { url: `${SITE}/support`, changeFrequency: 'monthly', priority: 0.6 },
+  { url: `${SITE}/tools`, changeFrequency: 'weekly', priority: 0.8 },
   {
     url: `${SITE}/tools/startup-costs`,
     changeFrequency: 'monthly',
@@ -22,6 +24,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base: MetadataRoute.Sitemap = staticRoutes.map((r) => ({
     ...r,
     lastModified: now,
+  }))
+
+  const toolEntries: MetadataRoute.Sitemap = getAllTools().map((t) => ({
+    url: `${SITE}/tools/${t.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
   }))
 
   try {
@@ -58,8 +67,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     )
 
-    return [...base, ...blogEntries, ...sharedEntries]
+    return [...base, ...toolEntries, ...blogEntries, ...sharedEntries]
   } catch {
-    return base
+    return [...base, ...toolEntries]
   }
 }

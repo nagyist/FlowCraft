@@ -1,0 +1,74 @@
+---
+slug: online-er-diagram-tool
+title: Online Entity-relationship Diagram Tool — Free Online Tool | FlowCraft
+h1: Online Entity-relationship Diagram Tool
+meta_description: Online er diagram tool. An entity-relationship diagram (ERD) shows the entities in a data model, their attributes, and the relationships between them. Export…
+diagram_type: entityRelationshipDiagram
+example_prompt: A Users table has id, email, and created_at. A Posts table has id, user_id, title, and body, and a post belongs to one user. A Tags table has id and name, and posts can have many tags through a posts_tags join table.
+example_svgs:
+  - /tools/online-er-diagram-tool/example-1.svg
+  - /tools/online-er-diagram-tool/example-2.svg
+  - /tools/online-er-diagram-tool/example-3.svg
+keywords:
+  - online er diagram tool
+  - er diagram generator
+  - erd generator
+  - entity relationship diagram
+  - ai database schema
+  - mermaid er diagram
+  - sql schema diagram
+  - er diagram online
+  - er diagram from text
+related:
+  - ai-er-diagram-maker
+  - ai-er-diagram-generator
+  - free-er-diagram-maker
+  - ai-class-diagram-generator
+---
+
+Online Entity-relationship Diagram Tool turns a plain-English description into a entity-relationship diagram you can export, share, or drop straight into your docs. No drawing tools, no syntax cheat-sheets — just describe what you need and get a clean Mermaid-compatible diagram back.
+
+## What is a entity-relationship diagram?
+
+An entity-relationship diagram (ERD) shows the entities in a data model, their attributes, and the relationships between them. Each entity is a box listing fields and types; each relationship is a line annotated with cardinality — one-to-one, one-to-many, many-to-many.
+
+ERDs are the standard deliverable for database design and schema reviews. They surface foreign-key mistakes, missing join tables, and denormalisation trade-offs in one picture — long before any DDL gets written.
+
+## Who uses entity-relationship diagrams?
+
+- Backend engineers designing SQL schemas and migrations
+- Data engineers modelling warehouses, lakes, and marts
+- Database administrators reviewing schema changes
+- Software architects planning multi-service data ownership
+- Analytics engineers documenting dbt or Looker models
+- Product engineers pitching a feature that needs new tables
+- Students learning relational database design
+- Consultants auditing a client's data model
+
+## Why generate entity-relationship diagrams with AI?
+
+Hand-writing Mermaid erDiagram syntax means remembering cardinality glyphs (`||--o{` for one-to-many, `}o--o{` for many-to-many) while you also keep track of field names, types, and keys. The syntax is the distraction; the model is what matters.
+
+Generating the ERD from a plain-English description of the schema removes the friction. Describe the tables and how they relate, regenerate as the design evolves, and get an ERD that actually tracks reality instead of becoming stale documentation.
+
+## How to use the Online Entity-relationship Diagram Tool
+
+1. Describe your tables, their important fields, and how they relate (one-to-one, one-to-many, many-to-many).
+2. Paste the description into the Online Entity-relationship Diagram Tool prompt box and click Generate.
+3. Review the rendered ERD; request changes like "split User into Users and UserProfiles" or "add a join table between Posts and Tags".
+4. Export as SVG, PNG, or Mermaid source for your schema review, PR, or data dictionary.
+5. Save the diagram to keep a canonical picture of the schema as it evolves.
+
+## FAQ
+
+### Does it support cardinality notation (Crow's Foot)?
+
+Yes — Mermaid's erDiagram syntax renders Crow's Foot notation. Mention the cardinality in plain English and the generator will pick the correct glyph.
+
+### Can I generate an ERD from existing SQL DDL?
+
+Paste the CREATE TABLE statements or a schema dump into the prompt. Results are best when the DDL is clean and includes foreign-key constraints.
+
+### Does it show field types?
+
+Yes. Mention types ('id int PK, email varchar') in the prompt and they'll appear inside each entity box.

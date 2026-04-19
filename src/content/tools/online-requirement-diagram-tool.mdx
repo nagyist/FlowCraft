@@ -1,0 +1,74 @@
+---
+slug: online-requirement-diagram-tool
+title: Online Requirement Diagram Tool — Free Online Tool | FlowCraft
+h1: Online Requirement Diagram Tool
+meta_description: Online requirement diagram tool. A requirement diagram models system requirements and the elements that satisfy, derive from, or refine them. Export as SVG,…
+diagram_type: requirementDiagram
+example_prompt: A functional requirement REQ-01 says the system must authenticate users. It is satisfied by the AuthService component and verified by the E2E login test. REQ-02 derives from REQ-01 and requires password reset, satisfied by the PasswordResetFlow module.
+example_svgs:
+  - /tools/online-requirement-diagram-tool/example-1.svg
+  - /tools/online-requirement-diagram-tool/example-2.svg
+  - /tools/online-requirement-diagram-tool/example-3.svg
+keywords:
+  - online requirement diagram tool
+  - requirement diagram generator
+  - requirements traceability tool
+  - ai requirement diagram
+  - mermaid requirement diagram
+  - sysml requirement diagram
+  - system requirements diagram
+  - requirement diagram online
+  - requirement diagram from text
+related:
+  - ai-requirement-diagram-generator
+  - ai-requirement-diagram-maker
+  - free-requirement-diagram-maker
+  - ai-class-diagram-generator
+---
+
+Online Requirement Diagram Tool turns a plain-English description into a requirement diagram you can export, share, or drop straight into your docs. No drawing tools, no syntax cheat-sheets — just describe what you need and get a clean Mermaid-compatible diagram back.
+
+## What is a requirement diagram?
+
+A requirement diagram models system requirements and the elements that satisfy, derive from, or refine them. It connects business or functional requirements to the design elements, tests, and risks associated with each — a traceability map in diagram form.
+
+Requirement diagrams are most common in regulated domains (medical, aerospace, automotive) and in large systems where "why does this component exist" needs a defensible answer. They pair naturally with verification workflows and audit trails.
+
+## Who uses requirement diagrams?
+
+- Systems engineers modelling requirements traceability
+- Regulatory and compliance leads preparing for audits
+- QA leads linking requirements to test coverage
+- Product owners in safety-critical software teams
+- Architects capturing non-functional requirements and constraints
+- Technical writers producing spec documents
+- Defence and aerospace teams following SysML-adjacent practices
+- Students learning SysML and formal requirements engineering
+
+## Why generate requirement diagrams with AI?
+
+Requirement diagrams are valuable precisely where the cost of getting requirements wrong is high, but the tooling (Enterprise Architect, IBM Rhapsody) is heavy enough that teams often skip the diagram and hope the spec covers it.
+
+Generating a Mermaid requirementDiagram from a plain description — "requirement X is satisfied by component Y and verified by test Z" — makes traceability cheap enough to maintain. The diagram lives in git next to the spec; it stays in sync with real life.
+
+## How to use the Online Requirement Diagram Tool
+
+1. List your requirements, the design elements that satisfy them, and the verification methods that confirm them.
+2. Paste the description into the Online Requirement Diagram Tool prompt box and click Generate.
+3. Review the diagram; request tweaks like "derive REQ-02 from REQ-01" or "add a risk link to the payment module".
+4. Export as SVG, PNG, or Mermaid source to include in spec documents, audit packages, or design reviews.
+5. Save the diagram to your workspace to maintain traceability as requirements evolve.
+
+## FAQ
+
+### What relationships are supported?
+
+Mermaid requirementDiagram supports contains, copies, derives, satisfies, verifies, refines, and traces. Mention the relationship in plain English and the generator picks the right arrow.
+
+### Is this SysML-compliant?
+
+Mermaid requirementDiagram is SysML-inspired, not fully compliant. For a SysML-conformant diagram, use a dedicated SysML tool; for a readable traceability view in Markdown docs, Mermaid is the right level.
+
+### Can I categorise requirements (functional, performance, etc.)?
+
+Yes — requirement elements accept a type field. Mention the type in the prompt ("a functional requirement for login...") and it appears in the rendered box.

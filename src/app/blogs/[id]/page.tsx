@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import { buildMetadata, buildCanonical, SITE_NAME, SITE_URL } from '@/lib/seo'
+import { mdxComponents } from '@/components/Mdx/MdxComponents'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -40,49 +41,6 @@ export async function generateMetadata(
     publishedTime: blog.published_at,
     keywords: ['flowchart', 'ai', 'diagram', 'chart', 'whiteboard'],
   })
-}
-
-// Custom MDX Components to ensure internal content matches the aesthetic
-const mdxComponents = {
-  h1: (props: any) => (
-    <h1
-      className="mb-4 mt-8 text-3xl font-bold tracking-tight text-gray-900"
-      {...props}
-    />
-  ),
-  h2: (props: any) => (
-    <h2
-      className="mb-4 mt-10 text-2xl font-semibold tracking-tight text-gray-900"
-      {...props}
-    />
-  ),
-  h3: (props: any) => (
-    <h3
-      className="mb-3 mt-8 text-xl font-semibold tracking-tight text-gray-900"
-      {...props}
-    />
-  ),
-  p: (props: any) => (
-    <p
-      className="not-prose mb-6 text-lg leading-relaxed text-gray-700"
-      {...props}
-    />
-  ),
-  a: (props: any) => (
-    <a
-      className="font-medium text-gray-900 underline decoration-gray-400 underline-offset-4 transition-all hover:decoration-black"
-      {...props}
-    />
-  ),
-  ul: (props: any) => (
-    <ul className="my-6 ml-6 list-disc space-y-2 text-gray-700" {...props} />
-  ),
-  blockquote: (props: any) => (
-    <blockquote
-      className="my-6 border-l-4 border-gray-200 pl-4 italic text-gray-800"
-      {...props}
-    />
-  ),
 }
 
 export default async function BlogPage({ params }: { params: Promise<{ id: string }> }) {

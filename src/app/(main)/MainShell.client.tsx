@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { DiagramContext } from '@/lib/Contexts/DiagramContext'
 import { Edge, Node } from 'reactflow'
@@ -46,6 +46,27 @@ export default function MainShell({
   const [mermaidData, setMermaidData] = useState<string>('')
   const [diagramId, setDiagramId] = useState<string>('')
   const [controls, setControls] = useState<any>(null)
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('flowcraft.toolDemoSeed')
+      if (!raw) return
+      const seed = JSON.parse(raw) as {
+        prompt?: string
+        type?: string
+        ts?: number
+      }
+      sessionStorage.removeItem('flowcraft.toolDemoSeed')
+      const fresh = typeof seed.ts === 'number' && Date.now() - seed.ts < 30 * 60 * 1000
+      if (!fresh) return
+      if (seed.prompt) setDescription(seed.prompt)
+      if (seed.type) {
+        setType(seed.type as DiagramOrChartType | TempMermaidDiagramType)
+      }
+    } catch {
+      // sessionStorage unavailable or malformed — ignore
+    }
+  }, [])
 
   return (
     <WhiteboardContext.Provider

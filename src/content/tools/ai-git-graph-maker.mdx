@@ -1,0 +1,74 @@
+---
+slug: ai-git-graph-maker
+title: AI Git Graph Maker — Free Online Tool | FlowCraft
+h1: AI Git Graph Maker
+meta_description: AI git graph maker. A Git graph visualises a repository's commit history — branches, merges, tags, cherry-picks — as a graph of commits connected by parent…
+diagram_type: gitgraph
+example_prompt: Main branch has 3 commits. A feature branch is created after the second commit with 2 commits on it, then merged back into main. A v1.0 tag is added on main after the merge. A hotfix branch is created from the tag with one commit, merged back to main.
+example_svgs:
+  - /tools/ai-git-graph-maker/example-1.svg
+  - /tools/ai-git-graph-maker/example-2.svg
+  - /tools/ai-git-graph-maker/example-3.svg
+keywords:
+  - AI git graph maker
+  - git graph generator
+  - git branch diagram
+  - ai git diagram
+  - mermaid gitgraph
+  - git history visualizer
+  - gitflow diagram
+  - git graph online
+  - git graph from text
+related:
+  - ai-git-graph-generator
+  - free-git-graph-maker
+  - online-git-graph-tool
+  - ai-class-diagram-generator
+---
+
+AI Git Graph Maker turns a plain-English description into a Git graph you can export, share, or drop straight into your docs. No drawing tools, no syntax cheat-sheets — just describe what you need and get a clean Mermaid-compatible diagram back.
+
+## What is a Git graph?
+
+A Git graph visualises a repository's commit history — branches, merges, tags, cherry-picks — as a graph of commits connected by parent links. Each lane is a branch; each node is a commit. It's the mental model you build when running `git log --graph`, rendered properly.
+
+Git graphs are invaluable when explaining branching strategies, onboarding a new engineer to a repo's conventions, or showing a tricky merge/rebase scenario in a design doc or blog post. They turn "let me walk you through this" into "here, see for yourself".
+
+## Who uses Git graphs?
+
+- Tech leads documenting branching strategies (Gitflow, trunk-based, release branches)
+- Engineering managers onboarding new hires to repo conventions
+- Technical bloggers explaining Git concepts to a general audience
+- Open-source maintainers documenting contribution workflows
+- Trainers teaching version control in bootcamps and courses
+- DevOps engineers illustrating release and hotfix processes
+- Students learning Git for the first time
+- Authors writing Git documentation and style guides
+
+## Why generate Git graphs with AI?
+
+Mermaid gitGraph syntax is compact but unintuitive — commits, branches, checkouts, and merges each have their own keywords. Writing a realistic-looking branch-and-merge scenario by hand is a fiddly exercise that distracts from what you're actually explaining.
+
+Describing the scenario in plain English ("main has three commits, then we branch off feature, add two commits, and merge back") and letting AI emit the gitGraph source puts the focus back on the concept. Perfect for blog posts, onboarding docs, and internal training.
+
+## How to use the AI Git Graph Maker
+
+1. Describe the scenario — which branches exist, when they diverged, and how they merged back.
+2. Paste the description into the AI Git Graph Maker prompt box and click Generate.
+3. Review the graph; request changes like "add a hotfix branch after the release tag" or "show a cherry-pick from feature to main".
+4. Export as SVG, PNG, or Mermaid source to drop into your blog post, onboarding doc, or design review.
+5. Save it so you have a library of common scenarios to pull from for future training or docs.
+
+## FAQ
+
+### Does it support tags and cherry-picks?
+
+Yes — both are expressible in Mermaid gitGraph. Mention them in the prompt (e.g. "tag v1.0 on main", "cherry-pick fix-abc into release") and the generator emits them.
+
+### Can I show a complex Gitflow scenario?
+
+Yes. Describe the scenario in order — develop, feature branches, release branches, hotfixes — and the generator produces a faithful Mermaid rendering.
+
+### Is this the same as `git log --graph`?
+
+Similar idea, different rendering. `git log --graph` shows the real history of a repo; this tool produces a styled, shareable version of a hypothetical or actual history for teaching and documentation.

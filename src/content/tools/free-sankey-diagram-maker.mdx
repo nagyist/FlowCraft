@@ -1,0 +1,74 @@
+---
+slug: free-sankey-diagram-maker
+title: Free Sankey Diagram Maker — Free Online Tool | FlowCraft
+h1: Free Sankey Diagram Maker
+meta_description: Free sankey diagram maker. A Sankey diagram visualises flows of quantity between nodes. Export as SVG, PNG, or Mermaid source.
+diagram_type: sankey
+example_prompt: "A conversion funnel for last month. 10,000 visits: 6,000 bounce, 4,000 continue. Of those 4,000: 2,500 view pricing, 1,500 skip. Of the 2,500 pricing viewers: 400 start checkout, 2,100 drop. Of 400 checkouts: 300 complete, 100 abandon."
+example_svgs:
+  - /tools/free-sankey-diagram-maker/example-1.svg
+  - /tools/free-sankey-diagram-maker/example-2.svg
+  - /tools/free-sankey-diagram-maker/example-3.svg
+keywords:
+  - free sankey diagram maker
+  - sankey diagram generator
+  - sankey diagram maker
+  - ai sankey diagram
+  - mermaid sankey
+  - flow diagram tool
+  - funnel visualization
+  - sankey diagram online
+  - sankey diagram from text
+related:
+  - ai-sankey-diagram-generator
+  - ai-sankey-diagram-maker
+  - online-sankey-diagram-tool
+  - ai-class-diagram-generator
+---
+
+Free Sankey Diagram Maker turns a plain-English description into a Sankey diagram you can export, share, or drop straight into your docs. No drawing tools, no syntax cheat-sheets — just describe what you need and get a clean Mermaid-compatible diagram back.
+
+## What is a Sankey diagram?
+
+A Sankey diagram visualises flows of quantity between nodes. Flow width is proportional to the amount moved, so you can see at a glance where the big pipes are and which paths account for most of a total.
+
+Sankey diagrams are the right tool for energy flows, budget allocations, funnel analyses, traffic-source attributions, and any scenario where you want to follow "where did all the X go?" across multiple stages.
+
+## Who uses Sankey diagrams?
+
+- Analysts visualising conversion funnels and attribution
+- Growth engineers tracing user flow across activation stages
+- Finance teams showing budget allocation across departments
+- Energy and sustainability analysts modelling energy flows
+- Product managers visualising feature-usage and churn paths
+- Operations teams tracing materials and process flow
+- Consultants presenting value-chain or supply-chain analyses
+- Researchers reporting multi-stage data aggregations
+
+## Why generate Sankey diagrams with AI?
+
+Sankey diagrams are powerful and a pain to author. The nodes, the links, the exact flow values — producing one in D3.js or Plotly takes non-trivial code, and spreadsheet tools rarely support them well.
+
+Generating a Mermaid Sankey from a plain description ("500 visits total, 300 to home, 150 to pricing...") collapses the overhead to one paragraph of prose. Great for monthly reports, blog posts, and dashboards that need a one-off visual.
+
+## How to use the Free Sankey Diagram Maker
+
+1. Describe the flows — source node, target node, and the quantity flowing between them — for each link.
+2. Paste the description into the Free Sankey Diagram Maker prompt box and click Generate.
+3. Review the rendered diagram; request tweaks like "split Checkout into Success and Failure" or "roll up the small flows into Other".
+4. Export as SVG, PNG, or Mermaid source for your funnel report, attribution deck, or budget memo.
+5. Save it so updating with next month's numbers is a five-second regenerate.
+
+## FAQ
+
+### How many nodes can a Sankey handle?
+
+Mermaid handles a few dozen nodes gracefully. Past that, consider aggregating long-tail nodes into an "Other" bucket — readability drops fast beyond ~20 distinct nodes.
+
+### Do the flows need to balance?
+
+Not strictly — you can show loss, drop-off, or unallocated flow by having outflows smaller than inflows at a node. Mermaid renders the imbalance visibly, which is usually what you want.
+
+### Can I colour flows by category?
+
+Mermaid Sankey uses the theme palette; per-flow colour customisation requires post-export SVG editing. For rich per-flow styling, consider a D3.js implementation.

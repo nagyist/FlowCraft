@@ -1,0 +1,74 @@
+---
+slug: ai-state-diagram-maker
+title: AI State Diagram Maker — Free Online Tool | FlowCraft
+h1: AI State Diagram Maker
+meta_description: AI state diagram maker. A state diagram (or state machine diagram) shows the states an object or system can be in and the transitions that move it between…
+diagram_type: stateDiagram
+example_prompt: A blog post starts as Draft. It can be submitted for review, which moves it to Pending. A reviewer can approve it (Published), request changes (back to Draft), or reject it (Archived, terminal).
+example_svgs:
+  - /tools/ai-state-diagram-maker/example-1.svg
+  - /tools/ai-state-diagram-maker/example-2.svg
+  - /tools/ai-state-diagram-maker/example-3.svg
+keywords:
+  - AI state diagram maker
+  - state diagram generator
+  - state machine diagram
+  - ai state diagram
+  - mermaid state diagram
+  - uml state diagram
+  - online state machine tool
+  - state diagram online
+  - state diagram from text
+related:
+  - ai-state-diagram-generator
+  - free-state-diagram-maker
+  - online-state-diagram-tool
+  - ai-class-diagram-generator
+---
+
+AI State Diagram Maker turns a plain-English description into a state diagram you can export, share, or drop straight into your docs. No drawing tools, no syntax cheat-sheets — just describe what you need and get a clean Mermaid-compatible diagram back.
+
+## What is a state diagram?
+
+A state diagram (or state machine diagram) shows the states an object or system can be in and the transitions that move it between them. Each state is a rounded rectangle; each transition is a labelled arrow triggered by an event or condition.
+
+State diagrams are the right tool whenever behaviour depends on history — order lifecycles, document review workflows, connection states, UI wizards, subscription billing. They make illegal transitions visible and give you a single source of truth for what can happen next.
+
+## Who uses state diagrams?
+
+- Backend engineers modelling entity lifecycles (orders, subscriptions, tickets)
+- Frontend engineers designing multi-step forms and wizards
+- Embedded engineers specifying hardware and firmware behaviour
+- Protocol designers documenting connection and handshake states
+- QA engineers enumerating test paths through a state machine
+- PMs communicating approval and review workflows
+- Game developers modelling AI behaviour and combat states
+- Educators teaching finite-state machines and formal methods
+
+## Why generate state diagrams with AI?
+
+State machines are easy to describe in English ("a draft can be submitted or deleted; submitted goes to approved or rejected; approved can be published") and tedious to hand-render in Mermaid. The cost of drawing keeps most teams from formalising behaviour, so edge cases get discovered in production.
+
+Generating the diagram from a plain description flips the incentive. Want to add a new terminal state or a retry transition? Say so and regenerate. The diagram stays in step with the thinking instead of slowly drifting out of date.
+
+## How to use the AI State Diagram Maker
+
+1. Describe the states, the events that trigger transitions, and any initial or final states.
+2. Paste the description into the AI State Diagram Maker prompt box and click Generate.
+3. Review the rendered diagram; request tweaks like "merge Pending and Queued into one state" or "add a Cancelled terminal state".
+4. Export as SVG, PNG, or Mermaid source for your design doc or implementation ticket.
+5. Save the diagram so the canonical state machine lives next to the code it describes.
+
+## FAQ
+
+### Does it support nested or composite states?
+
+Yes. Describe the nesting in plain English ("Active contains Idle and Running") and the generator will emit the composite-state Mermaid syntax.
+
+### Can I mark initial and final states?
+
+Yes — mention the starting state and any terminal ones in your prompt. The output uses the standard filled-circle / double-circle notation.
+
+### What about guards and actions on transitions?
+
+Mention them in the prompt — 'submit [only if complete] / notify reviewer' — and the generator will include them on the transition labels.
