@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase-auth/server'
 import { NextRequest } from 'next/server'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET endpoint to fetch user settings
  * Returns user profile information and preferences
