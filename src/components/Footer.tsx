@@ -13,6 +13,7 @@ const Footer = () => {
     product: [
       { name: 'Get Started', href: '/' },
       { name: 'Pricing', href: '/pricing' },
+      { name: 'Tools', href: '/tools' },
       { name: 'Release Notes', href: '/release-notes' },
       { name: 'VS Code Extension', href: 'https://marketplace.visualstudio.com/items?itemName=FlowCraft.flowcraft' },
     ],
