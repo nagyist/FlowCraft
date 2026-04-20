@@ -17,8 +17,20 @@ const getURL = () => {
 
 export async function POST(request: NextRequest) {
   try {
+    let templateId: string | null = null
+    try {
+      const body = await request.json()
+      if (body && typeof body.templateId === 'string') {
+        templateId = body.templateId
+      }
+    } catch {
+      // no body is fine
+    }
+
     const supabase = await createClient()
-    const redirectURL = getURL()
+    const redirectURL = templateId
+      ? `${getURL()}?template=${encodeURIComponent(templateId)}`
+      : getURL()
 
     console.log('Redirect URL:', redirectURL)
 

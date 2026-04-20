@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import FlowCraftLogo from '@/images/FlowCraftLogo_New.png'
 import Image from 'next/image'
 import ErrorAlert from './ErrorAlert'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import SuccessAlert from './SuccessAlert'
 import GithubSVG from '@/lib/Shared/svgs/Github.svg'
 import GoogleSVG from '@/lib/Shared/svgs/Google.svg'
@@ -26,6 +26,17 @@ export default function AuthenticationForm({
   const [loadingType, setLoadingType] = useState<
     'email' | 'google' | 'github' | null
   >(null)
+  const [templateId, setTemplateId] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const t = params.get('template')
+      if (t) setTemplateId(t)
+    } catch {
+      // ignore
+    }
+  }, [])
 
   const _login = async () => {
     const emailField = document.getElementById('email') as HTMLInputElement
@@ -47,6 +58,7 @@ export default function AuthenticationForm({
         body: JSON.stringify({
           email: emailField.value,
           password: passwordField.value,
+          templateId,
         }),
       })
 
@@ -65,8 +77,10 @@ export default function AuthenticationForm({
           passwordField.focus()
         }
       } else {
-        // Successful login - redirect to dashboard
-        router.push('/dashboard')
+        const dest = data.diagramId
+          ? `/dashboard/diagrams/${data.diagramId}`
+          : '/dashboard'
+        router.push(dest)
         router.refresh()
       }
     } catch (error) {
@@ -148,6 +162,8 @@ export default function AuthenticationForm({
     try {
       const response = await fetch('/api/auth/github', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateId }),
       })
 
       const data = await response.json()
@@ -184,6 +200,8 @@ export default function AuthenticationForm({
     try {
       const response = await fetch('/api/auth/google', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateId }),
       })
 
       const data = await response.json()
@@ -419,7 +437,9 @@ export default function AuthenticationForm({
               <>
                 Not a member?{' '}
                 <Link
-                  href="/sign-up"
+                  href={
+                    templateId ? `/sign-up?template=${templateId}` : '/sign-up'
+                  }
                   className="text-signal transition-colors hover:text-paper"
                 >
                   Sign up →
@@ -429,7 +449,7 @@ export default function AuthenticationForm({
               <>
                 Already a member?{' '}
                 <Link
-                  href="/login"
+                  href={templateId ? `/login?template=${templateId}` : '/login'}
                   className="text-signal transition-colors hover:text-paper"
                 >
                   Sign in →

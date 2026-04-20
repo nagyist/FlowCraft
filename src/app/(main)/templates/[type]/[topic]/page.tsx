@@ -116,33 +116,33 @@ export default async function Page({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
 
-      <nav className="mb-4 text-sm text-slate-500">
-        <Link href="/templates" className="hover:text-slate-900">
+      <nav className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-fog">
+        <Link href="/templates" className="transition-colors hover:text-paper">
           Templates
         </Link>
-        <span className="mx-1">/</span>
+        <span className="mx-2">/</span>
         <Link
           href={`/templates/${t.slug}`}
-          className="hover:text-slate-900"
+          className="transition-colors hover:text-paper"
         >
           {t.title}
         </Link>
-        <span className="mx-1">/</span>
-        <span className="text-slate-900">{tp.title}</span>
+        <span className="mx-2">/</span>
+        <span className="text-paper">{tp.title}</span>
       </nav>
 
       <header className="mb-8 flex flex-col gap-3">
-        <span className="inline-flex w-fit items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+        <span className="inline-flex w-fit items-center gap-2 rounded-sm border border-rule px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-signal">
           {t.title} template
         </span>
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight text-paper md:text-4xl">
           {tp.title} {t.title} Template
         </h1>
-        <p className="max-w-3xl text-lg text-slate-600">{row.description}</p>
+        <p className="max-w-3xl text-lg text-fog">{row.description}</p>
       </header>
 
       <section className="grid gap-6 md:grid-cols-[1fr_280px]">
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-sm border border-rule bg-ink/60">
           <TemplateRenderer typeId={t.id} data={row.data} />
         </div>
         <aside className="flex flex-col gap-3">
@@ -151,21 +151,21 @@ export default async function Page({
             <input type="hidden" name="topic" value={tp.slug} />
             <button
               type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:from-indigo-500 hover:to-purple-500"
+              className="w-full rounded-sm bg-signal px-4 py-3 font-mono text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-signal/90"
             >
               Use this template →
             </button>
           </form>
           <Link
             href={`/templates/topic/${tp.slug}`}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-medium text-slate-700 transition hover:border-slate-300"
+            className="rounded-sm border border-rule bg-ink/60 px-4 py-3 text-center font-mono text-[11px] uppercase tracking-[0.2em] text-paper/80 transition hover:border-signal/40 hover:text-paper"
           >
             See this topic as other types
           </Link>
         </aside>
       </section>
 
-      <section className="prose prose-slate mt-12 max-w-3xl">
+      <section className="prose prose-invert mt-12 max-w-3xl text-fog">
         {row.long_description.split('\n\n').map((p, i) => (
           <p key={i}>{p}</p>
         ))}
@@ -173,7 +173,7 @@ export default async function Page({
 
       {siblings.length > 0 && (
         <section className="mt-14">
-          <h2 className="mb-4 text-xl font-semibold text-slate-900">
+          <h2 className="mb-4 text-xl font-semibold text-paper">
             View {tp.title} as another diagram type
           </h2>
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -184,7 +184,7 @@ export default async function Page({
                 <li key={s.id}>
                   <Link
                     href={`/templates/${st.slug}/${s.topic_slug}`}
-                    className="block rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+                    className="block rounded-sm border border-rule bg-ink/60 px-4 py-3 text-sm text-paper/80 transition hover:border-signal/40 hover:text-paper"
                   >
                     {tp.title} as a {st.title} →
                   </Link>
@@ -197,7 +197,7 @@ export default async function Page({
 
       {related.length > 0 && (
         <section className="mt-12">
-          <h2 className="mb-4 text-xl font-semibold text-slate-900">
+          <h2 className="mb-4 text-xl font-semibold text-paper">
             Related {t.title} templates
           </h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -205,12 +205,12 @@ export default async function Page({
               <li key={r.id}>
                 <Link
                   href={`/templates/${t.slug}/${r.topic_slug}`}
-                  className="block rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300"
+                  className="block rounded-sm border border-rule bg-ink/60 p-4 transition hover:border-signal/40"
                 >
-                  <div className="text-sm font-medium text-slate-900">
+                  <div className="text-sm font-medium text-paper">
                     {r.topic_title}
                   </div>
-                  <div className="mt-1 text-xs text-slate-500">
+                  <div className="mt-1 text-xs text-fog">
                     {r.description}
                   </div>
                 </Link>
@@ -222,15 +222,15 @@ export default async function Page({
 
       {row.faqs.length > 0 && (
         <section className="mt-14">
-          <h2 className="mb-4 text-xl font-semibold text-slate-900">FAQ</h2>
+          <h2 className="mb-4 text-xl font-semibold text-paper">FAQ</h2>
           <dl className="space-y-4">
             {row.faqs.map((f, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-slate-200 bg-white p-5"
+                className="rounded-sm border border-rule bg-ink/60 p-5"
               >
-                <dt className="font-medium text-slate-900">{f.q}</dt>
-                <dd className="mt-2 text-sm text-slate-600">{f.a}</dd>
+                <dt className="font-medium text-paper">{f.q}</dt>
+                <dd className="mt-2 text-sm text-fog">{f.a}</dd>
               </div>
             ))}
           </dl>

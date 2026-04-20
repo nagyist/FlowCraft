@@ -76,7 +76,7 @@ export function GalleryGrid({
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search templates…"
-          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:border-slate-400 focus:outline-none"
+          className="w-full rounded-sm border border-rule bg-ink/60 px-4 py-2.5 font-mono text-[12px] text-paper placeholder:text-fog focus:border-signal/40 focus:outline-none"
         />
         <Section title="Diagram type">
           {types.map((t) => (
@@ -101,7 +101,7 @@ export function GalleryGrid({
       </aside>
 
       <div className="flex-1">
-        <div className="mb-4 text-sm text-slate-500">
+        <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.2em] text-fog">
           {filtered.length} templates
         </div>
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -112,23 +112,23 @@ export function GalleryGrid({
               <li key={r.id}>
                 <Link
                   href={`/templates/${t.slug}/${r.topic_slug}`}
-                  className="block overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                  className="block overflow-hidden rounded-sm border border-rule bg-ink/60 transition hover:-translate-y-0.5 hover:border-signal/40"
                 >
                   <img
                     src={`/api/templates/${r.id}/thumbnail`}
                     alt={`${r.topic_title} thumbnail`}
                     loading="lazy"
                     decoding="async"
-                    className="h-40 w-full bg-slate-50 object-contain"
+                    className="h-40 w-full bg-graphite object-contain"
                   />
                   <div className="p-4">
-                    <div className="mb-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600">
+                    <div className="mb-2 inline-block rounded-sm border border-rule px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-signal">
                       {t.title}
                     </div>
-                    <div className="text-sm font-medium text-slate-900">
+                    <div className="text-sm font-medium text-paper">
                       {r.topic_title}
                     </div>
-                    <div className="mt-1 line-clamp-2 text-xs text-slate-500">
+                    <div className="mt-1 line-clamp-2 text-xs text-fog">
                       {r.description}
                     </div>
                   </div>
@@ -138,7 +138,7 @@ export function GalleryGrid({
           })}
         </ul>
         {filtered.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-slate-200 p-12 text-center text-slate-500">
+          <div className="rounded-sm border border-dashed border-rule p-12 text-center text-fog">
             No templates match your filters.
           </div>
         )}
@@ -156,7 +156,7 @@ function Section({
 }) {
   return (
     <div className="mt-5">
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.25em] text-fog">
         {title}
       </h3>
       <div className="flex flex-wrap gap-1.5">{children}</div>
@@ -176,10 +176,10 @@ function Chip({
   return (
     <button
       onClick={onClick}
-      className={`rounded-full border px-3 py-1 text-xs capitalize transition ${
+      className={`rounded-sm border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.15em] transition ${
         active
-          ? 'border-indigo-600 bg-indigo-600 text-white'
-          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+          ? 'border-signal bg-signal text-ink'
+          : 'border-rule bg-ink/60 text-fog hover:border-signal/40 hover:text-paper'
       }`}
     >
       {label}

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-auth/server'
+import { handleSignupTemplate } from '@/lib/templates/handoff'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const { email, password, templateId } = await request.json()
 
     if (!email || !password) {
       return NextResponse.json(
@@ -28,7 +29,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ success: true })
+    const diagramId = await handleSignupTemplate(templateId ?? null)
+
+    return NextResponse.json({ success: true, diagramId })
   } catch (error) {
     console.error('Error during login:', error)
     return NextResponse.json(
