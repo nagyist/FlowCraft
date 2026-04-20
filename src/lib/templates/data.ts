@@ -23,6 +23,26 @@ export interface TemplateRow {
   updated_at: string
 }
 
+/**
+ * Lightweight projection for list/gallery views — omits the heavy
+ * `data`, `long_description`, `faqs`, `seo_keywords`, and `thumbnail_svg`
+ * columns so RSC payloads/ISR fallbacks stay small. Thumbnails are served
+ * on demand via /api/templates/[id]/thumbnail.
+ */
+export interface TemplateListRow {
+  id: string
+  type: string
+  topic_slug: string
+  topic_title: string
+  topic_category: string
+  title: string
+  description: string
+  updated_at: string
+}
+
+const LIST_COLUMNS =
+  'id,type,topic_slug,topic_title,topic_category,title,description,updated_at'
+
 function adminClient() {
   const url = process.env.SUPABASE_URL
   const key = process.env.SUPABASE_PRIVATE_KEY
@@ -54,15 +74,29 @@ export async function listTemplates(filter?: {
   type?: string
   topic?: string
   category?: string
-}): Promise<TemplateRow[]> {
+}): Promise<TemplateListRow[]> {
   const sb = adminClient()
-  let q = sb.from('diagram_templates').select('*').eq('hidden', false)
+  let q = sb.from('diagram_templates').select(LIST_COLUMNS).eq('hidden', false)
   if (filter?.type) q = q.eq('type', filter.type)
   if (filter?.topic) q = q.eq('topic_slug', filter.topic)
   if (filter?.category) q = q.eq('topic_category', filter.category)
   const { data, error } = await q
   if (error) throw error
-  return (data ?? []) as TemplateRow[]
+  return (data ?? []) as unknown as TemplateListRow[]
+}
+
+/** Fetch just the SVG thumbnail blob for a single template. */
+export async function getTemplateThumbnail(
+  id: string,
+): Promise<string | null> {
+  const sb = adminClient()
+  const { data, error } = await sb
+    .from('diagram_templates')
+    .select('thumbnail_svg')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  return (data?.thumbnail_svg as string | null) ?? null
 }
 
 /** Returns every (type, topic) pair the gallery should statically generate. */

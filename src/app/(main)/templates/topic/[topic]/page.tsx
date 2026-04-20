@@ -67,14 +67,13 @@ export default async function Page({
                 href={`/templates/${t.slug}/${tp.slug}`}
                 className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 sm:flex-row sm:items-center"
               >
-                <div className="h-32 w-full shrink-0 overflow-hidden rounded-lg bg-slate-50 sm:w-56 [&_svg]:h-full [&_svg]:w-full">
-                  {r.thumbnail_svg && (
-                    <div
-                      className="h-full w-full"
-                      dangerouslySetInnerHTML={{ __html: r.thumbnail_svg }}
-                    />
-                  )}
-                </div>
+                <img
+                  src={`/api/templates/${r.id}/thumbnail`}
+                  alt={`${r.title} thumbnail`}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-32 w-full shrink-0 rounded-lg bg-slate-50 object-contain sm:w-56"
+                />
                 <div className="flex-1">
                   <div className="text-xs font-medium uppercase tracking-wide text-indigo-600">
                     {t.title}

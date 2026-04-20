@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { listTemplates, type TemplateRow } from '@/lib/templates/data'
+import { listTemplates, type TemplateListRow } from '@/lib/templates/data'
 import { TEMPLATE_TYPES } from '@/lib/templates/types'
 import { TEMPLATE_TOPICS } from '@/lib/templates/topics'
 import { GalleryGrid } from '@/components/Templates/GalleryGrid'
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://flowcraft.app/templates' },
 }
 
-function serializeRow(r: TemplateRow) {
+function serializeRow(r: TemplateListRow) {
   return {
     id: r.id,
     type: r.type,
@@ -21,7 +21,6 @@ function serializeRow(r: TemplateRow) {
     topic_title: r.topic_title,
     topic_category: r.topic_category,
     description: r.description,
-    thumbnail_svg: r.thumbnail_svg,
   }
 }
 

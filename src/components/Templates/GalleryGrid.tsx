@@ -12,7 +12,6 @@ interface Row {
   topic_title: string
   topic_category: string
   description: string
-  thumbnail_svg: string | null
 }
 
 interface TypeMeta {
@@ -115,14 +114,13 @@ export function GalleryGrid({
                   href={`/templates/${t.slug}/${r.topic_slug}`}
                   className="block overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
                 >
-                  {r.thumbnail_svg ? (
-                    <div
-                      className="h-40 w-full overflow-hidden bg-slate-50 [&_svg]:h-full [&_svg]:w-full"
-                      dangerouslySetInnerHTML={{ __html: r.thumbnail_svg }}
-                    />
-                  ) : (
-                    <div className="h-40 w-full bg-gradient-to-br from-indigo-50 to-slate-50" />
-                  )}
+                  <img
+                    src={`/api/templates/${r.id}/thumbnail`}
+                    alt={`${r.topic_title} thumbnail`}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-40 w-full bg-slate-50 object-contain"
+                  />
                   <div className="p-4">
                     <div className="mb-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600">
                       {t.title}
