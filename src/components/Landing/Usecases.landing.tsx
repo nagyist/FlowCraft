@@ -1,5 +1,5 @@
 import {
-  ArrowPathIcon,
+  ChatBubbleLeftRightIcon,
   CloudArrowUpIcon,
   Cog6ToothIcon,
   CogIcon,
@@ -9,37 +9,37 @@ import { MapIcon } from '@heroicons/react/24/outline'
 
 const useCases = [
   {
-    name: 'Knowledge Sharing Diagrams.',
+    name: 'Knowledge Sharing Diagrams',
     description:
       'Explain complex algorithms or system interactions visually with flowcharts for onboarding and training.',
     icon: CloudArrowUpIcon,
   },
   {
-    name: 'Process Mapping:.',
+    name: 'Process Mapping',
     description:
       'Create process maps to visualize and optimize workflows, identify bottlenecks, and improve efficiency.',
     icon: CogIcon,
   },
   {
-    name: 'Stakeholder Communication.',
+    name: 'Stakeholder Communication',
     description:
       'Use diagrams to communicate ideas and complex concepts to stakeholders, clients, and team members.',
-    icon: ArrowPathIcon,
+    icon: ChatBubbleLeftRightIcon,
   },
   {
-    name: 'Data Visualization.',
+    name: 'Data Visualization',
     description:
       'Turn raw data into pie charts, bar graphs, and other visualizations that provide insights and drive decisions.',
     icon: RssIcon,
   },
   {
-    name: 'User Flow Prototyping.',
+    name: 'User Flow Prototyping',
     description:
       'Quickly visualize user journeys and wireframes with intuitive diagrams, accelerating ideation and testing.',
     icon: Cog6ToothIcon,
   },
   {
-    name: 'System Architecture.',
+    name: 'System Architecture',
     description:
       'Design system architecture diagrams to plan and communicate the structure of complex systems.',
     icon: MapIcon,

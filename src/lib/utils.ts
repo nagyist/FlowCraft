@@ -197,7 +197,7 @@ export type OptionType =
   | 'Pie Chart'
   | 'Quadrant Chart'
   | 'Requirement Diagram'
-  | 'Gitgraph Diagram'
+  | 'Git Graph'
   | 'C4 Diagram'
   | 'Mindmaps'
   | 'Timeline'

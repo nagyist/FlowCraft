@@ -138,7 +138,7 @@ const DiagramOptions: {
     link: `/dashboard/mermaid/${MermaidDiagramEnums.RequirementDiagram}`,
   },
   gitgraph: {
-    title: 'Gitgraph Diagram',
+    title: 'Git Graph',
     description:
       'A Gitgraph diagram is a type of diagram that represents the history of a Git repository.',
     link: `/dashboard/mermaid/${MermaidDiagramEnums.GitgraphDiagram}`,

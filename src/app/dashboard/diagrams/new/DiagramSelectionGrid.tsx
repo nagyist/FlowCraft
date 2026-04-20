@@ -48,7 +48,7 @@ const diagramOptions: Record<Exclude<CategoryKey, 'ALL'>, SpecEntry[]> = {
       type: 'Requirement Diagram',
       description: 'Requirements & dependencies',
     },
-    { type: 'Gitgraph Diagram', description: 'Git branches & merges' },
+    { type: 'Git Graph', description: 'Git branches & merges' },
     { type: 'C4 Diagram', description: 'Architecture at multiple levels' },
     { type: 'Packet', description: 'Network packet structures' },
     { type: 'Architecture', description: 'System architecture' },
