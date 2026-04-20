@@ -1,48 +1,79 @@
 import React, { useState } from 'react'
-import {
-  Brush,
-  ChevronDownIcon,
-  NotebookPenIcon,
-  Share2,
-  Activity,
-  Box,
-  GitBranch,
-  Layers,
-  PieChart,
-  Grid,
-  FileText,
-  Network,
-  Map,
-  Code,
-  BarChart2,
-  LayoutGrid,
-  Package,
-  Trello,
-  Home,
-  Compass,
-  TimerIcon,
-  TreeDeciduous,
-} from 'lucide-react'
-import { MicrophoneIcon } from '@heroicons/react/20/solid'
-import { OptionType } from '@/lib/utils'
 import { Menu } from '@headlessui/react'
-import { HexColorPicker } from 'react-colorful'
+import { OptionType } from '@/lib/utils'
+import clsx from 'clsx'
 
-// Category definitions
 const DIAGRAM_CATEGORIES = {
-  FLOW: 'Flow & Process',
-  DATA: 'Data Visualization',
-  SOFTWARE: 'Software & Architecture',
-  PLANNING: 'Planning & Tracking',
+  ALL: 'All',
+  FLOW: 'Flow',
+  DATA: 'Data',
+  SOFTWARE: 'Software',
+  PLANNING: 'Planning',
+} as const
+
+type CategoryKey = keyof typeof DIAGRAM_CATEGORIES
+
+type SpecEntry = {
+  type: OptionType
+  description: string
+  badge?: string
 }
 
-type OptionsList = {
-  type: OptionType
-  icon: React.ReactNode
-  description: string
-  badgeText?: string
-  badgeColor?: string
-}[]
+const diagramOptions: Record<Exclude<CategoryKey, 'ALL'>, SpecEntry[]> = {
+  FLOW: [
+    { type: 'Flowchart', description: 'Process flows & decision paths' },
+    {
+      type: 'Sequence Diagram',
+      description: 'Interactions between components',
+    },
+    { type: 'State Diagram', description: 'States & transitions of a system' },
+    { type: 'User Journey', description: 'User experiences step by step' },
+    { type: 'Block Diagram', description: 'Components & their connections' },
+  ],
+  DATA: [
+    { type: 'Pie Chart', description: 'Proportional data in segments' },
+    { type: 'Quadrant Chart', description: 'Items across four sections' },
+    { type: 'Sankey', description: 'Flow quantities with variable arrows' },
+    { type: 'XY Chart', description: 'Two-dimensional data points' },
+    { type: 'Radar', description: 'Compare variables across axes' },
+    { type: 'Treemap', description: 'Hierarchies as nested rectangles' },
+  ],
+  SOFTWARE: [
+    { type: 'Class Diagram', description: 'Object-oriented system structure' },
+    {
+      type: 'Entity Relationship Diagram',
+      description: 'Relationships between entities',
+    },
+    {
+      type: 'Requirement Diagram',
+      description: 'Requirements & dependencies',
+    },
+    { type: 'Gitgraph Diagram', description: 'Git branches & merges' },
+    { type: 'C4 Diagram', description: 'Architecture at multiple levels' },
+    { type: 'Packet', description: 'Network packet structures' },
+    { type: 'Architecture', description: 'System architecture' },
+    { type: 'ZenUML', description: 'Text-based UML sequences' },
+  ],
+  PLANNING: [
+    { type: 'Gantt', description: 'Project tasks & timelines' },
+    { type: 'Mindmaps', description: 'Hierarchical idea maps' },
+    { type: 'Timeline', description: 'Events in chronological order' },
+    { type: 'Kanban', description: 'Work progress across stages' },
+  ],
+}
+
+const featuredOptions: SpecEntry[] = [
+  {
+    type: 'Illustration',
+    description: 'Editorial vector graphics',
+    badge: 'New',
+  },
+  {
+    type: 'Infographic',
+    description: 'Complex info rendered visually',
+    badge: 'New',
+  },
+]
 
 const DiagramSelectionGrid = ({
   selectedOption,
@@ -61,23 +92,14 @@ const DiagramSelectionGrid = ({
   highlightedType?: OptionType
   hideTextarea?: boolean
 }) => {
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState<
-    keyof typeof DIAGRAM_CATEGORIES | null
-  >(null)
-  const [showColorPicker, setShowColorPicker] = useState(false)
-  const [customColor, setCustomColor] = useState('#3b82f6')
+  const [selectedCategory, setSelectedCategory] = useState<CategoryKey>('ALL')
 
-  // Color palette options
   const colorPaletteOptions = [
     'Default',
     'Monochromatic',
     'Complementary',
     'Analogous',
-    // 'Custom...',
   ]
-
-  // Complexity options
   const complexityOptions = [
     'Medium (default)',
     'Simple',
@@ -92,430 +114,217 @@ const DiagramSelectionGrid = ({
     complexityOptions[0],
   )
 
-  // Diagram options organized by category
-  const diagramOptions: {
-    [key in keyof typeof DIAGRAM_CATEGORIES]: OptionsList
-  } = {
-    FLOW: [
-      {
-        type: 'Flowchart',
-        icon: (
-          <Share2 className="h-12 w-12 text-red-500" strokeWidth={1.5} />
-        ),
-        description: 'Visualize process flows and decision paths',
-      },
-      {
-        type: 'Sequence Diagram',
-        icon: (
-          <Activity className="h-12 w-12 text-blue-500" strokeWidth={1.5} />
-        ),
-        description: 'Show interactions between components over time',
-      },
-      {
-        type: 'State Diagram',
-        icon: <Box className="h-12 w-12 text-violet-500" strokeWidth={1.5} />,
-        description: 'Represent states and transitions of a system',
-      },
-      {
-        type: 'User Journey',
-        icon: <Map className="h-12 w-12 text-emerald-500" strokeWidth={1.5} />,
-        description: 'Map out user experiences step by step',
-      },
-      {
-        type: 'Block Diagram',
-        icon: <Layers className="h-12 w-12 text-amber-500" strokeWidth={1.5} />,
-        description: 'Show components and their connections',
-      },
-    ],
-    DATA: [
-      {
-        type: 'Pie Chart',
-        icon: (
-          <PieChart className="h-12 w-12 text-pink-500" strokeWidth={1.5} />
-        ),
-        description: 'Display proportional data in circular segments',
-      },
-      {
-        type: 'Quadrant Chart',
-        icon: <Grid className="h-12 w-12 text-cyan-500" strokeWidth={1.5} />,
-        description: 'Plot items across four categorized sections',
-      },
-      {
-        type: 'Sankey',
-        icon: (
-          <Share2 className="h-12 w-12 text-orange-500" strokeWidth={1.5} />
-        ),
-        description: 'Visualize flow quantities with width-variable arrows',
-      },
-      {
-        type: 'XY Chart',
-        icon: (
-          <BarChart2 className="h-12 w-12 text-red-500" strokeWidth={1.5} />
-        ),
-        description: 'Plot data points on two-dimensional grid',
-      },
-      {
-        type: 'Radar',
-        icon: <Compass className="h-12 w-12 text-teal-500" strokeWidth={1.5} />,
-        description: 'Compare multiple variables across axes',
-      },
-      {
-        type: 'Treemap',
-        icon: (
-          <TreeDeciduous className="h-12 w-12 text-green-600" strokeWidth={1.5} />
-        ),
-        description: 'Visualize hierarchical data with nested rectangles',
-      },
-    ],
-    SOFTWARE: [
-      {
-        type: 'Class Diagram',
-        icon: (
-          <FileText className="h-12 w-12 text-violet-500" strokeWidth={1.5} />
-        ),
-        description: 'Model object-oriented system structure',
-      },
-      {
-        type: 'Entity Relationship Diagram',
-        icon: (
-          <Network className="h-12 w-12 text-emerald-500" strokeWidth={1.5} />
-        ),
-        description: 'Map relationships between data entities',
-      },
-      {
-        type: 'Requirement Diagram',
-        icon: <FileText className="h-12 w-12 text-sky-500" strokeWidth={1.5} />,
-        description: 'Document system requirements and dependencies',
-      },
-      {
-        type: 'Gitgraph Diagram',
-        icon: (
-          <GitBranch className="h-12 w-12 text-gray-700" strokeWidth={1.5} />
-        ),
-        description: 'Visualize Git branch and merge operations',
-      },
-      {
-        type: 'C4 Diagram',
-        icon: (
-          <Layers className="h-12 w-12 text-purple-600" strokeWidth={1.5} />
-        ),
-        description: 'Model software architecture at different levels',
-      },
-      {
-        type: 'Packet',
-        icon: <Package className="h-12 w-12 text-blue-600" strokeWidth={1.5} />,
-        description: 'Visualize network packet structures and flows',
-      },
-      {
-        type: 'Architecture',
-        icon: <Home className="h-12 w-12 text-amber-600" strokeWidth={1.5} />,
-        description: 'Document system architecture and components',
-      },
-      {
-        type: 'ZenUML',
-        icon: <Code className="h-12 w-12 text-red-600" strokeWidth={1.5} />,
-        description: 'Text-based UML sequence diagrams',
-      },
-    ],
-    PLANNING: [
-      {
-        type: 'Gantt',
-        icon: (
-          <TimerIcon className="h-12 w-12 text-green-500" strokeWidth={1.5} />
-        ),
-        description: 'Schedule project tasks and timelines',
-      },
-      {
-        type: 'Mindmaps',
-        icon: (
-          <Network className="h-12 w-12 text-amber-500" strokeWidth={1.5} />
-        ),
-        description: 'Organize ideas in a hierarchical structure',
-      },
-      {
-        type: 'Timeline',
-        icon: (
-          <TimerIcon className="h-12 w-12 text-blue-500" strokeWidth={1.5} />
-        ),
-        description: 'Visualize events in chronological order',
-      },
-      {
-        type: 'Kanban',
-        icon: <Trello className="h-12 w-12 text-cyan-600" strokeWidth={1.5} />,
-        description: 'Track work progress across different stages',
-      },
-    ],
-  }
-
-  const originalOptions: OptionsList = [
-    {
-      type: 'Illustration',
-      icon: <Brush className="h-12 w-12 text-red-500" strokeWidth={1.5} />,
-      description: 'Vector graphics ideal for storytelling and decoration',
-      badgeText: 'New',
-      badgeColor: 'bg-red-100 text-red-800',
-    },
-    {
-      type: 'Infographic',
-      icon: (
-        <NotebookPenIcon
-          className="h-12 w-12 text-blue-500"
-          strokeWidth={1.5}
-        />
-      ),
-      description: 'Represent complex information visually',
-      badgeText: 'New',
-      badgeColor: 'bg-blue-100 text-blue-800',
-    },
-  ]
-
-  // Create a complete array of all options
-  const allDiagramOptions = [
-    ...originalOptions,
+  const allOptions: SpecEntry[] = [
+    ...featuredOptions,
     ...Object.values(diagramOptions)
       .flat()
-      .sort((a, b) => (a.type as string).localeCompare(b.type as string)),
+      .sort((a, b) =>
+        (a.type as string).localeCompare(b.type as string),
+      ),
   ]
 
-  // Handler for selecting a diagram option
-  const handleOptionSelect = (option: OptionType) => {
-    setSelectedOption(option)
-  }
-
-  // Handler for color palette change
-  const handleColorPaletteChange = (palette: string) => {
-    // if (palette === 'Custom...') {
-    //   setShowColorPicker(true);
-    // } else {
-    setSelectedColorPalette(palette)
-    setColorPalette(palette)
-    // setShowColorPicker(false);
-    // }
-  }
-
-  // Handler for applying custom color
-  const handleCustomColorApply = () => {
-    const customPalette = `Custom (${customColor})`
-    setSelectedColorPalette(customPalette)
-    setColorPalette(customPalette)
-    setShowColorPicker(false)
-  }
-
-  // Handler for complexity change
-  const handleComplexityChange = (level: string) => {
-    setSelectedComplexity(level)
-    setComplexityLevel(level)
-  }
+  const visible: SpecEntry[] =
+    selectedCategory === 'ALL'
+      ? allOptions
+      : diagramOptions[selectedCategory]
 
   return (
-    <div className="rounded-xl bg-white px-6 py-8 shadow-sm">
-      {/* Categories Tabs */}
-      <div className="mb-6 border-b border-slate-200">
-        <div className="no-scrollbar flex overflow-x-auto">
+    <div className="space-y-8">
+      {/* Category tabs */}
+      <div className="flex flex-wrap items-center gap-1 border-b border-rule">
+        {(Object.keys(DIAGRAM_CATEGORIES) as CategoryKey[]).map((key) => (
           <button
-            className={`whitespace-nowrap px-4 pb-2 text-base font-medium transition-all ${
-              !selectedCategory
-                ? 'border-b-2 border-red-600 text-red-600'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
-            onClick={() => setSelectedCategory(null)}
+            key={key}
+            onClick={() => setSelectedCategory(key)}
+            className={clsx(
+              'relative px-4 py-3 font-mono text-[11px] uppercase tracking-[0.22em] transition-colors',
+              selectedCategory === key
+                ? 'text-signal'
+                : 'text-paper/60 hover:text-paper',
+            )}
           >
-            All Types
+            {DIAGRAM_CATEGORIES[key]}
+            {selectedCategory === key && (
+              <span className="absolute bottom-0 left-2 right-2 h-px bg-signal" />
+            )}
           </button>
+        ))}
+      </div>
 
-          {Object.entries(DIAGRAM_CATEGORIES).map(([key, category]) => (
+      {/* Grid */}
+      <div className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {visible.map(({ type, description, badge }, i) => {
+          const isSelected = selectedOption === type
+          const isHighlighted = highlightedType === type
+          return (
             <button
-              key={key}
-              className={`whitespace-nowrap px-4 pb-2 text-base font-medium transition-all ${
-                selectedCategory === key
-                  ? 'border-b-2 border-red-600 text-red-600'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-              onClick={() =>
-                setSelectedCategory(key as keyof typeof DIAGRAM_CATEGORIES)
-              }
-            >
-              {category}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Diagram Selection Grid */}
-      <div className="mb-10">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {(selectedCategory !== null
-            ? diagramOptions[selectedCategory]
-            : allDiagramOptions
-          ).map(({ type, icon, description, badgeColor, badgeText }) => (
-            <div
               key={type}
-              className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 hover:shadow-md ${
-                hoveredCard === type || selectedOption === type
-                  ? 'border-red-500 shadow-sm'
-                  : highlightedType === type
-                    ? 'border-blue-400 shadow-sm ring-2 ring-blue-100'
-                    : 'border-slate-200'
-              } ${selectedOption === type ? 'bg-red-50' : highlightedType === type ? 'bg-blue-50/50' : 'bg-white'}`}
-              onMouseEnter={() => setHoveredCard(type)}
-              onMouseLeave={() => setHoveredCard(null)}
-              onClick={() => handleOptionSelect(type)}
-            >
-              {badgeText && (
-                <div className="mb-1 flex justify-end">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-xs ${badgeColor || 'bg-gray-100 text-gray-800'}`}
-                  >
-                    {badgeText}
-                  </span>
-                </div>
+              type="button"
+              onClick={() => setSelectedOption(type)}
+              className={clsx(
+                'group relative flex flex-col gap-3 p-5 text-left transition-colors duration-200',
+                isSelected
+                  ? 'bg-signal text-ink'
+                  : isHighlighted
+                    ? 'bg-signal/10 text-paper'
+                    : 'bg-graphite text-paper hover:bg-ink',
               )}
-
-              <div className="mb-3 flex h-20 items-center justify-center">
-                {icon}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className={clsx(
+                    'font-mono text-[10px] uppercase tracking-[0.22em]',
+                    isSelected
+                      ? 'text-ink/70'
+                      : isHighlighted
+                        ? 'text-signal'
+                        : 'text-signal/70',
+                  )}
+                >
+                  {String(type).slice(0, 4).toUpperCase()}.
+                  {(i + 1).toString().padStart(2, '0')}
+                </span>
+                {badge && (
+                  <span
+                    className={clsx(
+                      'rounded-sm border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.15em]',
+                      isSelected
+                        ? 'border-ink bg-ink text-signal'
+                        : 'border-signal bg-signal/10 text-signal',
+                    )}
+                  >
+                    {badge}
+                  </span>
+                )}
               </div>
-              <h4 className="mb-1 text-center font-medium text-slate-800">
-                {type}
-              </h4>
-              <p className="text-center text-xs text-slate-500">
-                {description}
-              </p>
-            </div>
-          ))}
-        </div>
+              <div>
+                <h4
+                  className={clsx(
+                    'font-serif text-xl leading-tight',
+                    isSelected ? 'text-ink' : 'text-paper',
+                  )}
+                >
+                  {type}
+                </h4>
+                <p
+                  className={clsx(
+                    'mt-1 text-xs leading-relaxed',
+                    isSelected
+                      ? 'text-ink/70'
+                      : isHighlighted
+                        ? 'text-paper/80'
+                        : 'text-paper/50',
+                  )}
+                >
+                  {description}
+                </p>
+              </div>
+              {isHighlighted && !isSelected && (
+                <span className="absolute right-3 top-3 inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-[0.2em] text-signal">
+                  <span className="h-1 w-1 rounded-full bg-signal" />
+                  suggested
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Vision Description — hidden when paste-anything input is active */}
+      {/* Vision description (when not hidden) */}
       {!hideTextarea && (
-        <div className="mb-8" id="vision-description">
-          <h3 className="mb-3 text-lg font-medium text-slate-800">
-            Describe your vision
-          </h3>
-          <div className="relative overflow-hidden rounded-lg border border-slate-200 shadow-sm">
+        <div className="space-y-3" id="vision-description">
+          <label className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-signal">
+            <span className="h-px w-8 bg-signal/50" />
+            <span className="text-fog">Describe the vision</span>
+          </label>
+          <div className="overflow-hidden rounded-sm border border-rule bg-graphite">
             <textarea
-              className="min-h-36 w-full border-0 p-4 pr-20 text-base focus:ring-1 focus:ring-red-500"
-              placeholder="Describe what you want to visualize... The more details you provide, the better!"
+              className="min-h-32 w-full resize-none border-0 bg-transparent p-4 text-[15px] leading-relaxed text-paper placeholder:text-fog focus:outline-none focus:ring-0"
+              placeholder="Describe what you want to visualize. The more detail you give, the better it drafts."
               rows={4}
               onChange={(e) => setVisionDescription(e.target.value)}
-            ></textarea>
+            />
           </div>
         </div>
       )}
 
-      {/* Advanced Options */}
-      <div className="mb-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <h3 className="text-lg font-medium text-slate-800">
-              Advanced options
-            </h3>
-            <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-              Optional
-            </span>
-          </div>
+      {/* Advanced options */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-signal">
+          <span>ADV</span>
+          <span className="h-px w-8 bg-signal/50" />
+          <span className="text-fog">Advanced · optional</span>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Color Palette Dropdown */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Color palette
-            </label>
-            <Menu as="div" className="relative w-full">
-              <Menu.Button className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-left text-slate-700 hover:bg-slate-50">
-                <span>{selectedColorPalette}</span>
-                <ChevronDownIcon
-                  className="h-5 w-5 transform text-slate-500 transition-transform"
-                  aria-hidden="true"
-                />
-              </Menu.Button>
-
-              <Menu.Items className="absolute z-10 mt-1 w-full rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-                {colorPaletteOptions.map((option) => (
-                  <Menu.Item key={option}>
-                    {({ active }) => (
-                      <div
-                        className={`cursor-pointer px-3 py-2 ${
-                          active ? 'bg-red-50' : ''
-                        } ${
-                          selectedColorPalette.startsWith(option)
-                            ? 'bg-red-50 font-medium text-red-600'
-                            : 'text-slate-700'
-                        }`}
-                        onClick={() => handleColorPaletteChange(option)}
-                      >
-                        {option}
-                      </div>
-                    )}
-                  </Menu.Item>
-                ))}
-
-                {showColorPicker && (
-                  <div className="border-t border-slate-200 p-3">
-                    <HexColorPicker
-                      color={customColor}
-                      onChange={setCustomColor}
-                      className="mb-3 w-full"
-                    />
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <div
-                          className="mr-2 h-6 w-6 rounded-full border border-slate-300"
-                          style={{ backgroundColor: customColor }}
-                        />
-                        <span className="font-mono text-sm">{customColor}</span>
-                      </div>
-                      <button
-                        onClick={handleCustomColorApply}
-                        className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </Menu.Items>
-            </Menu>
-          </div>
-
-          {/* Complexity Level Dropdown */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
-              Complexity level
-            </label>
-            <Menu as="div" className="relative w-full">
-              <Menu.Button className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white p-2.5 text-left text-slate-700 hover:bg-slate-50">
-                <span>{selectedComplexity}</span>
-                <ChevronDownIcon
-                  className="h-5 w-5 transform text-slate-500 transition-transform"
-                  aria-hidden="true"
-                />
-              </Menu.Button>
-
-              <Menu.Items className="absolute z-10 mt-1 w-full rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-                {complexityOptions.map((option) => (
-                  <Menu.Item key={option}>
-                    {({ active }) => (
-                      <div
-                        className={`cursor-pointer px-3 py-2 ${
-                          active ? 'bg-red-50' : ''
-                        } ${
-                          selectedComplexity === option
-                            ? 'bg-red-50 font-medium text-red-600'
-                            : 'text-slate-700'
-                        }`}
-                        onClick={() => handleComplexityChange(option)}
-                      >
-                        {option}
-                      </div>
-                    )}
-                  </Menu.Item>
-                ))}
-              </Menu.Items>
-            </Menu>
-          </div>
+          <DraftingSelect
+            label="Color palette"
+            value={selectedColorPalette}
+            options={colorPaletteOptions}
+            onChange={(v) => {
+              setSelectedColorPalette(v)
+              setColorPalette(v)
+            }}
+          />
+          <DraftingSelect
+            label="Complexity"
+            value={selectedComplexity}
+            options={complexityOptions}
+            onChange={(v) => {
+              setSelectedComplexity(v)
+              setComplexityLevel(v)
+            }}
+          />
         </div>
       </div>
+    </div>
+  )
+}
+
+function DraftingSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: string
+  options: string[]
+  onChange: (v: string) => void
+}) {
+  return (
+    <div>
+      <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+        {label}
+      </label>
+      <Menu as="div" className="relative">
+        <Menu.Button className="flex w-full items-center justify-between rounded-sm border border-rule bg-graphite px-4 py-3 text-left text-sm text-paper transition-colors hover:border-signal/40">
+          <span>{value}</span>
+          <span className="font-mono text-xs text-fog">▾</span>
+        </Menu.Button>
+
+        <Menu.Items className="absolute z-20 mt-1 w-full overflow-hidden rounded-sm border border-rule bg-graphite shadow-2xl shadow-black/40">
+          {options.map((option) => (
+            <Menu.Item key={option}>
+              {({ active }) => (
+                <button
+                  type="button"
+                  onClick={() => onChange(option)}
+                  className={clsx(
+                    'block w-full px-4 py-2.5 text-left text-sm transition-colors',
+                    active && 'bg-ink',
+                    value === option
+                      ? 'text-signal'
+                      : 'text-paper/80 hover:text-paper',
+                  )}
+                >
+                  {option}
+                </button>
+              )}
+            </Menu.Item>
+          ))}
+        </Menu.Items>
+      </Menu>
     </div>
   )
 }

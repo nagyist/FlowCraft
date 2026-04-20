@@ -1,25 +1,20 @@
 import React, { Fragment } from 'react'
 import { motion } from 'framer-motion'
 import { Menu, Transition } from '@headlessui/react'
-import {
-  ChevronDownIcon,
-  SparklesIcon,
-  ArrowRightIcon,
-} from '@heroicons/react/20/solid'
 import { InputClassification, OptionType } from '@/lib/utils'
 import clsx from 'clsx'
 
 const INPUT_TYPE_LABELS: Record<string, string> = {
-  plain_text: 'Text Description',
-  meeting_transcript: 'Meeting Transcript',
-  python_code: 'Python Code',
-  javascript_code: 'JavaScript/TypeScript',
-  generic_code: 'Source Code',
-  markdown_bullets: 'Markdown / List',
-  json_data: 'JSON Data',
-  yaml_data: 'YAML Data',
-  sql_schema: 'SQL Schema',
-  api_spec_openapi: 'OpenAPI Spec',
+  plain_text: 'Text description',
+  meeting_transcript: 'Meeting transcript',
+  python_code: 'Python code',
+  javascript_code: 'JavaScript / TypeScript',
+  generic_code: 'Source code',
+  markdown_bullets: 'Markdown / list',
+  json_data: 'JSON data',
+  yaml_data: 'YAML data',
+  sql_schema: 'SQL schema',
+  api_spec_openapi: 'OpenAPI spec',
 }
 
 const ALL_DIAGRAM_TYPES: OptionType[] = [
@@ -59,29 +54,28 @@ export default function DetectionChip({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -4, scale: 0.96 }}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-      className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3"
+      className="flex flex-wrap items-center gap-3 rounded-sm border border-signal/30 bg-signal/5 px-4 py-3"
     >
-      <SparklesIcon className="h-4 w-4 text-amber-500" />
-
-      <span className="text-sm font-medium text-zinc-700">
-        Detected:{' '}
-        <span className="rounded-md bg-zinc-200/60 px-1.5 py-0.5 font-semibold text-zinc-900">
-          {inputLabel}
-        </span>
+      <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-signal">
+        <span className="h-1.5 w-1.5 rounded-full bg-signal" />
+        Detected
+      </span>
+      <span className="rounded-sm border border-signal/30 bg-ink px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-paper">
+        {inputLabel}
       </span>
 
-      <ArrowRightIcon className="h-3.5 w-3.5 text-zinc-400" />
-
-      <span className="text-sm text-zinc-600">Suggested:</span>
+      <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+        ▸ suggests
+      </span>
 
       <Menu as="div" className="relative">
-        <Menu.Button className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100">
+        <Menu.Button className="group inline-flex items-center gap-1.5 rounded-sm border border-signal bg-signal/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-signal transition-colors hover:bg-signal/20">
           {selectedOption ?? classification.suggestedDiagram}
-          <ChevronDownIcon className="h-4 w-4 text-blue-500" />
+          <span className="text-xs">▾</span>
         </Menu.Button>
 
         <Transition
@@ -93,17 +87,17 @@ export default function DetectionChip({
           leaveFrom="opacity-100 scale-100"
           leaveTo="opacity-0 scale-95"
         >
-          <Menu.Items className="absolute left-0 z-50 mt-1.5 max-h-64 w-56 overflow-y-auto rounded-xl border border-zinc-200 bg-white py-1 shadow-xl ring-1 ring-black/5 focus:outline-none">
+          <Menu.Items className="absolute left-0 z-50 mt-2 max-h-64 w-60 overflow-y-auto rounded-sm border border-rule bg-graphite py-1 shadow-2xl shadow-black/40 focus:outline-none">
             {ALL_DIAGRAM_TYPES.map((type) => (
               <Menu.Item key={type}>
                 {({ active }) => (
                   <button
                     className={clsx(
-                      'w-full px-3 py-2 text-left text-sm',
-                      active && 'bg-blue-50',
+                      'w-full px-3 py-2 text-left text-sm transition-colors',
+                      active && 'bg-ink',
                       type === (selectedOption ?? classification.suggestedDiagram)
-                        ? 'font-semibold text-blue-700'
-                        : 'text-zinc-700',
+                        ? 'font-medium text-signal'
+                        : 'text-paper/80 hover:text-paper',
                     )}
                     onClick={() => onOverride(type)}
                   >
@@ -117,8 +111,8 @@ export default function DetectionChip({
       </Menu>
 
       {classification.confidence >= 0.8 && (
-        <span className="ml-auto text-xs text-zinc-400">
-          {Math.round(classification.confidence * 100)}% confidence
+        <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+          {Math.round(classification.confidence * 100)}% match
         </span>
       )}
     </motion.div>

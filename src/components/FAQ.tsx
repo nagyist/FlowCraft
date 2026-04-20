@@ -1,39 +1,36 @@
 'use client'
 
 import { Disclosure, Transition } from '@headlessui/react'
-import { PlusIcon, MinusIcon } from '@heroicons/react/24/outline'
-import clsx from 'clsx'
 
 const faqs = [
   {
     question: 'What is FlowCraft?',
     answer:
-      'FlowCraft is an innovative AI-powered diagramming platform designed to revolutionize the way you create visual representations of ideas and processes. Our platform utilizes cutting-edge AI technology to assist you in generating stunning flowcharts, whiteboard sketches, charts, and complex diagrams with ease.',
+      'FlowCraft is an AI-powered drafting suite for diagrams, charts, and illustrations. Describe what you want. It drafts the visual. No dragging, no toolbar archaeology.',
   },
   {
-    question: 'What types of diagrams can I create?',
+    question: 'What can I draft?',
     answer:
-      'FlowCraft empowers you to create a wide variety of diagrams including Flow Diagrams, Whiteboard sketches, Charts (pie, bar, etc.), and complex AI-generated visuals like Sankey diagrams, Mind maps, Requirements diagrams, and User journey maps.',
+      'Flowcharts, sequence diagrams, mind maps, knowledge graphs, user-journey maps, Sankey diagrams, pie charts, infographics, and editorial illustrations — all from a single sentence or a document paste.',
   },
   {
-    question: 'Is FlowCraft suitable for beginners?',
+    question: 'Is it suitable for beginners?',
     answer:
-      "Absolutely. FlowCraft is designed with user-friendliness in mind. The intuitive interface and AI assistance make it easy for both beginners and experienced users to create professional-looking diagrams. Whether you're new to diagramming or looking to boost your productivity, FlowCraft caters to all skill levels.",
+      "Absolutely. If you can write a sentence, you can draft a diagram. The interface is intentionally quiet — your idea is the input, the visual is the output.",
   },
   {
-    question: 'Does FlowCraft offer collaboration features?',
+    question: 'Does FlowCraft support collaboration?',
     answer:
-      'We are currently working on implementing real-time collaboration features in FlowCraft. Stay tuned for updates on our progress and upcoming releases in our changelog.',
+      'Real-time collaboration is on the roadmap. Shared links with invite codes are live today. Check the release notes for latest updates.',
   },
   {
     question: 'How does billing work?',
     answer:
-      "If you have specific questions about billing or your FlowCraft subscription that aren't addressed in your dashboard, please contact our support team. We're happy to assist you immediately.",
+      'Monthly or annual, with a 17% discount for annual. Cancel anytime. Specific billing questions — reach support directly.',
   },
 ]
 
 export default function FAQs() {
-  // Generate JSON-LD for SEO Rich Snippets
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -48,74 +45,74 @@ export default function FAQs() {
   }
 
   return (
-    <section className="bg-white" aria-labelledby="faq-heading">
-      {/* Inject SEO Schema */}
+    <section className="relative bg-ink text-paper" aria-labelledby="faq-heading">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-40"
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
-        <div className="mx-auto max-w-4xl divide-y divide-zinc-100">
-          <div className="mb-10 lg:mb-14">
+      <div className="relative mx-auto max-w-[1280px] border-t border-rule px-6 py-24 lg:px-8 lg:py-32">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+              <span className="h-px w-12 bg-signal/50" />
+              <span className="text-fog">Queries</span>
+            </div>
             <h2
               id="faq-heading"
-              className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl"
+              className="mt-6 font-serif text-5xl leading-[0.95] tracking-[-0.01em] text-paper md:text-6xl"
             >
-              Frequently asked questions
+              Questions,
+              <br />
+              <span className="italic text-signal">answered</span>
+              <span className="text-paper">.</span>
             </h2>
-            <p className="mt-4 text-base leading-7 text-zinc-600">
-              Can’t find the answer you’re looking for? Reach out to our{' '}
+            <p className="mt-6 max-w-md text-base leading-relaxed text-paper/60">
+              Can't find what you need? Reach out to{' '}
               <a
                 href="/support"
-                className="font-semibold text-blue-600 hover:text-blue-500 hover:underline"
+                className="text-signal underline decoration-signal/40 underline-offset-4 transition-colors hover:decoration-signal"
               >
-                customer support
-              </a>{' '}
-              team.
+                support
+              </a>
+              .
             </p>
           </div>
 
-          <dl className="mt-10 space-y-6 divide-y divide-zinc-100">
+          <dl className="lg:col-span-7">
             {faqs.map((faq) => (
-              <Disclosure as="div" key={faq.question} className="pt-6">
+              <Disclosure as="div" key={faq.question}>
                 {({ open }) => (
-                  <>
+                  <div className="border-t border-rule last:border-b">
                     <dt>
-                      <Disclosure.Button className="flex w-full items-start justify-between text-left text-zinc-900 transition-colors hover:text-zinc-600">
-                        <span className="text-base font-medium leading-7">
+                      <Disclosure.Button className="group flex w-full items-start justify-between gap-6 py-6 text-left text-paper transition-colors hover:text-signal">
+                        <span className="font-serif text-xl md:text-2xl">
                           {faq.question}
                         </span>
-                        <span className="ml-6 flex h-7 items-center">
-                          {open ? (
-                            <MinusIcon
-                              className="h-5 w-5 flex-none"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <PlusIcon
-                              className="h-5 w-5 flex-none"
-                              aria-hidden="true"
-                            />
-                          )}
+                        <span className="mt-1 flex h-7 w-7 flex-none items-center justify-center border border-rule font-mono text-fog transition-all group-hover:border-signal group-hover:text-signal">
+                          {open ? '–' : '+'}
                         </span>
                       </Disclosure.Button>
                     </dt>
                     <Transition
-                      enter="transition duration-100 ease-out"
-                      enterFrom="transform scale-95 opacity-0"
-                      enterTo="transform scale-100 opacity-100"
-                      leave="transition duration-75 ease-out"
-                      leaveFrom="transform scale-100 opacity-100"
-                      leaveTo="transform scale-95 opacity-0"
+                      enter="transition duration-200 ease-out"
+                      enterFrom="transform -translate-y-1 opacity-0"
+                      enterTo="transform translate-y-0 opacity-100"
+                      leave="transition duration-150 ease-out"
+                      leaveFrom="transform translate-y-0 opacity-100"
+                      leaveTo="transform -translate-y-1 opacity-0"
                     >
-                      <Disclosure.Panel as="dd" className="mt-2 pr-12">
-                        <p className="text-base leading-7 text-zinc-500">
+                      <Disclosure.Panel as="dd" className="pb-8 pr-8">
+                        <p className="max-w-2xl text-base leading-relaxed text-paper/60">
                           {faq.answer}
                         </p>
                       </Disclosure.Panel>
                     </Transition>
-                  </>
+                  </div>
                 )}
               </Disclosure>
             ))}

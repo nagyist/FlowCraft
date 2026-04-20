@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { LockIcon, LockOpenIcon, CrownIcon } from 'lucide-react'
 
 interface FormStepProps {
   currentStep?: number
@@ -7,107 +6,118 @@ interface FormStepProps {
   setIsPublic: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-const FormStep: React.FC<FormStepProps> = ({ currentStep = 2, isPublic, setIsPublic }) => {
-  const [usageData, setUsageData] = useState<{
-    subscribed: boolean
-  } | null>(null)
+const FormStep: React.FC<FormStepProps> = ({
+  currentStep = 2,
+  isPublic,
+  setIsPublic,
+}) => {
+  const [usageData, setUsageData] = useState<{ subscribed: boolean } | null>(
+    null,
+  )
 
   useEffect(() => {
-    const fetchUsage = async () => {
+    ;(async () => {
       try {
         const response = await fetch('/api/usage')
         if (response.ok) {
           const data = await response.json()
           setUsageData(data)
         }
-      } catch (error) {
-        console.error('Error fetching usage:', error)
+      } catch {
+        // ignore
       }
-    }
-    fetchUsage()
+    })()
   }, [])
 
   if (currentStep !== 2) return null
 
   const canTogglePrivate = usageData?.subscribed || false
+
   const handleToggle = () => {
-    if (!canTogglePrivate && !isPublic) {
-      // Already public, can't change
-      return
-    }
-    if (!canTogglePrivate && isPublic) {
-      // Trying to go private, but not subscribed - show message
-      return
-    }
+    if (!canTogglePrivate) return
     setIsPublic(!isPublic)
   }
 
   return (
-    <div className="space-y-8 rounded-2xl bg-white/80 p-6 backdrop-blur-xl">
-      {/* Privacy Toggle */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">
-          Privacy Settings
-          {!canTogglePrivate && (
-            <span className="ml-2 inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
-              <CrownIcon className="mr-1 h-3 w-3" />
-              Pro Only
-            </span>
-          )}
-        </label>
-        <button
-          type="button"
-          onClick={handleToggle}
-          disabled={!canTogglePrivate}
-          className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 transition duration-200 ${
-            isPublic
-              ? 'border-green-200 bg-green-50 text-green-700'
-              : canTogglePrivate
-                ? 'border-gray-200 bg-white/50 text-gray-700'
-                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          <div className="flex items-center space-x-3">
-            {isPublic ? (
-              <LockOpenIcon className="h-5 w-5" />
-            ) : (
-              <LockIcon className="h-5 w-5" />
-            )}
-            <span className="font-medium">
-              {isPublic ? 'Public Diagram' : 'Private Diagram'}
-            </span>
-          </div>
-          <div
-            className={`flex h-6 w-11 items-center rounded-full transition duration-200 ${
-              isPublic ? 'bg-green-500' : canTogglePrivate ? 'bg-gray-200' : 'bg-gray-300'
-            }`}
-          >
-            <span
-              className={`relative inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition duration-200 ${
-                isPublic ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </div>
-        </button>
-        <p className="text-sm text-gray-500">
-          {isPublic
-            ? 'It will be showcased in our FlowCraft public gallery and anyone with the link can access this diagram!'
-            : canTogglePrivate
-              ? 'Only you can access this diagram'
-              : 'Private diagrams are available with Pro subscription'}
-        </p>
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-signal">
+        <span>PRV</span>
+        <span className="h-px w-8 bg-signal/50" />
+        <span className="text-fog">Privacy</span>
         {!canTogglePrivate && (
-          <div className="mt-2 rounded-md bg-yellow-50 p-3 border border-yellow-200">
-            <p className="text-xs text-yellow-800">
-              Upgrade to{' '}
-              <a href="/pricing" className="font-semibold underline hover:text-yellow-900">
-                Pro
-              </a>{' '}
-              to create private diagrams that only you can access.
-            </p>
-          </div>
+          <span className="ml-auto rounded-sm border border-signal/40 bg-signal/10 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.15em] text-signal">
+            Pro only
+          </span>
         )}
       </div>
+
+      <button
+        type="button"
+        onClick={handleToggle}
+        disabled={!canTogglePrivate}
+        className={`group flex w-full items-center justify-between rounded-sm border px-4 py-4 transition-colors duration-200 ${
+          isPublic
+            ? 'border-rule bg-graphite text-paper hover:border-signal/40'
+            : canTogglePrivate
+              ? 'border-signal bg-signal/10 text-signal'
+              : 'cursor-not-allowed border-rule bg-graphite/60 text-fog'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className={`flex h-2 w-2 rounded-full ${
+              isPublic ? 'bg-signal' : 'bg-fog'
+            }`}
+          />
+          <div className="text-left">
+            <div className="font-mono text-[11px] uppercase tracking-[0.22em]">
+              {isPublic ? 'Public diagram' : 'Private diagram'}
+            </div>
+            <div className="mt-0.5 font-serif text-lg">
+              {isPublic ? 'Visible in gallery' : 'Only you can view'}
+            </div>
+          </div>
+        </div>
+
+        <span
+          className={`relative inline-flex h-6 w-11 items-center rounded-sm border transition-colors ${
+            isPublic
+              ? 'border-signal/60 bg-signal/20'
+              : canTogglePrivate
+                ? 'border-signal bg-signal/40'
+                : 'border-rule bg-graphite'
+          }`}
+        >
+          <span
+            className={`absolute inline-block h-4 w-4 rounded-sm bg-signal transition-transform duration-200 ${
+              isPublic ? 'translate-x-1' : 'translate-x-6'
+            }`}
+          />
+        </span>
+      </button>
+
+      <p className="text-sm leading-relaxed text-paper/60">
+        {isPublic
+          ? 'It will appear in our public gallery and anyone with the link can view it.'
+          : canTogglePrivate
+            ? 'Only you can access this diagram.'
+            : 'Private diagrams are available on Pro.'}
+      </p>
+
+      {!canTogglePrivate && (
+        <div className="rounded-sm border border-signal/30 bg-signal/5 p-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+            Upgrade to{' '}
+            <a
+              href="/pricing"
+              className="text-signal underline decoration-signal/40 underline-offset-2 hover:decoration-signal"
+            >
+              Pro
+            </a>{' '}
+            to draft private diagrams
+          </p>
+        </div>
+      )}
     </div>
   )
 }

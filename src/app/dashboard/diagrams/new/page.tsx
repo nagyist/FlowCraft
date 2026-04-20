@@ -6,25 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 import mermaid from 'mermaid'
 
-// Icons
-import {
-  MagnifyingGlassPlusIcon,
-  MagnifyingGlassMinusIcon,
-  LinkIcon,
-  ArrowPathIcon,
-  ExclamationTriangleIcon,
-  SparklesIcon,
-  CheckCircleIcon,
-} from '@heroicons/react/24/outline'
-
-// Internal
 import { DiagramContext } from '@/lib/Contexts/DiagramContext'
-import {
-  InputClassification,
-  OptionType,
-  sanitizeMermaid,
-  sanitizeSVG,
-} from '@/lib/utils'
+import { OptionType, sanitizeMermaid, sanitizeSVG } from '@/lib/utils'
 import { useLoading } from '@/lib/LoadingProvider'
 import DiagramSelectionGrid from './DiagramSelectionGrid'
 import FormStep from './FormStep'
@@ -33,83 +16,38 @@ import PasteAnythingInput from './PasteAnythingInput'
 import { useClassifyInput } from './useClassifyInput'
 import { useStreamingGenerate } from './useStreamingGenerate'
 
-// --- UI Components (Apple Style) ---
-
-const Card = ({
+function SectionLabel({
+  code,
+  kicker,
   children,
-  className,
 }: {
-  children: React.ReactNode
-  className?: string
-}) => (
-  <div
-    className={clsx(
-      'overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm',
-      className,
-    )}
-  >
-    {children}
-  </div>
-)
-
-const Button = ({
-  children,
-  onClick,
-  variant = 'primary',
-  disabled,
-  className,
-  type = 'button',
-}: any) => {
-  const base =
-    'inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
-  const variants = {
-    primary:
-      'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm hover:shadow-md',
-    secondary:
-      'bg-white text-zinc-700 border border-zinc-200 hover:bg-zinc-50 focus:ring-zinc-200',
-    ghost: 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100',
-  }
+  code: string
+  kicker: string
+  children?: React.ReactNode
+}) {
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={clsx(
-        base,
-        variants[variant as keyof typeof variants],
-        className,
-      )}
-    >
-      {children}
-    </button>
+    <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-signal">
+      <span>{code}</span>
+      <span className="h-px w-12 bg-signal/50" />
+      <span className="text-fog">{kicker}</span>
+      {children && <span className="ml-auto">{children}</span>}
+    </div>
   )
 }
 
-const IconButton = ({ icon: Icon, onClick, title }: any) => (
-  <button
-    onClick={onClick}
-    title={title}
-    className="rounded-full p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 active:scale-95"
-  >
-    <Icon className="h-5 w-5" />
-  </button>
-)
-
-const UsageBadge = ({ usage }: { usage: any }) => {
+function UsageBadge({ usage }: { usage: any }) {
   if (!usage || usage.subscribed) return null
+  const tone = usage.remaining <= 1 ? 'text-red-300' : 'text-fog'
   return (
-    <div className="flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600">
-      <span>Free Plan</span>
-      <span className="h-1 w-1 rounded-full bg-zinc-300" />
-      <span
-        className={clsx(
-          usage.remaining <= 1 ? 'text-amber-600' : 'text-zinc-600',
-        )}
-      >
-        {usage.remaining} left this month
-      </span>
+    <div className="inline-flex items-center gap-2 rounded-sm border border-rule bg-graphite px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-paper">
+      <span className="text-signal/80">Free tier</span>
+      <span className="text-fog">·</span>
+      <span className={tone}>{usage.remaining} left</span>
       {usage.remaining <= 2 && (
-        <a href="/pricing" className="ml-1 text-blue-600 hover:underline">
+        <a
+          href="/pricing"
+          className="ml-1 text-signal underline decoration-signal/40 underline-offset-2 hover:decoration-signal"
+        >
           Upgrade
         </a>
       )}
@@ -117,19 +55,15 @@ const UsageBadge = ({ usage }: { usage: any }) => {
   )
 }
 
-// --- Main Page Component ---
-
 export default function NewDiagramPage() {
   const { showLoading, hideLoading } = useLoading()
   const context = useContext(DiagramContext)
   const router = useRouter()
 
-  // Refs
   const svgContainerRef = useRef<HTMLDivElement>(null)
   const mermaidContainerRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // State
   const [selectedOption, _setSelectedOption] =
     useState<OptionType>('Infographic')
   const [visionDescription, setVisionDescription] = useState('')
@@ -137,7 +71,6 @@ export default function NewDiagramPage() {
   const [complexityLevel, setComplexityLevel] = useState('Medium (default)')
   const [isPublic, setIsPublic] = useState(true)
 
-  // Paste Anything state
   const [pasteText, setPasteText] = useState('')
   const [pasteFileName, setPasteFileName] = useState<string | null>(null)
   const [inputMode, setInputMode] = useState<'paste' | 'manual'>('paste')
@@ -150,51 +83,50 @@ export default function NewDiagramPage() {
   } = useClassifyInput()
   const streaming = useStreamingGenerate()
 
-  // Generation State
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isGenerated, setIsGenerated] = useState(false)
 
-  // Output State
   const [generatedTitle, setGeneratedTitle] = useState('')
   const [svgCode, setSvgCode] = useState('')
   const [mermaidCode, setMermaidCode] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [diagramId, setDiagramId] = useState<string | null>(null)
 
-  // Viewport State
   const [zoomLevel, setZoomLevel] = useState(1)
   const [usageData, setUsageData] = useState<any>(null)
   const [linkCopied, setLinkCopied] = useState(false)
 
-  // Dragging State
   const [isDragging, setIsDragging] = useState(false)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
-  // --- Effects ---
-
-  // Usage Data
   useEffect(() => {
     fetch('/api/usage')
       .then((r) => {
-        if (r.ok) {
-          return r.json().then(setUsageData)
-        }
+        if (r.ok) return r.json().then(setUsageData)
       })
-      .catch(console.error)
+      .catch(() => {})
   }, [])
 
-  // Mermaid Init
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: true,
-      theme: 'neutral',
+      theme: 'dark',
       securityLevel: 'loose',
+      themeVariables: {
+        darkMode: true,
+        background: '#141417',
+        primaryColor: '#141417',
+        primaryTextColor: '#F3EFE4',
+        primaryBorderColor: '#C4FF3D',
+        lineColor: '#76766F',
+        secondaryColor: '#0B0B0C',
+        tertiaryColor: '#141417',
+      },
     })
   }, [])
 
-  // Mermaid Rendering
   useEffect(() => {
     if (mermaidCode && mermaidContainerRef.current) {
       mermaidContainerRef.current.innerHTML = ''
@@ -212,8 +144,6 @@ export default function NewDiagramPage() {
     }
   }, [mermaidCode, zoomLevel])
 
-  // Auto-select diagram type when classification comes in.
-  // Skip if user has explicitly overridden via grid click or chip dropdown.
   useEffect(() => {
     if (
       classification?.suggestedDiagram &&
@@ -224,7 +154,6 @@ export default function NewDiagramPage() {
     }
   }, [classification, inputMode])
 
-  // Reset override flag when paste is cleared or mode changes
   useEffect(() => {
     if (!pasteText.trim()) userOverrodeRef.current = false
   }, [pasteText])
@@ -233,7 +162,6 @@ export default function NewDiagramPage() {
     userOverrodeRef.current = false
   }, [inputMode])
 
-  // Handle streaming completion
   useEffect(() => {
     if (streaming.finalResult) {
       const { code, title, diagramId: streamDiagramId } = streaming.finalResult
@@ -247,7 +175,6 @@ export default function NewDiagramPage() {
     }
   }, [streaming.finalResult, hideLoading])
 
-  // Handle streaming errors
   useEffect(() => {
     if (streaming.error) {
       setError(streaming.error)
@@ -256,7 +183,6 @@ export default function NewDiagramPage() {
     }
   }, [streaming.error, hideLoading])
 
-  // Incremental mermaid rendering during streaming
   const lastRenderedRef = useRef('')
   const streamingContainerRef = useRef<HTMLDivElement>(null)
 
@@ -279,7 +205,6 @@ export default function NewDiagramPage() {
           }
           document.getElementById('dmermaid-stream-preview')?.remove()
         } catch {
-          // Partial code not yet valid — ignore
           document.getElementById('dmermaid-stream-preview')?.remove()
         }
       }
@@ -291,13 +216,11 @@ export default function NewDiagramPage() {
     }
   }, [streaming.partialCode, streaming.isStreaming])
 
-  // URL Sync
   useEffect(() => {
     if (diagramId)
       window.history.pushState({ diagramId }, '', `/diagram/${diagramId}`)
   }, [diagramId])
 
-  // Drag Logic
   useEffect(() => {
     if (!containerRef.current) return
 
@@ -305,7 +228,6 @@ export default function NewDiagramPage() {
       if (!isDragging) return
       setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
     }
-
     const handleMouseUp = () => setIsDragging(false)
 
     const container = containerRef.current
@@ -323,8 +245,6 @@ export default function NewDiagramPage() {
   useEffect(() => {
     setPosition({ x: 0, y: 0 })
   }, [zoomLevel])
-
-  // --- Handlers ---
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
@@ -366,14 +286,13 @@ export default function NewDiagramPage() {
   }
 
   const handleSubmit = async () => {
-    // Determine which description to use
     const description =
       inputMode === 'paste' && pasteText.trim()
         ? pasteText.trim()
         : visionDescription.trim()
 
     if (!description) {
-      setError('Please describe your vision or paste some content.')
+      setError('Describe your vision or paste some content.')
       if (inputMode === 'paste') {
         document
           .getElementById('paste-anything-input')
@@ -387,30 +306,26 @@ export default function NewDiagramPage() {
     }
 
     if (usageData && !usageData.can_create) {
-      setError(`Free limit reached. Upgrade to continue.`)
+      setError('Free limit reached. Upgrade to continue.')
       return
     }
 
     try {
-      showLoading('Designing...', 'blue')
+      showLoading('Drafting…', 'blue')
       setIsLoading(true)
       setError('')
 
-      // Clear context
       context.setChartJsData(null)
       context.setMermaidData('')
       context.setNodes([])
       context.setEdges([])
 
-      // Use streaming for paste mode with standard diagram types (not Illustration/Infographic)
       const useStreaming =
         inputMode === 'paste' &&
         selectedOption !== 'Illustration' &&
         selectedOption !== 'Infographic'
 
       if (useStreaming) {
-        // Streaming path — the useStreamingGenerate hook handles everything
-        // Completion is handled by the useEffect watching streaming.finalResult
         streaming.generate({
           type: selectedOption as string,
           description,
@@ -421,7 +336,6 @@ export default function NewDiagramPage() {
         return
       }
 
-      // Non-streaming path (original behavior)
       const response = await fetch('/api/generate-visual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -443,7 +357,6 @@ export default function NewDiagramPage() {
       const data = await response.json()
       if (data.error) throw new Error(data.error)
 
-      // Handle Data Types
       if (selectedOption === 'Illustration') {
         setImageUrl(data.image_url)
       } else if (selectedOption === 'Infographic') {
@@ -463,126 +376,165 @@ export default function NewDiagramPage() {
     }
   }
 
-  // --- Views ---
-
   if (isGenerated) {
     return (
-      <main className="min-h-screen w-full bg-zinc-50 px-6 pb-10 pt-20">
-        {/* Expanded width for Generated View as well */}
-        <header className="mx-auto mb-6 flex w-full max-w-7xl flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-              {generatedTitle || `Your ${selectedOption}`}
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Generated by AI • {complexityLevel}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="secondary"
-              onClick={resetState}
-              className="!px-4 !py-2"
-            >
-              <ArrowPathIcon className="mr-2 h-4 w-4" />
-              New
-            </Button>
-          </div>
-        </header>
+      <main className="relative min-h-screen bg-ink pb-14 pt-14 text-paper">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-40"
+        />
 
-        <section className="relative mx-auto h-[75vh] w-full max-w-7xl">
-          <Card className="relative flex h-full w-full flex-col">
-            {/* Toolbar */}
-            <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-1 rounded-full border border-zinc-200 bg-white/80 p-1.5 shadow-sm backdrop-blur-md">
-              <IconButton
-                icon={MagnifyingGlassMinusIcon}
-                onClick={() => setZoomLevel((z) => Math.max(z - 0.2, 0.5))}
-                title="Zoom Out"
-              />
-              <span className="w-12 px-2 text-center text-xs font-medium text-zinc-500">
-                {Math.round(zoomLevel * 100)}%
+        <div className="relative mx-auto w-full max-w-[1400px] px-6 lg:px-8">
+          <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-rule pb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 text-paper">
+                <span className="h-1.5 w-1.5 rounded-full bg-signal" />
+                Sheet · Rendered draft
               </span>
-              <IconButton
-                icon={MagnifyingGlassPlusIcon}
-                onClick={() => setZoomLevel((z) => Math.min(z + 0.2, 3))}
-                title="Zoom In"
-              />
-              <div className="mx-1 h-4 w-px bg-zinc-200" />
-              <IconButton
-                icon={linkCopied ? CheckCircleIcon : LinkIcon}
-                onClick={copyLink}
-                title="Copy Link"
-              />
+              <span>/</span>
+              <span>{selectedOption}</span>
             </div>
-
-            {/* Canvas */}
-            <div
-              ref={containerRef}
-              className="relative flex-1 cursor-grab overflow-hidden bg-zinc-50/50 active:cursor-grabbing"
+            <button
+              onClick={resetState}
+              className="inline-flex items-center gap-2 rounded-sm border border-rule px-3 py-1.5 text-paper transition-colors hover:border-signal/50 hover:text-signal"
             >
+              ↺ New draft
+            </button>
+          </header>
+
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="font-serif text-4xl leading-tight text-paper md:text-5xl">
+                {generatedTitle || `Your ${selectedOption}`}
+              </h1>
+              <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                Drafted by AI · {complexityLevel}
+              </p>
+            </div>
+          </div>
+
+          <section className="relative h-[72vh] w-full">
+            <div className="relative h-full w-full overflow-hidden rounded-sm border border-rule bg-graphite">
+              <CornerTicks />
+              {/* Toolbar */}
+              <div className="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-1 rounded-sm border border-rule bg-ink/80 p-1.5 backdrop-blur-md">
+                <ToolBtn
+                  label="−"
+                  onClick={() => setZoomLevel((z) => Math.max(z - 0.2, 0.5))}
+                  title="Zoom out"
+                />
+                <span className="w-14 px-2 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                <ToolBtn
+                  label="+"
+                  onClick={() => setZoomLevel((z) => Math.min(z + 0.2, 3))}
+                  title="Zoom in"
+                />
+                <div className="mx-1 h-4 w-px bg-rule" />
+                <button
+                  onClick={copyLink}
+                  className="rounded-sm px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-paper transition-colors hover:bg-graphite hover:text-signal"
+                  title="Copy link"
+                >
+                  {linkCopied ? '✓ Copied' : '⇢ Link'}
+                </button>
+              </div>
+
               <div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center"
-                style={{
-                  transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
-                  transition: isDragging
-                    ? 'none'
-                    : 'transform 0.2s cubic-bezier(0.2, 0, 0.2, 1)',
-                  willChange: 'transform',
-                  transformOrigin: 'center',
-                  pointerEvents: 'auto',
-                }}
-                onMouseDown={handleMouseDown}
+                ref={containerRef}
+                className="relative h-full w-full cursor-grab overflow-hidden bg-ink/50 active:cursor-grabbing"
               >
-                {svgCode && (
-                  <div
-                    ref={svgContainerRef}
-                    dangerouslySetInnerHTML={{ __html: svgCode }}
-                    className="h-auto max-h-[80vh] w-auto max-w-[80vw] shadow-sm"
-                  />
-                )}
-                {mermaidCode && (
-                  <div
-                    ref={mermaidContainerRef}
-                    className="rounded-lg bg-white p-8 shadow-sm"
-                  />
-                )}
-                {imageUrl && (
-                  <img
-                    src={imageUrl}
-                    alt="Result"
-                    className="max-h-[90%] max-w-[90%] rounded-lg object-contain shadow-sm"
-                  />
-                )}
+                <div
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                  style={{
+                    transform: `scale(${zoomLevel}) translate(${position.x}px, ${position.y}px)`,
+                    transition: isDragging
+                      ? 'none'
+                      : 'transform 0.2s cubic-bezier(0.2, 0, 0.2, 1)',
+                    willChange: 'transform',
+                    transformOrigin: 'center',
+                    pointerEvents: 'auto',
+                  }}
+                  onMouseDown={handleMouseDown}
+                >
+                  {svgCode && (
+                    <div
+                      ref={svgContainerRef}
+                      dangerouslySetInnerHTML={{ __html: svgCode }}
+                      className="h-auto max-h-[80vh] w-auto max-w-[80vw]"
+                    />
+                  )}
+                  {mermaidCode && (
+                    <div
+                      ref={mermaidContainerRef}
+                      className="rounded-sm bg-graphite p-8"
+                    />
+                  )}
+                  {imageUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl}
+                      alt="Result"
+                      className="max-h-[90%] max-w-[90%] rounded-sm object-contain"
+                    />
+                  )}
+                </div>
               </div>
             </div>
-          </Card>
-        </section>
+          </section>
+        </div>
       </main>
     )
   }
 
-  // --- Creation Mode ---
   return (
-    <main className="min-h-screen w-full bg-zinc-50 px-6 pb-20 pt-24 lg:px-12">
-      {/* Changed max-w-3xl to max-w-7xl to fill the page */}
-      <div className="mx-auto w-full max-w-7xl">
-        {/* Header */}
-        <header className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
-              Create a Visual Plan
-            </h1>
-            <p className="mt-2 max-w-2xl text-zinc-500">
-              Paste meeting notes, code, SQL, or any content — we&apos;ll detect
-              what it is and suggest the best diagram for it.
-            </p>
+    <main className="relative min-h-screen bg-ink pb-20 pt-14 text-paper">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-40"
+      />
+
+      <div className="relative mx-auto w-full max-w-[1280px] px-6 lg:px-8">
+        {/* Sheet header */}
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-rule pb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-paper">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inset-0 animate-ping rounded-full bg-signal/60" />
+                <span className="relative h-1.5 w-1.5 rounded-full bg-signal" />
+              </span>
+              Sheet · New draft
+            </span>
+            <span>/</span>
+            <span>Drafting table</span>
           </div>
           <UsageBadge usage={usageData} />
-        </header>
+        </div>
 
-        {/* Upgrade Prompt */}
+        {/* Heading */}
+        <div className="mb-12 grid grid-cols-1 items-end gap-8 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+              <span className="h-px w-12 bg-signal/50" />
+              <span className="text-fog">Compose</span>
+            </div>
+            <h1 className="mt-6 font-serif text-5xl leading-[0.95] tracking-[-0.01em] text-paper md:text-6xl">
+              Draft a new
+              <br />
+              <span className="italic text-signal">visual plan</span>
+              <span className="text-paper">.</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-paper/60">
+              Paste notes, code, SQL, or docs — we'll detect what it is and
+              suggest the best diagram. Or pick a type yourself.
+            </p>
+          </div>
+        </div>
+
+        {/* Upgrade prompt */}
         {usageData && !usageData.subscribed && usageData.diagrams_created >= 3 && (
-          <div className="mb-6">
+          <div className="mb-8">
             <UpgradePrompt
               currentUsage={usageData.diagrams_created}
               limit={usageData.free_limit}
@@ -590,87 +542,88 @@ export default function NewDiagramPage() {
           </div>
         )}
 
-        {/* Error State */}
+        {/* Error */}
         <AnimatePresence>
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-6 flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-4"
+              className="mb-8 flex items-start gap-3 rounded-sm border border-red-500/30 bg-red-500/5 p-4"
             >
-              <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 text-red-600" />
-              <div className="text-sm text-red-800">
-                <p className="font-medium">Creation Failed</p>
-                <p>{error}</p>
+              <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-red-400" />
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-red-400">
+                  Drafting failed
+                </p>
+                <p className="mt-1 text-sm text-paper/80">{error}</p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Streaming Preview */}
+        {/* Streaming preview */}
         <AnimatePresence>
           {streaming.isStreaming && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
+              className="relative mb-8 rounded-sm border border-signal/30 bg-graphite p-6"
             >
-              <Card className="mb-6 p-6">
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500" />
-                  <span className="text-sm font-medium text-zinc-700">
-                    Building your diagram...
-                  </span>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      streaming.cancel()
-                      setIsLoading(false)
-                      hideLoading()
-                    }}
-                    className="ml-auto !px-3 !py-1 !text-xs"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-
-                {/* Incremental Mermaid Preview */}
-                <div className="min-h-[200px] rounded-xl bg-zinc-50 p-4">
-                  <div
-                    ref={streamingContainerRef}
-                    className="flex items-center justify-center"
-                  />
-                  {!lastRenderedRef.current && streaming.partialCode && (
-                    <pre className="max-h-[300px] overflow-auto font-mono text-xs text-zinc-500">
-                      {streaming.partialCode}
-                    </pre>
-                  )}
-                </div>
-              </Card>
+              <CornerTicks />
+              <div className="flex items-center gap-3">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-signal/60" />
+                  <span className="relative h-2 w-2 rounded-full bg-signal" />
+                </span>
+                <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-signal">
+                  Drafting in progress
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    streaming.cancel()
+                    setIsLoading(false)
+                    hideLoading()
+                  }}
+                  className="ml-auto font-mono text-[10px] uppercase tracking-[0.22em] text-fog transition-colors hover:text-paper"
+                >
+                  ✕ Cancel
+                </button>
+              </div>
+              <div className="mt-4 min-h-[220px] rounded-sm border border-rule bg-ink p-4">
+                <div
+                  ref={streamingContainerRef}
+                  className="flex items-center justify-center"
+                />
+                {!lastRenderedRef.current && streaming.partialCode && (
+                  <pre className="max-h-[300px] overflow-auto font-mono text-xs text-paper/60">
+                    {streaming.partialCode}
+                  </pre>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Form Container - Full Width Card */}
-        <Card className="min-h-[60vh] p-6 md:p-10">
-          <div className="space-y-8">
-            {/* 0. Paste Anything Input */}
+        {/* Form card */}
+        <div className="relative rounded-sm border border-rule bg-graphite p-6 md:p-10">
+          <CornerTicks />
+
+          <div className="space-y-10">
+            {/* Paste anything */}
             <section className="space-y-4" id="paste-anything-input">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-semibold text-zinc-900">
-                  Paste anything to get started
-                </label>
+                <SectionLabel code="INP" kicker="Paste anything" />
                 <button
                   type="button"
                   onClick={() =>
                     setInputMode(inputMode === 'paste' ? 'manual' : 'paste')
                   }
-                  className="text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-700"
+                  className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog transition-colors hover:text-signal"
                 >
-                  {inputMode === 'paste'
-                    ? 'Switch to manual mode'
-                    : 'Switch to paste mode'}
+                  Switch to {inputMode === 'paste' ? 'manual' : 'paste'} mode →
                 </button>
               </div>
 
@@ -698,20 +651,18 @@ export default function NewDiagramPage() {
 
             {/* Separator */}
             <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-zinc-100" />
-              <span className="text-xs font-medium text-zinc-400">
+              <span className="h-px flex-1 bg-rule" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
                 {inputMode === 'paste'
-                  ? 'or choose a type manually'
+                  ? 'or pick a type manually'
                   : 'select a diagram type'}
               </span>
-              <div className="h-px flex-1 bg-zinc-100" />
+              <span className="h-px flex-1 bg-rule" />
             </div>
 
-            {/* 1. Type Selection */}
-            <section className="space-y-4">
-              <label className="block text-sm font-semibold text-zinc-900">
-                What are we building?
-              </label>
+            {/* Type selection */}
+            <section className="space-y-5">
+              <SectionLabel code="SPEC" kicker="What are we drafting?" />
               <DiagramSelectionGrid
                 selectedOption={selectedOption}
                 setSelectedOption={handleGridSelect}
@@ -727,41 +678,81 @@ export default function NewDiagramPage() {
               />
             </section>
 
-            <div className="h-px w-full bg-zinc-100" />
+            <div className="h-px w-full bg-rule" />
 
-            {/* 2. Details & Privacy */}
-            <section className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <div className="space-y-4">
-                <label className="block text-sm font-semibold text-zinc-900">
-                  Configuration
-                </label>
+            {/* Configuration */}
+            <section className="grid grid-cols-1 gap-10 lg:grid-cols-2">
+              <div className="space-y-5">
+                <SectionLabel code="CFG" kicker="Configuration" />
                 <FormStep isPublic={isPublic} setIsPublic={setIsPublic} />
               </div>
             </section>
 
-            {/* 3. Action */}
-            <div className="flex justify-end border-t border-zinc-100 pt-6">
-              <Button
+            {/* Submit */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-rule pt-6">
+              <p className="max-w-md font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                <span className="text-signal">▸</span> Ready to render ·{' '}
+                <span className="text-paper">{selectedOption}</span>
+              </p>
+              <button
                 onClick={handleSubmit}
                 disabled={isLoading || streaming.isStreaming}
-                className="w-full min-w-[200px] !py-3 !text-base md:w-auto"
+                className={clsx(
+                  'group relative inline-flex items-center gap-3 overflow-hidden rounded-sm px-8 py-4 font-mono text-[12px] uppercase tracking-[0.22em] transition-colors',
+                  isLoading || streaming.isStreaming
+                    ? 'cursor-wait bg-signal/60 text-ink'
+                    : 'bg-signal text-ink hover:bg-paper',
+                )}
               >
                 {isLoading || streaming.isStreaming ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Generating...
-                  </span>
+                  <>
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-ink" />
+                    Drafting…
+                  </>
                 ) : (
-                  <span className="flex items-center gap-2">
-                    <SparklesIcon className="h-5 w-5" />
-                    Generate Visualization
-                  </span>
+                  <>
+                    <span>Generate visual</span>
+                    <span className="transition-transform duration-300 group-hover:translate-x-1.5">
+                      →
+                    </span>
+                  </>
                 )}
-              </Button>
+              </button>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     </main>
+  )
+}
+
+function CornerTicks() {
+  return (
+    <>
+      <span className="pointer-events-none absolute -left-px -top-px h-3 w-3 border-l border-t border-signal" />
+      <span className="pointer-events-none absolute -right-px -top-px h-3 w-3 border-r border-t border-signal" />
+      <span className="pointer-events-none absolute -bottom-px -left-px h-3 w-3 border-b border-l border-signal" />
+      <span className="pointer-events-none absolute -bottom-px -right-px h-3 w-3 border-b border-r border-signal" />
+    </>
+  )
+}
+
+function ToolBtn({
+  label,
+  onClick,
+  title,
+}: {
+  label: string
+  onClick: () => void
+  title?: string
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      className="rounded-sm px-2.5 py-1 font-mono text-sm text-paper transition-colors hover:bg-graphite hover:text-signal"
+    >
+      {label}
+    </button>
   )
 }

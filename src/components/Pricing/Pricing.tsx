@@ -1,29 +1,27 @@
 'use client'
+
 import { cn } from '@/lib/utils'
-import { CheckIcon } from '@heroicons/react/20/solid'
 import type { PricingTier } from '@/lib/pricing'
-import SwitchButton from '../Switch'
 import { useState } from 'react'
 import Link from 'next/link'
 import SimpleNotification from '../SimpleNotification'
 import { loadStripe } from '@stripe/stripe-js'
 import { motion } from 'framer-motion'
-import Button from '@/components/ui/Button'
 
 type PricingPageSource = 'landing' | 'dashboard' | 'mermaid' | 'chart'
 
-const PricingHeaderMessage = (sourcePage: PricingPageSource) => {
+const PricingKicker = (sourcePage: PricingPageSource) => {
   switch (sourcePage) {
     case 'landing':
-      return 'Simple, transparent pricing.'
+      return 'Choose your tier'
     case 'dashboard':
-      return 'To continue using FlowCraft, please choose a plan.'
+      return 'Pick a plan to continue'
     case 'mermaid':
-      return 'To create complex diagrams, please choose a plan.'
+      return 'Unlock complex diagrams'
     case 'chart':
-      return 'To create charts, please choose a plan.'
+      return 'Unlock charts'
     default:
-      return 'To use FlowCraft, please choose a plan.'
+      return 'Pick a plan'
   }
 }
 
@@ -50,12 +48,6 @@ export default function PricingTemplate({
       'There was an error processing your request. Please try again later.',
     )
     setNotificationType('error')
-    setOpenNotification(true)
-  }
-
-  const openSuccessNotification = () => {
-    setNotificationMessage('Success! Your request was processed.')
-    setNotificationType('success')
     setOpenNotification(true)
   }
 
@@ -97,11 +89,10 @@ export default function PricingTemplate({
       const { id: sessionId } = await fetch('/api/checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product: id, isYearly: isYearly }),
+        body: JSON.stringify({ product: id, isYearly }),
       })
         .then((res) => res.json())
-        .catch((error) => {
-          console.error('Error fetching checkout session', error)
+        .catch(() => {
           openErrorNotification()
           return { id: '' }
         })
@@ -114,7 +105,6 @@ export default function PricingTemplate({
       const { error } = await stripe.redirectToCheckout({ sessionId })
 
       if (error) {
-        console.error('Error redirecting to checkout', error)
         openErrorNotification()
       }
     } finally {
@@ -122,136 +112,195 @@ export default function PricingTemplate({
     }
   }
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50/50 px-6 py-24 sm:py-32 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mx-auto max-w-2xl text-center"
-        >
-          {sourcePage === 'landing' ? (
-            <>
-              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-                Simple, transparent pricing
-              </h1>
-              <p className="mt-4 text-lg text-gray-600">
-                Choose the plan that fits your needs. All plans include core features.
-              </p>
-            </>
-          ) : (
-            <>
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
-                {PricingHeaderMessage(sourcePage)}
-              </h2>
-              <p className="mt-4 text-lg text-gray-600">
-                Select a plan to continue using FlowCraft
-              </p>
-            </>
-          )}
-        </motion.div>
+    <div className="relative min-h-screen bg-ink text-paper">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-60"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-48 h-[520px] w-[820px] -translate-x-1/2 rounded-full"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(196,255,61,0.10), transparent 60%)',
+        }}
+      />
 
-        {/* Billing Toggle */}
+      <div className="relative mx-auto max-w-[1280px] px-6 pb-24 pt-24 lg:px-8 lg:pt-32">
+        {/* Sheet header */}
+        <div className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-rule pb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-paper">
+              <span className="h-1.5 w-1.5 rounded-full bg-signal" />
+              Sheet · Pricing
+            </span>
+            <span>/</span>
+            <span>Rates & tiers</span>
+          </div>
+          <div className="hidden items-center gap-3 md:flex">
+            <span className="text-signal">◆</span>
+            <span>All plans · Exports in PNG / SVG / PDF</span>
+          </div>
+        </div>
+
+        {/* Heading */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mt-8 flex justify-center"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="grid grid-cols-1 gap-8 lg:grid-cols-12"
         >
-          <div className="rounded-full bg-white p-1 shadow-sm ring-1 ring-gray-200">
-            <SwitchButton
-              enabled={yearly}
-              setEnabled={setYearly}
-              message="Save 17% with annual billing"
-            />
+          <div className="lg:col-span-7">
+            <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+              <span className="h-px w-12 bg-signal/50" />
+              <span className="text-fog">{PricingKicker(sourcePage)}</span>
+            </div>
+            <h1 className="mt-6 font-serif text-5xl leading-[0.95] tracking-[-0.01em] text-paper md:text-7xl">
+              Straight lines,
+              <br />
+              <span className="italic text-signal">fair rates</span>
+              <span className="text-paper">.</span>
+            </h1>
+          </div>
+          <div className="lg:col-span-5 lg:pt-12">
+            <p className="max-w-md text-lg leading-relaxed text-paper/60">
+              Draft as much as you want on the free tier. Step up to Pro when
+              your ideas need more volume — or when the team catches on.
+            </p>
           </div>
         </motion.div>
 
-        {/* Pricing Tiers Grid */}
+        {/* Billing toggle */}
         <motion.div
-          variants={containerVariants}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="mt-14 flex items-center justify-center gap-4"
+        >
+          <button
+            onClick={() => setYearly(false)}
+            className={cn(
+              'rounded-sm px-5 py-2 font-mono text-[11px] uppercase tracking-[0.22em] transition-colors',
+              !yearly
+                ? 'bg-signal text-ink'
+                : 'border border-rule text-paper/60 hover:text-paper',
+            )}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setYearly(true)}
+            className={cn(
+              'relative rounded-sm px-5 py-2 font-mono text-[11px] uppercase tracking-[0.22em] transition-colors',
+              yearly
+                ? 'bg-signal text-ink'
+                : 'border border-rule text-paper/60 hover:text-paper',
+            )}
+          >
+            Annual
+            <span
+              className={cn(
+                'absolute -top-2 -right-2 rounded-sm border px-1.5 py-0.5 font-mono text-[9px] tracking-[0.15em]',
+                yearly
+                  ? 'border-ink bg-ink text-signal'
+                  : 'border-signal bg-ink text-signal',
+              )}
+            >
+              −17%
+            </span>
+          </button>
+        </motion.div>
+
+        {/* Tiers */}
+        <motion.div
           initial="hidden"
           animate="visible"
-          className="mx-auto mt-12 grid max-w-7xl grid-cols-1 gap-6 sm:mt-16 lg:grid-cols-3"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.12, delayChildren: 0.4 },
+            },
+          }}
+          className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule lg:grid-cols-3"
         >
           {tiers.map((tier) => (
             <motion.div
               key={tier.id}
-              variants={itemVariants}
-              whileHover={{ y: -4 }}
+              variants={{
+                hidden: { opacity: 0, y: 16 },
+                visible: { opacity: 1, y: 0 },
+              }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className={cn(
-                'relative flex flex-col rounded-2xl bg-white p-8 shadow-sm transition-all duration-300',
-                tier.featured
-                  ? 'border-2 border-gray-900 ring-1 ring-gray-900/5 hover:shadow-lg'
-                  : 'border border-gray-200 hover:border-gray-300 hover:shadow-md',
+                'group relative flex flex-col bg-graphite p-8 transition-colors duration-300',
+                tier.featured ? 'bg-ink' : 'hover:bg-ink',
               )}
             >
               {tier.featured && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white">
-                    Most Popular
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 opacity-50"
+                  style={{
+                    backgroundImage:
+                      'radial-gradient(rgba(196,255,61,0.12) 1px, transparent 1px)',
+                    backgroundSize: '14px 14px',
+                  }}
+                />
+              )}
+              {tier.featured && <TierCornerTicks />}
+
+              {tier.featured && (
+                <div className="relative flex items-center justify-end font-mono text-[10px] uppercase tracking-[0.22em]">
+                  <span className="inline-flex items-center gap-1.5 text-signal">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-signal" />
+                    Recommended
                   </span>
                 </div>
               )}
 
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold tracking-tight text-gray-900">
-                  {tier.name}
-                </h3>
-                <p className="mt-2 text-sm text-gray-500">{tier.description}</p>
+              <div className="relative mt-8 flex-1">
+                <h3 className="font-serif text-4xl text-paper">{tier.name}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-paper/60">
+                  {tier.description}
+                </p>
 
-                <div className="mt-6 flex items-baseline gap-x-1">
-                  <span className="text-4xl font-bold tracking-tight text-gray-900">
+                <div className="mt-8 flex items-baseline gap-1.5 border-y border-rule py-6">
+                  <span className="font-serif text-6xl text-paper">
                     {yearly ? tier.price.annually : tier.price.monthly}
                   </span>
-                  <span className="text-sm font-medium text-gray-500">
-                    {yearly ? '/year' : '/month'}
+                  <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                    /{yearly ? 'yr' : 'mo'}
                   </span>
                 </div>
 
-                {/* Features */}
-                <ul role="list" className="mt-8 space-y-3">
+                <ul className="mt-8 space-y-3.5">
                   {tier.mainFeatures.map((feature) => (
-                    <li key={feature} className="flex items-start gap-x-3">
-                      <CheckIcon
-                        className="h-5 w-5 flex-none text-gray-900"
-                        aria-hidden="true"
-                      />
-                      <span className="text-sm text-gray-600">{feature}</span>
+                    <li
+                      key={feature}
+                      className="flex items-start gap-3 text-sm text-paper/80"
+                    >
+                      <span className="mt-1.5 inline-block h-px w-4 flex-none bg-signal" />
+                      <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* CTA Button */}
-              <div className="mt-8">
+              <div className="relative mt-10">
                 {tier.id === 'tier-teams' ? (
                   <Link
                     href="/support"
-                    className="block w-full rounded-full border border-gray-300 bg-white px-6 py-3 text-center text-sm font-medium text-gray-900 transition-colors hover:bg-gray-50"
+                    className="group/cta flex w-full items-center justify-between rounded-sm border border-rule bg-transparent px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-paper transition-colors hover:border-signal/50 hover:text-signal"
                   >
-                    {tier.cta}
+                    <span>{tier.cta}</span>
+                    <span className="transition-transform duration-300 group-hover/cta:translate-x-1">
+                      →
+                    </span>
                   </Link>
                 ) : shouldGoToCheckout ? (
-                  <Button
+                  <button
                     onClick={() =>
                       handleGoingToCheckout(
                         tier.id as 'tier-hobby' | 'tier-pro',
@@ -260,52 +309,51 @@ export default function PricingTemplate({
                     }
                     disabled={loadingTier !== null}
                     className={cn(
-                      'block w-full rounded-full px-6 py-3 text-sm font-medium transition-all',
-                      loadingTier !== null && loadingTier !== tier.id
-                        ? 'bg-gray-400 text-white cursor-not-allowed'
-                        : 'bg-gray-900 text-white hover:bg-gray-800',
-                      loadingTier === tier.id && 'cursor-wait opacity-90',
+                      'group/cta flex w-full items-center justify-between rounded-sm px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] transition-colors',
+                      tier.featured
+                        ? 'bg-signal text-ink hover:bg-paper'
+                        : 'border border-rule text-paper hover:border-signal/50 hover:text-signal',
+                      loadingTier !== null &&
+                        loadingTier !== tier.id &&
+                        'opacity-40',
+                      loadingTier === tier.id && 'opacity-80',
                     )}
                   >
                     {loadingTier === tier.id ? (
-                      <span className="inline-flex items-center gap-2">
-                        <svg
-                          className="h-4 w-4 animate-spin"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
+                      <>
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              'h-1.5 w-1.5 animate-pulse rounded-full',
+                              tier.featured ? 'bg-ink' : 'bg-signal',
+                            )}
                           />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                          />
-                        </svg>
-                        Redirecting to checkout...
-                      </span>
+                          Redirecting…
+                        </span>
+                      </>
                     ) : (
-                      'Upgrade'
+                      <>
+                        <span>Upgrade</span>
+                        <span className="transition-transform duration-300 group-hover/cta:translate-x-1">
+                          →
+                        </span>
+                      </>
                     )}
-                  </Button>
+                  </button>
                 ) : (
                   <Link
                     href={tier.href}
                     className={cn(
-                      'block w-full rounded-full px-6 py-3 text-center text-sm font-medium transition-all',
+                      'group/cta flex w-full items-center justify-between rounded-sm px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] transition-colors',
                       tier.featured
-                        ? 'bg-gray-900 text-white hover:bg-gray-800'
-                        : 'bg-gray-900 text-white hover:bg-gray-800',
+                        ? 'bg-signal text-ink hover:bg-paper'
+                        : 'border border-rule text-paper hover:border-signal/50 hover:text-signal',
                     )}
                   >
-                    {tier.cta}
+                    <span>{tier.cta}</span>
+                    <span className="transition-transform duration-300 group-hover/cta:translate-x-1">
+                      →
+                    </span>
                   </Link>
                 )}
               </div>
@@ -313,35 +361,34 @@ export default function PricingTemplate({
           ))}
         </motion.div>
 
-        {/* Additional Info Section */}
+        {/* Common features strip */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mx-auto mt-16 max-w-2xl text-center"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="mx-auto mt-16 max-w-3xl rounded-sm border border-rule bg-graphite/60 p-8"
         >
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-            <p className="text-sm font-medium text-gray-900">
-              All plans include
-            </p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-600">
-              <span className="flex items-center gap-x-2">
-                <CheckIcon className="h-4 w-4 text-gray-900" />
-                Export diagrams
-              </span>
-              <span className="flex items-center gap-x-2">
-                <CheckIcon className="h-4 w-4 text-gray-900" />
-                Share & collaborate
-              </span>
-              <span className="flex items-center gap-x-2">
-                <CheckIcon className="h-4 w-4 text-gray-900" />
-                Customer support
-              </span>
-              <span className="flex items-center gap-x-2">
-                <CheckIcon className="h-4 w-4 text-gray-900" />
-                Regular updates
-              </span>
-            </div>
+          <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+            <span>Addendum</span>
+            <span className="h-px w-12 bg-signal/50" />
+            <span className="text-fog">Included in every tier</span>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 md:grid-cols-4">
+            {[
+              'Export PNG / SVG / PDF',
+              'Share & collaborate',
+              'Customer support',
+              'Regular updates',
+            ].map((f) => (
+              <div
+                key={f}
+                className="flex items-center gap-2 text-sm text-paper/70"
+              >
+                <span className="inline-block h-px w-4 bg-signal" />
+                {f}
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
@@ -354,5 +401,16 @@ export default function PricingTemplate({
         setOpen={setOpenNotification}
       />
     </div>
+  )
+}
+
+function TierCornerTicks() {
+  return (
+    <>
+      <span className="pointer-events-none absolute left-0 top-0 h-3 w-3 border-l border-t border-signal" />
+      <span className="pointer-events-none absolute right-0 top-0 h-3 w-3 border-r border-t border-signal" />
+      <span className="pointer-events-none absolute bottom-0 left-0 h-3 w-3 border-b border-l border-signal" />
+      <span className="pointer-events-none absolute bottom-0 right-0 h-3 w-3 border-b border-r border-signal" />
+    </>
   )
 }

@@ -13,6 +13,25 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Satoshi', ...defaultTheme.fontFamily.sans],
+        serif: ['"Instrument Serif"', ...defaultTheme.fontFamily.serif],
+        mono: ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
+      },
+      colors: {
+        ink: '#0B0B0C',
+        graphite: '#141417',
+        paper: '#F3EFE4',
+        signal: '#C4FF3D',
+        fog: '#76766F',
+        rule: 'rgba(255,255,255,0.08)',
+      },
+      backgroundImage: {
+        'dot-grid':
+          'radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)',
+        'dot-grid-dark':
+          'radial-gradient(rgba(11,11,12,0.12) 1px, transparent 1px)',
+      },
+      backgroundSize: {
+        'dot-24': '24px 24px',
       },
       spacing: {
         18: '4.5rem',
@@ -37,9 +56,19 @@ export default {
             borderColor: 'black',
           },
         },
+        scan: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        tick: {
+          '0%,100%': { opacity: '1' },
+          '50%': { opacity: '0.3' },
+        },
       },
       animation: {
         typing: 'typing 2s steps(20) infinite alternate, blink .7s infinite',
+        scan: 'scan 3.5s linear infinite',
+        tick: 'tick 1.4s ease-in-out infinite',
       },
     },
   },

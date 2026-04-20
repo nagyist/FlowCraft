@@ -3,50 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import FlowCraftLogo from '@/images/FlowCraftLogo_New.png'
-import { UserIcon, PlusIcon } from '@heroicons/react/20/solid'
-import {
-  ChevronDownIcon,
-  XMarkIcon,
-  Bars2Icon,
-  SparklesIcon,
-  Bars3Icon,
-} from '@heroicons/react/24/outline'
-
-const mainNavigation = [
-  { name: 'Features', href: '/features' },
-  { name: 'Gallery', href: '/gallery' },
-  { name: 'Image Studio', href: '/image-studio' },
-  { name: 'Pricing', href: '/pricing' },
-  { name: 'Blog', href: '/blogs' },
-  {
-    name: 'VS Code Extension',
-    href: 'https://marketplace.visualstudio.com/items?itemName=FlowCraft.flowcraft',
-  },
-]
-
-const useCasesNavigation = [
-  { name: 'For Healthcare', href: '/demos/healthcare' },
-  { name: 'For Engineers', href: '/demos/engineers' },
-]
-
-const authenticatedNavigation = [
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Showcase', href: '/dashboard/showcase' },
-  {
-    name: 'Image Studio',
-    href: '/image-studio',
-    icon: SparklesIcon,
-  },
-]
-
-const ProfileMenu = [
-  { title: 'Settings', link: '/dashboard/settings' },
-  { title: 'Help Center', link: '/support' },
-  { title: 'Sign Out', link: '/auth/logout', danger: true },
-]
 
 export type NavbarAuth = {
   isAuthenticated: boolean
@@ -55,139 +12,226 @@ export type NavbarAuth = {
   isSubscribed: boolean
 }
 
+const mainNavigation = [
+  { name: 'Features', href: '/features' },
+  { name: 'Gallery', href: '/gallery' },
+  { name: 'Studio', href: '/image-studio' },
+  { name: 'Pricing', href: '/pricing' },
+  { name: 'Journal', href: '/blogs' },
+]
+
+const useCasesNavigation = [
+  { name: 'For Healthcare', href: '/demos/healthcare' },
+  { name: 'For Engineers', href: '/demos/engineers' },
+  {
+    name: 'VS Code Extension',
+    href: 'https://marketplace.visualstudio.com/items?itemName=FlowCraft.flowcraft',
+    external: true,
+  },
+]
+
+const authenticatedNavigation = [
+  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Showcase', href: '/dashboard/showcase' },
+  { name: 'Studio', href: '/image-studio' },
+]
+
+const ProfileMenu = [
+  { title: 'Settings', link: '/dashboard/settings' },
+  { title: 'Help Center', link: '/support' },
+  { title: 'Sign Out', link: '/auth/logout', danger: true },
+]
+
 export default function NavbarClient({ auth }: { auth: NavbarAuth }) {
   const { isAuthenticated, userName, userEmail, isSubscribed } = auth
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [useCasesHovered, setUseCasesHovered] = useState(false)
+  const [useCasesOpen, setUseCasesOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10)
-    window.addEventListener('scroll', handleScroll)
+    const handleScroll = () => setScrolled(window.scrollY > 8)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
-    if (!profileOpen) return
+    if (!profileOpen && !useCasesOpen) return
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        e.target &&
-        !(e.target as Element).closest('.profile-menu-container')
-      ) {
-        setProfileOpen(false)
-      }
+      const target = e.target as Element | null
+      if (!target) return
+      if (!target.closest('[data-menu="profile"]')) setProfileOpen(false)
+      if (!target.closest('[data-menu="usecases"]')) setUseCasesOpen(false)
     }
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
-  }, [profileOpen])
+  }, [profileOpen, useCasesOpen])
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileMenuOpen])
 
   const closeMenus = () => {
     setMobileMenuOpen(false)
     setProfileOpen(false)
-    setUseCasesHovered(false)
+    setUseCasesOpen(false)
   }
 
   return (
-    <motion.nav
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className={cn(
-        'fixed left-0 right-0 top-0 z-50 border-b transition-all duration-300',
-        scrolled
-          ? 'border-gray-200/80 bg-white/80 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-white/60'
-          : 'border-transparent bg-white/70 backdrop-blur-lg',
-      )}
-    >
-      <div
+    <>
+      {/* Top coordinate strip — visible at all times on large screens */}
+      <div className="pointer-events-none fixed left-0 right-0 top-0 z-[60] hidden select-none justify-between px-6 pt-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-fog/60 lg:flex">
+        <span>
+          <span className="text-signal">◆</span> flowcraft / drafting suite /
+          build 04.19
+        </span>
+        <span>N 40°42′ · W 74°00′ · v.2026</span>
+      </div>
+
+      <motion.nav
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
-          'mx-auto px-6 lg:px-8',
-          isAuthenticated ? 'max-w-7xl' : 'max-w-[1200px]',
+          'fixed left-0 right-0 top-0 z-50 transition-[background,backdrop-filter,border-color] duration-300',
+          scrolled
+            ? 'border-b border-rule bg-ink/85 backdrop-blur-xl'
+            : 'border-b border-transparent bg-ink',
         )}
+        style={{
+          backgroundImage:
+            'linear-gradient(to bottom, rgba(196,255,61,0.06), transparent 60%)',
+        }}
       >
         <div
           className={cn(
-            'flex items-center justify-between',
-            isAuthenticated ? 'h-16' : 'h-[72px]',
+            'mx-auto flex items-center justify-between px-5 lg:px-8',
+            isAuthenticated ? 'max-w-[1400px]' : 'max-w-[1280px]',
+            'h-[68px] lg:h-[76px]',
           )}
         >
-          <div className="flex items-center gap-x-8">
+          {/* Logo block */}
+          <div className="flex items-center gap-x-6 lg:gap-x-10">
             <Link
               href={isAuthenticated ? '/dashboard' : '/'}
-              className="flex-shrink-0 outline-none"
-              aria-label={isAuthenticated ? 'Go to Dashboard' : 'Go to Home'}
+              onClick={closeMenus}
+              className="group flex items-center gap-2.5 outline-none"
+              aria-label="FlowCraft"
             >
-              <motion.div
-                whileHover={{ opacity: 0.8 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <Image
-                  className="h-10 w-auto"
-                  src={FlowCraftLogo}
-                  alt="FlowCraft Logo"
-                  priority
-                  width={160}
-                  height={40}
-                />
-              </motion.div>
+              <span className="relative flex h-8 w-8 items-center justify-center">
+                <span className="absolute inset-0 rounded-full bg-signal/10 blur-md transition-opacity duration-500 group-hover:opacity-100" />
+                <svg
+                  viewBox="0 0 32 32"
+                  className="relative h-8 w-8"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <circle
+                    cx="16"
+                    cy="16"
+                    r="14.5"
+                    stroke="#C4FF3D"
+                    strokeWidth="1"
+                    strokeDasharray="2 3"
+                    className="origin-center transition-transform duration-[1200ms] group-hover:rotate-90"
+                  />
+                  <path
+                    d="M10 11h12M10 16h8M10 21h5"
+                    stroke="#F3EFE4"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="22" cy="16" r="1.5" fill="#C4FF3D" />
+                </svg>
+              </span>
+              <span className="flex flex-col leading-none">
+                <span className="font-serif text-[22px] text-paper">
+                  Flow<span className="italic text-signal">craft</span>
+                </span>
+                <span className="mt-0.5 hidden font-mono text-[9px] uppercase tracking-[0.3em] text-fog md:block">
+                  drafting / visuals / flow
+                </span>
+              </span>
             </Link>
 
-            <div className="hidden lg:flex lg:items-center lg:gap-x-1">
+            {/* Desktop nav */}
+            <div className="hidden items-center gap-x-1 lg:flex">
               {isAuthenticated ? (
-                <>
-                  {authenticatedNavigation.map((item) => (
-                    <NavLink key={item.name} href={item.href}>
-                      {item.icon && <item.icon className="mr-1.5 h-4 w-4" />}
-                      {item.name}
-                    </NavLink>
-                  ))}
-                </>
+                authenticatedNavigation.map((item) => (
+                  <DeskNavLink key={item.name} href={item.href}>
+                    {item.name}
+                  </DeskNavLink>
+                ))
               ) : (
                 <>
                   {mainNavigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                    >
+                    <DeskNavLink key={item.name} href={item.href}>
                       {item.name}
-                    </Link>
+                    </DeskNavLink>
                   ))}
 
-                  <div
-                    className="relative h-full py-2"
-                    onMouseEnter={() => setUseCasesHovered(true)}
-                    onMouseLeave={() => setUseCasesHovered(false)}
-                  >
-                    <button className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900">
-                      Use Cases
-                      <ChevronDownIcon
-                        className={cn(
-                          'h-3 w-3 transition-transform duration-200',
-                          useCasesHovered ? 'rotate-180' : '',
-                        )}
-                      />
+                  <div className="relative" data-menu="usecases">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setUseCasesOpen((o) => !o)
+                      }}
+                      className="group flex items-center gap-1.5 rounded-sm px-3 py-2 text-sm text-paper/70 transition-colors hover:text-paper"
+                    >
+                      <span>Studios</span>
+                      <motion.svg
+                        animate={{ rotate: useCasesOpen ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="h-3 w-3 text-fog"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <path d="M3 5l3 3 3-3" />
+                      </motion.svg>
                     </button>
 
                     <AnimatePresence>
-                      {useCasesHovered && (
+                      {useCasesOpen && (
                         <motion.div
-                          initial={{ opacity: 0, y: 10 }}
+                          initial={{ opacity: 0, y: -6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute left-1/2 top-full w-56 -translate-x-1/2 pt-4"
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.18 }}
+                          className="absolute left-0 top-full mt-3 w-[280px] origin-top"
                         >
-                          <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg ring-1 ring-black/5">
-                            <div className="p-2">
+                          <div className="relative overflow-hidden rounded-sm border border-rule bg-graphite shadow-2xl shadow-black/40">
+                            <div className="flex items-center justify-between border-b border-rule px-4 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                              <span>Specimen · Studios</span>
+                              <span className="text-signal">●</span>
+                            </div>
+                            <div className="p-1.5">
                               {useCasesNavigation.map((item) => (
                                 <Link
                                   key={item.name}
                                   href={item.href}
-                                  className="block rounded-lg px-4 py-2.5 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
+                                  target={item.external ? '_blank' : undefined}
+                                  rel={
+                                    item.external
+                                      ? 'noopener noreferrer'
+                                      : undefined
+                                  }
+                                  onClick={closeMenus}
+                                  className="group flex items-center justify-between rounded-sm px-3 py-2.5 text-paper/80 transition-colors hover:bg-ink hover:text-paper"
                                 >
-                                  {item.name}
+                                  <span className="text-sm">{item.name}</span>
+                                  <span className="font-mono text-xs text-fog transition-transform duration-200 group-hover:translate-x-1 group-hover:text-signal">
+                                    →
+                                  </span>
                                 </Link>
                               ))}
                             </div>
@@ -201,87 +245,98 @@ export default function NavbarClient({ auth }: { auth: NavbarAuth }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-x-4">
+          {/* Right actions */}
+          <div className="flex items-center gap-x-3">
             {isAuthenticated ? (
               <>
                 {!isSubscribed && (
-                  <div className="hidden md:block">
-                    <Link
-                      href="/pricing?sourcePage=dashboard"
-                      className="flex items-center rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:from-indigo-500 hover:to-purple-500 hover:shadow-md active:scale-95"
-                    >
-                      Upgrade
-                    </Link>
-                  </div>
+                  <Link
+                    href="/pricing?sourcePage=dashboard"
+                    className="group relative hidden overflow-hidden rounded-sm border border-signal/40 bg-signal/10 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] text-signal transition-colors hover:bg-signal/20 md:inline-flex"
+                  >
+                    <span className="relative z-10">★ Upgrade</span>
+                    <span className="absolute inset-y-0 -left-10 w-10 skew-x-[-20deg] bg-signal/30 transition-transform duration-700 group-hover:translate-x-[220%]" />
+                  </Link>
                 )}
 
-                <div className="hidden md:block">
-                  <Link
-                    href="/dashboard/diagrams/new"
-                    className="flex items-center rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition-transform hover:scale-105 hover:bg-gray-800 active:scale-95"
-                  >
-                    <PlusIcon className="mr-1.5 h-4 w-4 text-gray-300" />
-                    New Creation
-                  </Link>
-                </div>
+                <Link
+                  href="/dashboard/diagrams/new"
+                  className="group hidden items-center gap-2 rounded-sm bg-signal px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] text-ink transition-colors hover:bg-paper md:inline-flex"
+                >
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inset-0 animate-ping rounded-full bg-ink opacity-60" />
+                    <span className="relative h-1.5 w-1.5 rounded-full bg-ink" />
+                  </span>
+                  New Draft
+                </Link>
 
-                <div className="profile-menu-container relative hidden md:block">
+                <div className="relative hidden md:block" data-menu="profile">
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      setProfileOpen(!profileOpen)
+                      setProfileOpen((o) => !o)
                     }}
-                    className="flex items-center gap-x-2 rounded-full border border-gray-200 bg-white py-1.5 pl-1.5 pr-3 transition-colors hover:border-gray-300 focus:outline-none"
+                    className="flex items-center gap-x-2.5 rounded-sm border border-rule bg-graphite px-2 py-1.5 text-paper transition-colors hover:border-signal/50"
                     aria-label="Open user menu"
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100">
-                      {userName ? (
-                        <span className="text-xs font-semibold text-gray-600">
-                          {userName.charAt(0).toUpperCase()}
-                        </span>
-                      ) : (
-                        <UserIcon className="h-4 w-4 text-gray-500" />
-                      )}
+                    <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-signal/15 font-mono text-[11px] font-medium text-signal">
+                      {(userName || 'U').charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium text-gray-700">
-                      {userName}
-                    </span>
-                    <ChevronDownIcon
-                      className={cn(
-                        'h-3 w-3 text-gray-400 transition-transform duration-200',
-                        profileOpen ? 'rotate-180' : '',
-                      )}
-                    />
+                    <span className="text-sm">{userName}</span>
+                    <motion.svg
+                      animate={{ rotate: profileOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="h-3 w-3 text-fog"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    >
+                      <path d="M3 5l3 3 3-3" />
+                    </motion.svg>
                   </button>
 
                   <AnimatePresence>
                     {profileOpen && (
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 4 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 4 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-xl bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+                        initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                        transition={{ duration: 0.18 }}
+                        className="absolute right-0 mt-3 w-64 origin-top-right overflow-hidden rounded-sm border border-rule bg-graphite shadow-2xl shadow-black/40"
                       >
-                        <div className="px-4 py-3">
-                          <p className="truncate text-sm font-medium text-gray-900">
+                        <div className="border-b border-rule px-4 py-3">
+                          <p className="font-serif text-base text-paper">
                             {userName}
                           </p>
-                          <p className="truncate text-xs text-gray-500">
+                          <p className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.15em] text-fog">
                             {userEmail}
                           </p>
+                          <div className="mt-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em]">
+                            <span
+                              className={cn(
+                                'inline-flex h-1.5 w-1.5 rounded-full',
+                                isSubscribed
+                                  ? 'bg-signal'
+                                  : 'bg-fog animate-tick',
+                              )}
+                            />
+                            <span className="text-fog">
+                              {isSubscribed ? 'Pro access' : 'Free tier'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="py-1">
+                        <div className="p-1">
                           {ProfileMenu.map((item) => (
                             <Link
                               key={item.title}
                               href={item.link}
                               onClick={closeMenus}
                               className={cn(
-                                'group flex items-center rounded-lg px-4 py-2 text-sm transition-colors',
+                                'block rounded-sm px-3 py-2 text-sm transition-colors',
                                 item.danger
-                                  ? 'text-red-600 hover:bg-red-50'
-                                  : 'text-gray-700 hover:bg-gray-50',
+                                  ? 'text-red-300/80 hover:bg-red-500/10 hover:text-red-300'
+                                  : 'text-paper/80 hover:bg-ink hover:text-paper',
                               )}
                             >
                               {item.title}
@@ -294,200 +349,215 @@ export default function NavbarClient({ auth }: { auth: NavbarAuth }) {
                 </div>
               </>
             ) : (
-              <div className="hidden items-center gap-4 lg:flex">
+              <div className="hidden items-center gap-2 lg:flex">
                 <Link
                   href="/login"
-                  className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+                  className="px-3 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-paper/70 transition-colors hover:text-paper"
                 >
-                  Sign In
+                  Sign in
                 </Link>
                 <Link
                   href="/login"
-                  className="inline-flex items-center justify-center rounded-full bg-gray-900 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-gray-800"
+                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-sm bg-signal px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] text-ink transition-colors hover:bg-paper"
                 >
-                  Get Started
+                  <span className="relative z-10">Start drafting</span>
+                  <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
+                    →
+                  </span>
                 </Link>
               </div>
             )}
 
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="-mr-2 p-2 text-gray-600 hover:text-gray-900 lg:hidden"
+              className="group -mr-2 flex h-11 w-11 items-center justify-center text-paper lg:hidden"
               aria-label="Open main menu"
             >
-              {isAuthenticated ? (
-                <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Bars2Icon className="h-6 w-6" />
-              )}
+              <div className="flex flex-col gap-[5px]">
+                <span className="h-px w-6 bg-paper transition-transform group-hover:w-7" />
+                <span className="h-px w-4 bg-signal transition-transform group-hover:w-7" />
+                <span className="h-px w-6 bg-paper transition-transform group-hover:w-7" />
+              </div>
             </button>
           </div>
         </div>
-      </div>
 
+        {/* Bottom signal accent line — only when scrolled */}
+        <motion.div
+          initial={false}
+          animate={{ scaleX: scrolled ? 1 : 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute bottom-0 left-0 h-px w-full origin-left bg-gradient-to-r from-transparent via-signal/40 to-transparent"
+        />
+      </motion.nav>
+
+      {/* Mobile overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 lg:hidden overflow-visible"
+            className="fixed inset-0 z-[70] lg:hidden"
           >
             <motion.div
-              className="fixed inset-0 bg-gray-900/20 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={closeMenus}
+              className="absolute inset-0 bg-ink/90 backdrop-blur-sm"
             />
 
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 z-50 w-full overflow-visible bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10"
+              transition={{ type: 'tween', duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="relative ml-auto flex h-full w-full max-w-sm flex-col overflow-hidden border-l border-rule bg-ink"
             >
-              <div className="flex items-center justify-between">
-                <Link
-                  href={isAuthenticated ? '/dashboard' : '/'}
-                  onClick={closeMenus}
-                >
-                  <Image
-                    className="h-8 w-auto"
-                    src={FlowCraftLogo}
-                    alt="FlowCraft"
-                    width={128}
-                    height={32}
-                  />
-                </Link>
+              <div
+                className="pointer-events-none absolute inset-0 opacity-40"
+                style={{
+                  backgroundImage:
+                    'radial-gradient(rgba(196,255,61,0.12) 1px, transparent 1px)',
+                  backgroundSize: '28px 28px',
+                }}
+              />
+
+              <div className="relative flex items-center justify-between border-b border-rule px-6 py-5">
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-fog">
+                  Index · Menu
+                </span>
                 <button
                   type="button"
-                  className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                  className="-m-2 p-2 text-paper"
                   onClick={closeMenus}
+                  aria-label="Close menu"
                 >
-                  <span className="sr-only">Close menu</span>
-                  <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    className="h-5 w-5"
+                  >
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
                 </button>
               </div>
 
-              <div className="mt-6 flow-root bg-white">
-                <div className="-my-6 divide-y divide-gray-500/10">
-                  {isAuthenticated ? (
-                    <>
-                      <div className="space-y-2 py-6">
-                        {authenticatedNavigation.map((item) => (
-                          <MobileNavLink
-                            key={item.name}
-                            href={item.href}
-                            onClick={closeMenus}
-                          >
-                            {item.icon ? (
-                              <span className="flex items-center gap-2">
-                                <item.icon className="h-4 w-4" /> {item.name}
-                              </span>
-                            ) : (
-                              item.name
-                            )}
-                          </MobileNavLink>
-                        ))}
-                      </div>
-
-                      <div className="space-y-4 py-6">
-                        <div className="flex items-center gap-x-3 px-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                            <UserIcon className="h-5 w-5 text-gray-500" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-gray-900">
-                              {userName}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {userEmail}
-                            </span>
-                          </div>
-                        </div>
-
-                        {ProfileMenu.map((item) => (
-                          <Link
-                            key={item.title}
-                            href={item.link}
-                            onClick={closeMenus}
-                            className={cn(
-                              '-mx-3 block rounded-lg px-3 py-2.5 text-base font-medium leading-7 hover:bg-gray-50',
-                              item.danger ? 'text-red-600' : 'text-gray-900',
-                            )}
-                          >
-                            {item.title}
-                          </Link>
-                        ))}
-
-                        <Link
-                          href="/dashboard/diagrams/new"
+              <div className="relative flex-1 overflow-y-auto px-6 py-8">
+                {isAuthenticated ? (
+                  <>
+                    <MobileGroup label="Workspace">
+                      {authenticatedNavigation.map((item, i) => (
+                        <MobileLink
+                          key={item.name}
+                          href={item.href}
+                          index={i}
                           onClick={closeMenus}
-                          className="mt-4 flex w-full items-center justify-center rounded-lg bg-black px-3 py-3 text-base font-semibold text-white shadow-sm hover:bg-gray-800"
                         >
-                          New Creation
-                        </Link>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="space-y-2 py-6">
-                        {mainNavigation.map((item) => (
-                          <MobileNavLink
-                            key={item.name}
-                            href={item.href}
-                            onClick={closeMenus}
-                          >
-                            {item.name}
-                          </MobileNavLink>
-                        ))}
-                      </div>
+                          {item.name}
+                        </MobileLink>
+                      ))}
+                    </MobileGroup>
 
-                      <div className="py-6">
-                        <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                          Use Cases
+                    <MobileGroup label="Account">
+                      <div className="mb-4 rounded-sm border border-rule bg-graphite p-4">
+                        <p className="font-serif text-lg text-paper">
+                          {userName}
                         </p>
-                        <div className="space-y-2">
-                          {useCasesNavigation.map((item) => (
-                            <MobileNavLink
-                              key={item.name}
-                              href={item.href}
-                              onClick={closeMenus}
-                            >
-                              {item.name}
-                            </MobileNavLink>
-                          ))}
-                        </div>
+                        <p className="mt-1 truncate font-mono text-[10px] uppercase tracking-[0.15em] text-fog">
+                          {userEmail}
+                        </p>
                       </div>
+                      {ProfileMenu.map((item, i) => (
+                        <MobileLink
+                          key={item.title}
+                          href={item.link}
+                          index={i + 3}
+                          onClick={closeMenus}
+                          danger={item.danger}
+                        >
+                          {item.title}
+                        </MobileLink>
+                      ))}
+                    </MobileGroup>
 
-                      <div className="flex flex-col gap-3 py-6">
-                        <Link
-                          href="/login"
+                    <Link
+                      href="/dashboard/diagrams/new"
+                      onClick={closeMenus}
+                      className="mt-6 flex items-center justify-between rounded-sm bg-signal px-4 py-4 font-mono text-[11px] uppercase tracking-[0.2em] text-ink"
+                    >
+                      <span>New Draft</span>
+                      <span>→</span>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <MobileGroup label="Navigate">
+                      {mainNavigation.map((item, i) => (
+                        <MobileLink
+                          key={item.name}
+                          href={item.href}
+                          index={i}
                           onClick={closeMenus}
-                          className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50"
                         >
-                          Sign In
-                        </Link>
-                        <Link
-                          href="/login"
+                          {item.name}
+                        </MobileLink>
+                      ))}
+                    </MobileGroup>
+
+                    <MobileGroup label="Studios">
+                      {useCasesNavigation.map((item, i) => (
+                        <MobileLink
+                          key={item.name}
+                          href={item.href}
+                          index={i + mainNavigation.length}
                           onClick={closeMenus}
-                          className="flex items-center justify-center rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white hover:bg-gray-800"
+                          external={item.external}
                         >
-                          Get Started
-                        </Link>
-                      </div>
-                    </>
-                  )}
-                </div>
+                          {item.name}
+                        </MobileLink>
+                      ))}
+                    </MobileGroup>
+
+                    <div className="mt-8 flex flex-col gap-3">
+                      <Link
+                        href="/login"
+                        onClick={closeMenus}
+                        className="flex items-center justify-center rounded-sm border border-rule px-4 py-4 font-mono text-[11px] uppercase tracking-[0.22em] text-paper hover:bg-graphite"
+                      >
+                        Sign in
+                      </Link>
+                      <Link
+                        href="/login"
+                        onClick={closeMenus}
+                        className="flex items-center justify-between rounded-sm bg-signal px-4 py-4 font-mono text-[11px] uppercase tracking-[0.2em] text-ink"
+                      >
+                        <span>Start drafting</span>
+                        <span>→</span>
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="relative flex items-center justify-between border-t border-rule px-6 py-4 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                <span>
+                  <span className="text-signal">◆</span> v.2026.04
+                </span>
+                <span>N 40°42′ · W 74°00′</span>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.nav>
+    </>
   )
 }
 
-function NavLink({
+function DeskNavLink({
   href,
   children,
 }: {
@@ -497,29 +567,74 @@ function NavLink({
   return (
     <Link
       href={href}
-      className="flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+      className="group relative flex items-center rounded-sm px-3 py-2 text-sm text-paper/70 transition-colors hover:text-paper"
     >
-      {children}
+      <span className="relative">
+        {children}
+        <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-signal transition-all duration-300 group-hover:w-full" />
+      </span>
     </Link>
   )
 }
 
-function MobileNavLink({
+function MobileGroup({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="mb-8">
+      <div className="mb-4 flex items-center gap-3">
+        <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-fog">
+          {label}
+        </span>
+        <span className="h-px flex-1 bg-rule" />
+      </div>
+      <div className="flex flex-col">{children}</div>
+    </div>
+  )
+}
+
+function MobileLink({
   href,
+  index = 0,
   onClick,
   children,
+  danger,
+  external,
 }: {
   href: string
+  index?: number
   onClick: () => void
   children: React.ReactNode
+  danger?: boolean
+  external?: boolean
 }) {
   return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.08 + index * 0.04, ease: [0.22, 1, 0.36, 1] }}
     >
-      {children}
-    </Link>
+      <Link
+        href={href}
+        target={external ? '_blank' : undefined}
+        rel={external ? 'noopener noreferrer' : undefined}
+        onClick={onClick}
+        className={cn(
+          'group flex items-center justify-between border-b border-rule py-4 transition-colors',
+          danger
+            ? 'text-red-300/80 hover:text-red-300'
+            : 'text-paper/80 hover:text-paper',
+        )}
+      >
+        <span className="font-serif text-2xl">{children}</span>
+        <span className="font-mono text-xs text-fog transition-transform duration-200 group-hover:translate-x-1 group-hover:text-signal">
+          →
+        </span>
+      </Link>
+    </motion.div>
   )
 }
