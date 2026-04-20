@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase-auth/server'
+import { handleSignupTemplate } from '@/lib/templates/handoff'
 
 export async function GET(request: NextRequest) {
   console.log('GET /auth/confirm: ', request.url.toString())
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
   console.log('GET /auth/confirm SEARCH PARAMS: ', searchParams.toString())
 
   const isCode = searchParams.get('code')
+  const templateId = searchParams.get('template')
 
   if (isCode) {
     const supabase = await createClient()
@@ -20,10 +22,13 @@ export async function GET(request: NextRequest) {
     console.log('GET /auth/confirm: ', error)
 
     if (!error) {
-      // Redirect them to dashboard if no error
-      return NextResponse.redirect(
-        new URL('/dashboard', request.nextUrl.origin),
-      )
+      // If the user came from a "Use this template" CTA before signup, clone
+      // it into their fresh account and drop them straight into the editor.
+      const newDiagramId = await handleSignupTemplate(templateId)
+      const dest = newDiagramId
+        ? `/dashboard/diagrams/${newDiagramId}`
+        : '/dashboard'
+      return NextResponse.redirect(new URL(dest, request.nextUrl.origin))
     }
 
     if (error) {
@@ -51,10 +56,12 @@ export async function GET(request: NextRequest) {
       })
       console.log('GET /auth/confirm: ', error)
       if (!error) {
-        // Redirect them to dashboard if no error
-        return NextResponse.redirect(
-          new URL('/dashboard', request.nextUrl.origin),
-        )
+        // Same template hand-off as the OAuth-code branch above.
+        const newDiagramId = await handleSignupTemplate(templateId)
+        const dest = newDiagramId
+          ? `/dashboard/diagrams/${newDiagramId}`
+          : '/dashboard'
+        return NextResponse.redirect(new URL(dest, request.nextUrl.origin))
       }
     }
 

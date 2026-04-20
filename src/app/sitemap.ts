@@ -1,6 +1,9 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@/lib/supabase-auth/server'
 import { getAllTools } from '@/lib/tools/loader'
+import { listTemplates } from '@/lib/templates/data'
+import { TEMPLATE_TYPES, TEMPLATE_TYPE_BY_ID } from '@/lib/templates/types'
+import { TEMPLATE_TOPICS } from '@/lib/templates/topics'
 
 const SITE = 'https://flowcraft.app'
 
@@ -32,6 +35,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }))
+
+  // Templates: hub + per-type + per-topic + every detail row.
+  let templateEntries: MetadataRoute.Sitemap = []
+  try {
+    const rows = await listTemplates()
+    templateEntries = [
+      {
+        url: `${SITE}/templates`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.9,
+      },
+      ...TEMPLATE_TYPES.map((t) => ({
+        url: `${SITE}/templates/${t.slug}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      })),
+      ...TEMPLATE_TOPICS.map((tp) => ({
+        url: `${SITE}/templates/topic/${tp.slug}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.6,
+      })),
+      ...rows.flatMap((r) => {
+        const t = TEMPLATE_TYPE_BY_ID[r.type]
+        if (!t) return []
+        return [
+          {
+            url: `${SITE}/templates/${t.slug}/${r.topic_slug}`,
+            lastModified: r.updated_at ? new Date(r.updated_at) : now,
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+          },
+        ]
+      }),
+    ]
+  } catch {
+    // If templates DB is not yet seeded, fall back to just the static routes.
+    templateEntries = []
+  }
 
   try {
     const supabase = await createClient()
@@ -67,8 +111,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }),
     )
 
-    return [...base, ...toolEntries, ...blogEntries, ...sharedEntries]
+    return [
+      ...base,
+      ...toolEntries,
+      ...templateEntries,
+      ...blogEntries,
+      ...sharedEntries,
+    ]
   } catch {
-    return [...base, ...toolEntries]
+    return [...base, ...toolEntries, ...templateEntries]
   }
 }

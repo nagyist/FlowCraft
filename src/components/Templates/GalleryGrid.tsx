@@ -1,0 +1,190 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+
+const CATEGORIES = ['engineering', 'product', 'ops', 'business', 'data'] as const
+
+interface Row {
+  id: string
+  type: string
+  topic_slug: string
+  topic_title: string
+  topic_category: string
+  description: string
+  thumbnail_svg: string | null
+}
+
+interface TypeMeta {
+  id: string
+  slug: string
+  title: string
+}
+
+interface TopicMeta {
+  slug: string
+  title: string
+  category: string
+}
+
+export function GalleryGrid({
+  rows,
+  types,
+}: {
+  rows: Row[]
+  types: TypeMeta[]
+  topics: ReadonlyArray<TopicMeta>
+}) {
+  const [q, setQ] = useState('')
+  const [activeTypes, setActiveTypes] = useState<Set<string>>(new Set())
+  const [activeCats, setActiveCats] = useState<Set<string>>(new Set())
+
+  const typeById = useMemo(
+    () => Object.fromEntries(types.map((t) => [t.id, t])),
+    [types],
+  )
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase()
+    return rows.filter((r) => {
+      if (activeTypes.size && !activeTypes.has(r.type)) return false
+      if (activeCats.size && !activeCats.has(r.topic_category)) return false
+      if (
+        needle &&
+        !`${r.topic_title} ${r.description}`.toLowerCase().includes(needle)
+      )
+        return false
+      return true
+    })
+  }, [rows, q, activeTypes, activeCats])
+
+  const toggle = (
+    set: Set<string>,
+    val: string,
+    setter: (s: Set<string>) => void,
+  ) => {
+    const next = new Set(set)
+    if (next.has(val)) next.delete(val)
+    else next.add(val)
+    setter(next)
+  }
+
+  return (
+    <div className="flex flex-col gap-6 lg:flex-row">
+      <aside className="lg:w-64 lg:shrink-0">
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search templates…"
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:border-slate-400 focus:outline-none"
+        />
+        <Section title="Diagram type">
+          {types.map((t) => (
+            <Chip
+              key={t.id}
+              label={t.title}
+              active={activeTypes.has(t.id)}
+              onClick={() => toggle(activeTypes, t.id, setActiveTypes)}
+            />
+          ))}
+        </Section>
+        <Section title="Category">
+          {CATEGORIES.map((c) => (
+            <Chip
+              key={c}
+              label={c}
+              active={activeCats.has(c)}
+              onClick={() => toggle(activeCats, c, setActiveCats)}
+            />
+          ))}
+        </Section>
+      </aside>
+
+      <div className="flex-1">
+        <div className="mb-4 text-sm text-slate-500">
+          {filtered.length} templates
+        </div>
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((r) => {
+            const t = typeById[r.type]
+            if (!t) return null
+            return (
+              <li key={r.id}>
+                <Link
+                  href={`/templates/${t.slug}/${r.topic_slug}`}
+                  className="block overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                >
+                  {r.thumbnail_svg ? (
+                    <div
+                      className="h-40 w-full overflow-hidden bg-slate-50 [&_svg]:h-full [&_svg]:w-full"
+                      dangerouslySetInnerHTML={{ __html: r.thumbnail_svg }}
+                    />
+                  ) : (
+                    <div className="h-40 w-full bg-gradient-to-br from-indigo-50 to-slate-50" />
+                  )}
+                  <div className="p-4">
+                    <div className="mb-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-600">
+                      {t.title}
+                    </div>
+                    <div className="text-sm font-medium text-slate-900">
+                      {r.topic_title}
+                    </div>
+                    <div className="mt-1 line-clamp-2 text-xs text-slate-500">
+                      {r.description}
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+        {filtered.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-slate-200 p-12 text-center text-slate-500">
+            No templates match your filters.
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="mt-5">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {title}
+      </h3>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
+    </div>
+  )
+}
+
+function Chip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full border px-3 py-1 text-xs capitalize transition ${
+        active
+          ? 'border-indigo-600 bg-indigo-600 text-white'
+          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
