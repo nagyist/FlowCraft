@@ -14,6 +14,7 @@ export type NavbarAuth = {
 
 const mainNavigation = [
   { name: 'Features', href: '/features' },
+  { name: 'Templates', href: '/templates' },
   { name: 'Gallery', href: '/gallery' },
   { name: 'Studio', href: '/image-studio' },
   { name: 'Pricing', href: '/pricing' },
@@ -32,12 +33,13 @@ const useCasesNavigation = [
 
 const authenticatedNavigation = [
   { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Templates', href: '/templates' },
   { name: 'Showcase', href: '/dashboard/showcase' },
   { name: 'Studio', href: '/image-studio' },
 ]
 
 const ProfileMenu = [
-  { title: 'Settings', link: '/dashboard/settings' },
+  // { title: 'Settings', link: '/dashboard/settings' },
   { title: 'Help Center', link: '/support' },
   { title: 'Sign Out', link: '/auth/logout', danger: true },
 ]

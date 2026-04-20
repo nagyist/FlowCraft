@@ -1,13 +1,13 @@
-import { motion } from 'framer-motion';
-import { HeartIcon, BookmarkIcon } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartIconSolid, BookmarkIcon as BookmarkIconSolid } from '@heroicons/react/24/solid';
-import { PublicVisual } from './PublicVisualType';
-import GalleryCard from './GalleryCard';
+'use client'
+
+import { PublicVisual } from './PublicVisualType'
+import GalleryCard from './GalleryCard'
+
 interface GalleryFeaturedSectionProps {
-  visuals: PublicVisual[];
-  onVisualClick: (visual: PublicVisual) => void;
-  onLike: (visualId: string) => Promise<boolean>;
-  onSave: (visualId: string) => Promise<boolean>;
+  visuals: PublicVisual[]
+  onVisualClick: (visual: PublicVisual) => void
+  onLike: (visualId: string) => Promise<boolean>
+  onSave: (visualId: string) => Promise<boolean>
 }
 
 export default function GalleryFeaturedSection({
@@ -16,20 +16,36 @@ export default function GalleryFeaturedSection({
   onLike,
   onSave,
 }: GalleryFeaturedSectionProps) {
-  const featuredVisuals = visuals
+  const featured = [...visuals]
     .sort((a, b) => (b.views || 0) - (a.views || 0))
-    .slice(0, 4);
+    .slice(0, 4)
+
+  if (featured.length === 0) return null
 
   return (
-    <div className="mb-12">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Popular This Week</h2>
+    <section className="mb-20">
+      <div className="flex items-end justify-between border-b border-rule pb-4">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+            Addendum · Popular
+          </div>
+          <h2 className="mt-3 font-serif text-4xl leading-[0.95] text-paper md:text-5xl">
+            Most viewed
+            <span className="italic text-signal"> this week.</span>
+          </h2>
+        </div>
+        <span className="hidden items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-fog md:inline-flex">
+          <span className="h-px w-8 bg-rule" />
+          Selection · 04
+        </span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {featuredVisuals.map((visual) => (
+
+      <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-4">
+        {featured.map((visual, i) => (
           <GalleryCard
             key={visual.id}
             visual={visual}
+            index={i}
             onClick={() => onVisualClick(visual)}
             onLike={onLike}
             onSave={onSave}
@@ -37,6 +53,6 @@ export default function GalleryFeaturedSection({
           />
         ))}
       </div>
-    </div>
-  );
+    </section>
+  )
 }

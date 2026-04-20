@@ -1,15 +1,17 @@
-import { useState } from 'react';
-import { PublicVisual } from './PublicVisualType';
-import EmptyState from './EmptyState';
-import GalleryCard from './GalleryCard';
+'use client'
+
+import { useState } from 'react'
+import { PublicVisual } from './PublicVisualType'
+import EmptyState from './EmptyState'
+import GalleryCard from './GalleryCard'
 
 interface GalleryGridProps {
-  visuals: PublicVisual[];
-  selectedFilter: string;
-  searchQuery: string;
-  onVisualClick: (visual: PublicVisual) => void;
-  onLike: (visualId: string) => Promise<boolean>;
-  onSave: (visualId: string) => Promise<boolean>;
+  visuals: PublicVisual[]
+  selectedFilter: string
+  searchQuery: string
+  onVisualClick: (visual: PublicVisual) => void
+  onLike: (visualId: string) => Promise<boolean>
+  onSave: (visualId: string) => Promise<boolean>
 }
 
 export default function GalleryGrid({
@@ -20,43 +22,64 @@ export default function GalleryGrid({
   onLike,
   onSave,
 }: GalleryGridProps) {
-  const [showAll, setShowAll] = useState(false);
-  const displayedVisuals = showAll ? visuals : visuals.slice(0, 10);
-  const totalItems = visuals.length;
-  const showingItems = displayedVisuals.length;
+  const [showAll, setShowAll] = useState(false)
+  const displayed = showAll ? visuals : visuals.slice(0, 12)
+  const total = visuals.length
+
+  const heading =
+    selectedFilter === 'Newest'
+      ? 'Recently drafted'
+      : selectedFilter === 'Trending'
+        ? 'Most viewed'
+        : selectedFilter === 'Generated Images'
+          ? 'Generated images'
+          : `${selectedFilter} · drafts`
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">
-          {selectedFilter === 'Newest' ? 'Recently Added' :
-            selectedFilter === 'Trending' ? 'Most Viewed' :
-            selectedFilter === 'Generated Images' ? 'Generated Images' :
-              `${selectedFilter} Diagrams`}
-        </h2>
-        
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            Showing {showingItems} of {totalItems} {totalItems === 1 ? 'item' : 'items'}
+    <section>
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-rule pb-4">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+            Index · {selectedFilter}
           </div>
-          
-          {totalItems > 10 && (
-            <button 
-              onClick={() => setShowAll(!showAll)}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          <h2 className="mt-3 font-serif text-4xl leading-[0.95] text-paper md:text-5xl">
+            {heading}
+            <span className="italic text-signal">.</span>
+          </h2>
+        </div>
+
+        <div className="flex items-center gap-6 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+          <span>
+            Showing{' '}
+            <span className="text-paper">
+              {displayed.length.toString().padStart(2, '0')}
+            </span>{' '}
+            of{' '}
+            <span className="text-paper">
+              {total.toString().padStart(2, '0')}
+            </span>
+          </span>
+          {total > 12 && (
+            <button
+              onClick={() => setShowAll((v) => !v)}
+              className="group inline-flex items-center gap-2 rounded-sm border border-rule px-3 py-2 text-paper/80 transition-colors hover:border-signal/50 hover:text-signal"
             >
-              {showAll ? 'Show Less' : 'View All'}
+              <span>{showAll ? 'Show less' : 'Reveal all'}</span>
+              <span className="transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
             </button>
           )}
         </div>
       </div>
 
-      {displayedVisuals.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {displayedVisuals.map((visual) => (
+      {displayed.length > 0 ? (
+        <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {displayed.map((visual, i) => (
             <GalleryCard
               key={visual.id}
               visual={visual}
+              index={i}
               onClick={() => onVisualClick(visual)}
               onLike={onLike}
               onSave={onSave}
@@ -66,6 +89,6 @@ export default function GalleryGrid({
       ) : (
         <EmptyState searchQuery={searchQuery} />
       )}
-    </div>
-  );
+    </section>
+  )
 }

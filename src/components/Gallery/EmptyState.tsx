@@ -1,19 +1,59 @@
+import Link from 'next/link'
+
 interface EmptyStateProps {
-    searchQuery: string;
-  }
-  
-  export default function EmptyState({ searchQuery }: EmptyStateProps) {
-    return (
-      <div className="text-center py-16">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <h3 className="mt-4 text-lg font-medium text-gray-900">No diagrams found</h3>
-        <p className="mt-1 text-gray-500 max-w-md mx-auto">
+  searchQuery: string
+}
+
+export default function EmptyState({ searchQuery }: EmptyStateProps) {
+  return (
+    <div className="relative mt-10 overflow-hidden rounded-sm border border-dashed border-rule bg-graphite/40 p-12 text-center">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            'radial-gradient(rgba(196,255,61,0.10) 1px, transparent 1px)',
+          backgroundSize: '14px 14px',
+        }}
+      />
+      <div className="relative mx-auto max-w-md">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-sm border border-rule bg-ink">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-7 w-7 text-fog"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+        <div className="mt-6 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+          Fig. 00 · Empty sheet
+        </div>
+        <h3 className="mt-3 font-serif text-3xl text-paper">
+          {searchQuery ? 'No matching drafts.' : 'Archive is empty.'}
+        </h3>
+        <p className="mt-3 text-sm leading-relaxed text-paper/60">
           {searchQuery
-            ? `No results for "${searchQuery}". Try a different search term.`
-            : 'There are currently no public diagrams available.'}
+            ? `Nothing filed under "${searchQuery}". Try a different term or clear the search.`
+            : 'There are no public drafts yet. Be the first to publish one.'}
         </p>
+        <Link
+          href="/dashboard/diagrams/new"
+          className="group mt-6 inline-flex items-center gap-2 rounded-sm bg-signal px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper"
+        >
+          <span>Start a draft</span>
+          <span className="transition-transform duration-300 group-hover:translate-x-1">
+            →
+          </span>
+        </Link>
       </div>
-    );
-  }
+    </div>
+  )
+}

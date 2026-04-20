@@ -218,12 +218,17 @@ export default async function Dashboard() {
         {/* Quick actions */}
         <section className="mb-20">
           <DashSectionHeader title="Quick draft" />
-          <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule md:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule md:grid-cols-3">
             <QuickActionCard
               href="/dashboard/diagrams/new"
               title="New diagram"
               desc="Start from a sentence. Flow, sequence, mind map, or knowledge graph."
               primary
+            />
+            <QuickActionCard
+              href="/templates"
+              title="Templates"
+              desc="420+ ready-to-edit starting points. Skip the blank canvas."
             />
             <QuickActionCard
               href="/image-studio"
