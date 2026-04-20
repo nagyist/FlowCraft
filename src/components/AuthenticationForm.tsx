@@ -222,91 +222,129 @@ export default function AuthenticationForm({
     }
   }
 
+  const pageLabel = isLoginOrSignup === 'login' ? 'Sheet · 01 · Access' : 'Sheet · 02 · Enroll'
+
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-white px-4 py-12 sm:px-6 lg:px-8">
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-ink px-4 py-12 sm:px-6 lg:px-8">
+      {/* dot grid */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            'radial-gradient(rgba(196,255,61,0.1) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
+      {/* corner crosshairs */}
+      <div className="pointer-events-none absolute left-6 top-6 hidden font-mono text-[10px] uppercase tracking-[0.25em] text-fog md:block">
+        <span className="text-signal">◆</span> flowcraft / auth
+      </div>
+      <div className="pointer-events-none absolute right-6 top-6 hidden font-mono text-[10px] uppercase tracking-[0.25em] text-fog md:block">
+        N 40°42′ · W 74°00′ · v.2026
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-[400px] space-y-8"
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative w-full max-w-[440px]"
       >
-        {/* Header Section */}
-        <div className="flex flex-col items-center text-center">
-          <Link href="/" className="mb-6">
-            <div className="h-16 w-16 overflow-hidden rounded-xl shadow-sm transition-transform hover:scale-105">
-              <Image
-                className="h-full w-full object-cover"
-                src={FlowCraftLogo}
-                alt="FlowCraft Logo"
-                height={100}
-                width={100}
-                priority
-              />
-            </div>
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-            {isLoginOrSignup === 'login' ? 'Welcome back' : 'Create account'}
-          </h1>
-          <p className="mt-2 text-sm text-gray-500">
-            {isLoginOrSignup === 'login'
-              ? 'Enter your details to access your workspace.'
-              : 'Start visualizing your ideas today.'}
-          </p>
-        </div>
+        <div className="relative overflow-hidden rounded-sm border border-rule bg-graphite shadow-2xl shadow-black/40">
+          {/* top strip */}
+          <div className="flex items-center justify-between border-b border-rule px-5 py-2.5 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+            <span>{pageLabel}</span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-signal animate-tick" />
+              <span className="text-signal">●</span>
+            </span>
+          </div>
 
-        {/* Main Form */}
-        <div className="mt-10">
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Email
-              </label>
-              <div className="mt-2">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="block w-full rounded-lg border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-600 sm:text-sm sm:leading-6"
-                  placeholder="name@example.com"
-                />
-              </div>
+          <div className="px-6 py-8 sm:px-10 sm:py-10">
+            {/* Header Section */}
+            <div className="flex flex-col items-center text-center">
+              <Link href="/" className="mb-6">
+                <div className="relative h-14 w-14 overflow-hidden rounded-sm border border-rule bg-ink p-1 transition-transform hover:scale-105">
+                  <Image
+                    className="h-full w-full object-cover"
+                    src={FlowCraftLogo}
+                    alt="FlowCraft Logo"
+                    height={100}
+                    width={100}
+                    priority
+                  />
+                </div>
+              </Link>
+              <h1 className="font-serif text-3xl leading-tight text-paper">
+                {isLoginOrSignup === 'login' ? (
+                  <>
+                    Welcome <span className="italic text-signal">back</span>
+                  </>
+                ) : (
+                  <>
+                    Begin a new <span className="italic text-signal">draft</span>
+                  </>
+                )}
+              </h1>
+              <p className="mt-2 max-w-sm text-sm leading-6 text-paper/60">
+                {isLoginOrSignup === 'login'
+                  ? 'Enter your credentials to access your workspace.'
+                  : 'Start visualizing your ideas — the canvas awaits.'}
+              </p>
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Password
-              </label>
-              <div className="mt-2">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete={
-                    isLoginOrSignup === 'login'
-                      ? 'current-password'
-                      : 'new-password'
-                  }
-                  required
-                  className="block w-full rounded-lg border-0 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gray-600 sm:text-sm sm:leading-6"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+            {/* Main Form */}
+            <div className="mt-8">
+              <form className="space-y-5" onSubmit={handleSubmit}>
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block font-mono text-[10px] uppercase tracking-[0.22em] text-fog"
+                  >
+                    Email
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      className="block w-full rounded-sm border border-rule bg-ink/60 px-3 py-2.5 text-sm text-paper placeholder:text-fog/70 focus:border-signal/50 focus:outline-none focus:ring-0"
+                      placeholder="name@example.com"
+                    />
+                  </div>
+                </div>
 
-            <div className="pt-2">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="flex w-full justify-center rounded-lg bg-gray-900 px-3 py-2.5 text-sm font-semibold leading-6 text-white shadow-sm transition-all duration-200 hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block font-mono text-[10px] uppercase tracking-[0.22em] text-fog"
+                  >
+                    Password
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete={
+                        isLoginOrSignup === 'login'
+                          ? 'current-password'
+                          : 'new-password'
+                      }
+                      required
+                      className="block w-full rounded-sm border border-rule bg-ink/60 px-3 py-2.5 text-sm text-paper placeholder:text-fog/70 focus:border-signal/50 focus:outline-none focus:ring-0"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="group relative flex w-full items-center justify-center overflow-hidden rounded-sm bg-signal px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-ink transition-colors hover:bg-paper disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
                 <AnimatePresence mode="wait">
                   {isLoading && loadingType === 'email' ? (
                     <motion.div
@@ -348,8 +386,16 @@ export default function AuthenticationForm({
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
+                      className="inline-flex items-center gap-2"
                     >
-                      {isLoginOrSignup === 'login' ? 'Sign in' : 'Create account'}
+                      <span>
+                        {isLoginOrSignup === 'login'
+                          ? 'Sign in'
+                          : 'Create account'}
+                      </span>
+                      <span className="transition-transform duration-200 group-hover:translate-x-1">
+                        →
+                      </span>
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -368,25 +414,25 @@ export default function AuthenticationForm({
           </div>
 
           {/* Toggle Login/Signup */}
-          <p className="mt-6 text-center text-sm text-gray-500">
+          <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-[0.2em] text-fog">
             {isLoginOrSignup === 'login' ? (
               <>
                 Not a member?{' '}
                 <Link
                   href="/sign-up"
-                  className="font-medium text-gray-900 hover:underline"
+                  className="text-signal transition-colors hover:text-paper"
                 >
-                  Sign up now
+                  Sign up →
                 </Link>
               </>
             ) : (
               <>
-                Already have an account?{' '}
+                Already a member?{' '}
                 <Link
                   href="/login"
-                  className="font-medium text-gray-900 hover:underline"
+                  className="text-signal transition-colors hover:text-paper"
                 >
-                  Sign in
+                  Sign in →
                 </Link>
               </>
             )}
@@ -398,22 +444,22 @@ export default function AuthenticationForm({
               className="absolute inset-0 flex items-center"
               aria-hidden="true"
             >
-              <div className="w-full border-t border-gray-200" />
+              <div className="w-full border-t border-rule" />
             </div>
-            <div className="relative flex justify-center text-sm font-medium leading-6">
-              <span className="bg-white px-4 text-gray-500">
+            <div className="relative flex justify-center">
+              <span className="bg-graphite px-4 font-mono text-[10px] uppercase tracking-[0.25em] text-fog">
                 Or continue with
               </span>
             </div>
           </div>
 
           {/* Social Buttons */}
-          <div className="mt-6 grid grid-cols-2 gap-4">
+          <div className="mt-6 grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={_loginWithGoogle}
               disabled={isLoading}
-              className="flex w-full items-center justify-center gap-3 rounded-lg bg-white px-3 py-2.5 text-sm font-medium text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 transition-all hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex w-full items-center justify-center gap-3 rounded-sm border border-rule bg-ink/60 px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-paper/80 transition-all hover:border-signal/40 hover:text-paper disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <AnimatePresence mode="wait">
                 {isLoading && loadingType === 'google' ? (
@@ -464,7 +510,7 @@ export default function AuthenticationForm({
               type="button"
               onClick={_loginWithGithub}
               disabled={isLoading}
-              className="flex w-full items-center justify-center gap-3 rounded-lg bg-white px-3 py-2.5 text-sm font-medium text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 transition-all hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex w-full items-center justify-center gap-3 rounded-sm border border-rule bg-ink/60 px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-paper/80 transition-all hover:border-signal/40 hover:text-paper disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <AnimatePresence mode="wait">
                 {isLoading && loadingType === 'github' ? (
@@ -510,6 +556,8 @@ export default function AuthenticationForm({
                 )}
               </AnimatePresence>
             </button>
+          </div>
+        </div>
           </div>
         </div>
       </motion.div>

@@ -4,11 +4,50 @@ export default function DiagramSkeleton() {
       role="status"
       aria-live="polite"
       aria-label="Loading diagram"
-      className="flex h-full min-h-[400px] w-full items-center justify-center rounded-lg bg-gray-50"
+      className="relative flex h-full min-h-[400px] w-full items-center justify-center overflow-hidden rounded-sm border border-rule bg-ink"
     >
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-200 border-t-gray-900" />
-        <div className="text-sm text-gray-500">Loading diagram…</div>
+      {/* dot grid */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            'radial-gradient(rgba(196,255,61,0.1) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
+      {/* scanline */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-40 animate-scan bg-gradient-to-r from-transparent via-signal/10 to-transparent" />
+
+      {/* corner labels */}
+      <div className="pointer-events-none absolute left-4 top-3 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+        <span className="text-signal">◆</span> drafting
+      </div>
+      <div className="pointer-events-none absolute right-4 top-3 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+        rendering · diagram
+      </div>
+
+      <div className="relative flex flex-col items-center gap-4">
+        <svg
+          viewBox="0 0 48 48"
+          className="h-12 w-12 animate-spin"
+          style={{ animationDuration: '3s' }}
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle
+            cx="24"
+            cy="24"
+            r="22"
+            stroke="#C4FF3D"
+            strokeWidth="1"
+            strokeDasharray="3 4"
+          />
+          <circle cx="24" cy="2" r="2" fill="#C4FF3D" />
+        </svg>
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-signal animate-tick" />
+          <span>Loading diagram</span>
+        </div>
       </div>
     </div>
   )

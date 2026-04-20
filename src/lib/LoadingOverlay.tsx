@@ -10,18 +10,18 @@ type ColorOptions =
   | 'pink'
   | 'green'
   | 'orange'
+  | 'signal'
 
 const LoadingOverlay = ({
   isLoading = false,
   text = 'Loading',
-  color = 'red' as ColorOptions,
-  backgroundColor = 'white',
+  color = 'signal' as ColorOptions,
+  backgroundColor = 'ink',
   fullScreen = false,
   zIndex = 50,
 }) => {
   const [dots, setDots] = useState('')
 
-  // Animated dots effect
   useEffect(() => {
     if (!isLoading) return
 
@@ -37,84 +37,59 @@ const LoadingOverlay = ({
 
   if (!isLoading) return null
 
-  // Color mapping for Tailwind classes
-  const colorMap = {
-    red: 'bg-red-600',
-    blue: 'bg-blue-600',
-    teal: 'bg-teal-600',
-    purple: 'bg-purple-600',
-    pink: 'bg-pink-600',
-    green: 'bg-green-600',
-    orange: 'bg-orange-600',
-  }
-  const colorClass = colorMap[color as ColorOptions] || 'bg-red-600'
-
   const bgClass =
-    backgroundColor === 'transparent' ? 'bg-transparent' : 'bg-white'
+    backgroundColor === 'transparent' ? 'bg-transparent' : 'bg-ink/90'
   const positionClass = fullScreen ? 'fixed inset-0' : 'absolute inset-0'
 
   return (
     <motion.div
-      className={`${positionClass} ${bgClass} flex flex-col items-center justify-center bg-opacity-80 z-${zIndex}`}
+      className={`${positionClass} ${bgClass} flex flex-col items-center justify-center backdrop-blur-sm z-${zIndex}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="flex flex-col items-center">
-        {/* Canva-inspired loader animation */}
-        <div className="mb-4 flex items-center justify-center">
-          <motion.div
-            className={`h-4 w-4 rounded-full ${colorClass} mr-1`}
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [1, 0.8, 1],
-            }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: 0,
-            }}
-          />
-          <motion.div
-            className={`h-4 w-4 rounded-full ${colorClass} mr-1`}
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [1, 0.8, 1],
-            }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: 0.2,
-            }}
-          />
-          <motion.div
-            className={`h-4 w-4 rounded-full ${colorClass}`}
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [1, 0.8, 1],
-            }}
-            transition={{
-              duration: 1.2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: 0.4,
-            }}
-          />
+      {/* dot grid backdrop */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{
+          backgroundImage:
+            'radial-gradient(rgba(196,255,61,0.1) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
+
+      <div className="relative flex flex-col items-center gap-5">
+        <div className="relative flex h-16 w-16 items-center justify-center">
+          <motion.svg
+            viewBox="0 0 64 64"
+            className="h-16 w-16"
+            fill="none"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+          >
+            <circle
+              cx="32"
+              cy="32"
+              r="29"
+              stroke="#C4FF3D"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+            />
+            <circle cx="32" cy="3" r="2.5" fill="#C4FF3D" />
+          </motion.svg>
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="inline-flex h-2 w-2 animate-tick rounded-full bg-signal" />
+          </span>
         </div>
 
-        {/* Text with animated dots */}
-        <motion.div
-          className="text-sm font-medium text-gray-700"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          {text}
-          {dots}
-        </motion.div>
+        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-paper">
+          <span className="text-signal">◆</span>
+          <span>
+            {text}
+            {dots}
+          </span>
+        </div>
       </div>
     </motion.div>
   )
