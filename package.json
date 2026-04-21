@@ -19,7 +19,7 @@
     "@next/mdx": "^14.1.0",
     "@next/third-parties": "^16.0.5",
     "@stripe/stripe-js": "^3.1.0",
-    "@supabase/ssr": "^0.1.0",
+    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.38.4",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.7",
