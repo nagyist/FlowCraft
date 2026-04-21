@@ -105,66 +105,85 @@ export default function DownloadMenu({
   return (
     <Menu as="div" className="relative">
       <Menu.Button
-        className="rounded-full p-2 text-gray-500 transition-all duration-150 hover:bg-gray-100 hover:text-gray-900"
+        className="rounded-sm p-2 text-fog transition-all duration-150 hover:bg-graphite hover:text-signal"
         title="Download"
         aria-label="Download"
       >
-        <ArrowDownTrayIcon className="h-5 w-5" />
+        <ArrowDownTrayIcon className="h-4 w-4" />
       </Menu.Button>
 
       <Transition
         as={Fragment}
-        enter="transition ease-out duration-100"
+        enter="transition ease-out duration-150"
         enterFrom="transform opacity-0 scale-95"
         enterTo="transform opacity-100 scale-100"
         leave="transition ease-in duration-75"
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items className="absolute right-0 top-full z-50 mt-2 w-48 origin-top-right rounded-xl border border-gray-200/80 bg-white py-1 shadow-xl shadow-black/5 focus:outline-none">
-          <Menu.Item>
-            {({ active }) => (
-              <button
-                onClick={handleDownloadPng}
-                className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm ${
-                  active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
-                }`}
-              >
-                <PhotoIcon className="h-4 w-4 text-gray-400" />
-                Download as PNG
-              </button>
-            )}
-          </Menu.Item>
+        <Menu.Items className="absolute right-0 top-full z-50 mt-2 w-56 origin-top-right overflow-hidden rounded-sm border border-rule bg-graphite py-1 shadow-2xl shadow-black/60 focus:outline-none">
+          <div className="border-b border-rule px-4 py-2.5 font-mono text-[9px] uppercase tracking-[0.28em] text-signal">
+            ▸ Export
+          </div>
+          <DownloadItem
+            onClick={handleDownloadPng}
+            icon={PhotoIcon}
+            label="Download as PNG"
+            ext="png"
+          />
           {isSvgType && (
-            <Menu.Item>
-              {({ active }) => (
-                <button
-                  onClick={handleDownloadSvg}
-                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm ${
-                    active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
-                  }`}
-                >
-                  <CodeBracketIcon className="h-4 w-4 text-gray-400" />
-                  Download as SVG
-                </button>
-              )}
-            </Menu.Item>
+            <DownloadItem
+              onClick={handleDownloadSvg}
+              icon={CodeBracketIcon}
+              label="Download as SVG"
+              ext="svg"
+            />
           )}
-          <Menu.Item>
-            {({ active }) => (
-              <button
-                onClick={handleDownloadPdf}
-                className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm ${
-                  active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
-                }`}
-              >
-                <DocumentIcon className="h-4 w-4 text-gray-400" />
-                Download as PDF
-              </button>
-            )}
-          </Menu.Item>
+          <DownloadItem
+            onClick={handleDownloadPdf}
+            icon={DocumentIcon}
+            label="Download as PDF"
+            ext="pdf"
+          />
         </Menu.Items>
       </Transition>
     </Menu>
+  )
+}
+
+function DownloadItem({
+  onClick,
+  icon: Icon,
+  label,
+  ext,
+}: {
+  onClick: () => void
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  ext: string
+}) {
+  return (
+    <Menu.Item>
+      {({ active }) => (
+        <button
+          onClick={onClick}
+          className={`group flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+            active ? 'bg-ink text-signal' : 'text-paper/80'
+          }`}
+        >
+          <Icon
+            className={`h-4 w-4 ${active ? 'text-signal' : 'text-fog'}`}
+          />
+          <span className="flex-1 text-left">{label}</span>
+          <span
+            className={`font-mono text-[9px] uppercase tracking-[0.22em] ${
+              active ? 'text-signal' : 'text-fog'
+            }`}
+          >
+            .{ext}
+          </span>
+        </button>
+      )}
+    </Menu.Item>
   )
 }

@@ -4,7 +4,6 @@ import {
   MagnifyingGlassPlusIcon,
   MagnifyingGlassMinusIcon,
   ArrowsPointingOutIcon,
-  ArrowsPointingInIcon,
 } from '@heroicons/react/24/outline'
 import { Maximize2, Minimize2 } from 'lucide-react'
 
@@ -24,15 +23,20 @@ export default function FloatingToolbar({
   isFullscreen,
 }: FloatingToolbarProps) {
   return (
-    <div className="absolute bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-gray-200/80 bg-white/90 px-2 py-1.5 shadow-lg shadow-black/5 backdrop-blur-xl">
+    <div className="absolute bottom-8 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-sm border border-rule bg-graphite/95 px-2 py-1.5 shadow-2xl shadow-black/40 backdrop-blur-xl">
+      <span className="pl-2 pr-1 font-mono text-[9px] uppercase tracking-[0.24em] text-fog">
+        ▸ Scale
+      </span>
+      <Divider />
       <ToolButton
         onClick={() => onZoom('out')}
         icon={MagnifyingGlassMinusIcon}
         label="Zoom Out"
         disabled={zoomLevel <= 25}
       />
-      <span className="w-14 select-none text-center font-mono text-xs font-medium text-gray-500">
-        {zoomLevel}%
+      <span className="w-12 select-none text-center font-mono text-[11px] font-medium text-paper">
+        {zoomLevel}
+        <span className="text-fog">%</span>
       </span>
       <ToolButton
         onClick={() => onZoom('in')}
@@ -61,7 +65,7 @@ export default function FloatingToolbar({
 }
 
 function Divider() {
-  return <div className="mx-0.5 h-4 w-px bg-gray-200" />
+  return <div className="mx-0.5 h-4 w-px bg-rule" />
 }
 
 function ToolButton({
@@ -79,7 +83,7 @@ function ToolButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-all duration-150 hover:bg-gray-900 hover:text-white active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+      className="flex h-8 w-8 items-center justify-center rounded-sm text-fog transition-all duration-150 hover:bg-signal hover:text-ink active:scale-95 disabled:pointer-events-none disabled:opacity-30"
       title={label}
       aria-label={label}
     >

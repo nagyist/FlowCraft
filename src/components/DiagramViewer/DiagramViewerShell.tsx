@@ -6,11 +6,8 @@ import {
   ChevronLeftIcon,
   ShareIcon,
   InformationCircleIcon,
-  ArrowsPointingOutIcon,
 } from '@heroicons/react/24/outline'
 import { Node, Edge } from 'reactflow'
-import Image from 'next/image'
-import FlowCraftLogo from '@/images/FlowCraftLogo_New.png'
 import FloatingToolbar from './FloatingToolbar'
 import InfoPanel from './InfoPanel'
 import ShareDialog from './ShareDialog'
@@ -46,22 +43,18 @@ export default function DiagramViewerShell({
   onBack,
   diagramId,
 }: DiagramViewerShellProps) {
-  // UI state
   const [headerVisible, setHeaderVisible] = useState(true)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const [shareDialogOpen, setShareDialogOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  // Zoom/pan state
   const [zoomLevel, setZoomLevel] = useState(100)
   const [position, setPosition] = useState({ x: 0, y: 0 })
 
-  // Refs
   const shellRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<DiagramCanvasHandle>(null)
   const headerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Auto-hide header
   const resetHeaderTimer = useCallback(() => {
     setHeaderVisible(true)
     if (headerTimerRef.current) clearTimeout(headerTimerRef.current)
@@ -79,7 +72,6 @@ export default function DiagramViewerShell({
 
   const handleMouseMoveOnShell = useCallback(
     (e: React.MouseEvent) => {
-      // Show header when mouse is near top
       if (e.clientY < 80) {
         setHeaderVisible(true)
         if (headerTimerRef.current) clearTimeout(headerTimerRef.current)
@@ -90,7 +82,6 @@ export default function DiagramViewerShell({
     [headerVisible, resetHeaderTimer],
   )
 
-  // Keyboard accessibility - show header on Tab/Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Tab' || e.key === 'Escape') {
@@ -102,7 +93,6 @@ export default function DiagramViewerShell({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [resetHeaderTimer])
 
-  // Fullscreen
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
@@ -121,7 +111,6 @@ export default function DiagramViewerShell({
     }
   }, [])
 
-  // Zoom
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     setZoomLevel((prev) => {
       const step = 25
@@ -130,7 +119,6 @@ export default function DiagramViewerShell({
     })
   }, [])
 
-  // Fit to screen
   const handleFitToScreen = useCallback(() => {
     setZoomLevel(100)
     setPosition({ x: 0, y: 0 })
@@ -141,18 +129,32 @@ export default function DiagramViewerShell({
   return (
     <div
       ref={shellRef}
-      className="relative flex h-screen w-full flex-col overflow-hidden bg-[#FAFAFA]"
+      className="relative flex h-screen w-full flex-col overflow-hidden bg-ink text-paper"
       onMouseMove={handleMouseMoveOnShell}
     >
+      {/* Atmosphere — dot grid + signal bloom */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-50"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-40 top-1/4 h-[480px] w-[480px] rounded-full bg-signal/5 blur-[120px]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-40 bottom-0 h-[420px] w-[420px] rounded-full bg-signal/[0.04] blur-[120px]"
+      />
+
       {/* Auto-hiding header */}
       <AnimatePresence>
         {headerVisible && (
           <motion.header
-            initial={{ y: -48, opacity: 0 }}
+            initial={{ y: -56, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -48, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute left-0 right-0 top-0 z-30 flex h-12 items-center justify-between border-b border-gray-200/40 bg-white/80 px-4 backdrop-blur-xl"
+            exit={{ y: -56, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 right-0 top-0 z-30 flex h-14 items-center justify-between border-b border-rule bg-ink/85 px-6 backdrop-blur-xl"
             onMouseEnter={() => {
               if (headerTimerRef.current)
                 clearTimeout(headerTimerRef.current)
@@ -160,32 +162,37 @@ export default function DiagramViewerShell({
             }}
             onMouseLeave={resetHeaderTimer}
           >
-            {/* Left side */}
-            <div className="flex items-center gap-3">
+            {/* Left */}
+            <div className="flex items-center gap-4">
               {mode === 'owner' && onBack && (
                 <>
                   <button
                     onClick={onBack}
-                    className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                    aria-label="Back"
+                    className="group flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-fog transition-colors hover:text-signal"
+                    aria-label="Back to dashboard"
                   >
-                    <ChevronLeftIcon className="h-4 w-4" />
+                    <ChevronLeftIcon className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+                    Sheet
                   </button>
-                  <div className="h-4 w-px bg-gray-200" />
+                  <span className="font-mono text-[10px] text-fog/60">/</span>
                 </>
               )}
 
-              <div className="flex items-center gap-2.5">
-                <h1 className="max-w-[300px] truncate text-sm font-medium text-gray-900">
+              <div className="flex items-center gap-3">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inset-0 animate-ping rounded-full bg-signal/60" />
+                  <span className="relative h-1.5 w-1.5 rounded-full bg-signal" />
+                </span>
+                <h1 className="max-w-[340px] truncate font-serif text-lg leading-none text-paper">
                   {title || 'Untitled'}
                 </h1>
-                <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-gray-500">
+                <span className="border border-rule bg-graphite px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.24em] text-fog">
                   {type.replace('_', ' ')}
                 </span>
               </div>
             </div>
 
-            {/* Right side */}
+            {/* Right */}
             <div className="flex items-center gap-1">
               <HeaderButton
                 icon={InformationCircleIcon}
@@ -198,23 +205,37 @@ export default function DiagramViewerShell({
                 onClick={() => setShareDialogOpen(true)}
               />
               <DownloadMenu
-                contentRef={{ current: canvasRef.current?.contentElement ?? null }}
+                contentRef={{
+                  current: canvasRef.current?.contentElement ?? null,
+                }}
                 title={title}
                 type={type}
               />
 
-              <div className="ml-1 h-4 w-px bg-gray-200" />
-              <Image
-                src={FlowCraftLogo}
-                alt="FlowCraft"
-                className="ml-1 h-6 w-6 opacity-60"
-              />
+              <div className="mx-2 h-4 w-px bg-rule" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal">
+                ◆ FlowCraft
+              </span>
             </div>
           </motion.header>
         )}
       </AnimatePresence>
 
-      {/* Main canvas */}
+      {/* Margin marks — editorial sheet corners */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-6 top-20 font-mono text-[9px] uppercase tracking-[0.24em] text-fog/50"
+      >
+        ▸ Draft · {new Date().getFullYear()}
+      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-6 right-6 font-mono text-[9px] uppercase tracking-[0.24em] text-fog/50"
+      >
+        {zoomLevel}% · {type.replace('_', ' ')}
+      </div>
+
+      {/* Canvas */}
       <main className="relative flex-1">
         <DiagramCanvas
           ref={canvasRef}
@@ -234,7 +255,6 @@ export default function DiagramViewerShell({
         />
       </main>
 
-      {/* Floating toolbar (hide for flow diagrams since ReactFlow has its own controls) */}
       {!isFlowDiagram && (
         <FloatingToolbar
           zoomLevel={zoomLevel}
@@ -245,7 +265,6 @@ export default function DiagramViewerShell({
         />
       )}
 
-      {/* Info panel */}
       <InfoPanel
         open={infoPanelOpen}
         onClose={() => setInfoPanelOpen(false)}
@@ -255,7 +274,6 @@ export default function DiagramViewerShell({
         createdAt={createdAt}
       />
 
-      {/* Share dialog */}
       <ShareDialog
         open={shareDialogOpen}
         onClose={() => setShareDialogOpen(false)}
@@ -278,7 +296,7 @@ function HeaderButton({
   return (
     <button
       onClick={onClick}
-      className="rounded-full p-2 text-gray-500 transition-all duration-150 hover:bg-gray-100 hover:text-gray-900"
+      className="rounded-sm p-2 text-fog transition-all duration-150 hover:bg-graphite hover:text-signal"
       title={label}
       aria-label={label}
     >

@@ -8,11 +8,30 @@ import Link from 'next/link'
 import { DiagramViewerShell } from '@/components/DiagramViewer'
 
 const CanvasLoader = () => (
-  <div className="flex h-screen w-full flex-col items-center justify-center bg-[#FAFAFA]">
-    <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gray-200 border-t-gray-900" />
-    <p className="mt-4 animate-pulse text-sm font-medium text-gray-400">
-      Loading...
-    </p>
+  <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-ink text-paper">
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-50"
+    />
+    <div
+      aria-hidden
+      className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-signal/[0.06] blur-[120px]"
+    />
+    <div className="relative flex flex-col items-center">
+      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="absolute inset-0 animate-ping rounded-full bg-signal/60" />
+          <span className="relative h-1.5 w-1.5 rounded-full bg-signal" />
+        </span>
+        Sheet · Loading
+      </div>
+      <p className="mt-5 font-serif text-4xl italic text-paper/80">
+        Drafting canvas<span className="animate-pulse text-signal">.</span>
+      </p>
+      <div className="mt-6 h-px w-40 overflow-hidden bg-rule">
+        <div className="h-full w-1/3 animate-scan bg-signal" />
+      </div>
+    </div>
   </div>
 )
 
@@ -105,19 +124,39 @@ export default function DiagramPage({
 
   if (error) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-[#FAFAFA] text-center">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Diagram Not Found
-        </h2>
-        <p className="mt-2 text-sm text-gray-500">
-          The project you are looking for has been moved or deleted.
-        </p>
-        <Link
-          href="/dashboard"
-          className="mt-6 rounded-full bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800"
-        >
-          Go to Dashboard
-        </Link>
+      <div className="relative flex h-screen flex-col items-center justify-center overflow-hidden bg-ink px-6 text-center text-paper">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-50"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-signal/[0.04] blur-[120px]"
+        />
+        <div className="relative flex max-w-md flex-col items-center">
+          <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+            <span className="h-px w-10 bg-signal/50" />
+            Draft · 404
+          </div>
+          <h2 className="mt-6 font-serif text-5xl leading-[0.95] tracking-[-0.01em] text-paper">
+            <span className="text-paper/70">This sheet has</span>{' '}
+            <span className="italic text-signal">gone missing</span>
+            <span className="text-paper/70">.</span>
+          </h2>
+          <p className="mt-5 text-base leading-relaxed text-paper/60">
+            The draft you're looking for has been moved, deleted, or never
+            existed in this workspace.
+          </p>
+          <Link
+            href="/dashboard"
+            className="group mt-8 inline-flex items-center gap-3 rounded-sm bg-signal px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper"
+          >
+            ← Back to dashboard
+            <span className="transition-transform duration-300 group-hover:translate-x-1">
+              →
+            </span>
+          </Link>
+        </div>
       </div>
     )
   }

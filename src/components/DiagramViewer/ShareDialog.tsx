@@ -22,27 +22,26 @@ export default function ShareDialog({
   mode,
   diagramId,
 }: ShareDialogProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<'current' | 'share' | null>(null)
   const [generatingLink, setGeneratingLink] = useState(false)
   const [shareableLink, setShareableLink] = useState<string | null>(null)
 
   const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
 
-  const handleCopy = async (url: string) => {
+  const handleCopy = async (url: string, which: 'current' | 'share') => {
     try {
       await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setCopied(which)
+      setTimeout(() => setCopied(null), 2000)
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea')
       textarea.value = url
       document.body.appendChild(textarea)
       textarea.select()
       document.execCommand('copy')
       document.body.removeChild(textarea)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setCopied(which)
+      setTimeout(() => setCopied(null), 2000)
     }
   }
 
@@ -67,7 +66,7 @@ export default function ShareDialog({
   }
 
   const handleClose = () => {
-    setCopied(false)
+    setCopied(null)
     setShareableLink(null)
     onClose()
   }
@@ -84,7 +83,7 @@ export default function ShareDialog({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-ink/70 backdrop-blur-sm" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
@@ -98,36 +97,56 @@ export default function ShareDialog({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-                <div className="flex items-center justify-between">
-                  <Dialog.Title className="text-base font-semibold text-gray-900">
-                    Share
-                  </Dialog.Title>
-                  <button
-                    onClick={handleClose}
-                    className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                  >
-                    <XMarkIcon className="h-4 w-4" />
-                  </button>
+              <Dialog.Panel className="relative w-full max-w-md overflow-hidden rounded-sm border border-rule bg-graphite text-paper shadow-2xl shadow-black/60">
+                {/* atmosphere */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-30"
+                />
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-signal/10 blur-3xl"
+                />
+
+                <div className="relative border-b border-rule px-6 py-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+                        ◆ Transmit
+                      </div>
+                      <Dialog.Title className="mt-1.5 font-serif text-2xl leading-none text-paper">
+                        Share this draft
+                      </Dialog.Title>
+                    </div>
+                    <button
+                      onClick={handleClose}
+                      className="rounded-sm p-1.5 text-fog hover:bg-ink hover:text-signal"
+                      aria-label="Close"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="mt-5 space-y-4">
+                <div className="relative space-y-5 px-6 py-6">
                   {/* Current URL */}
                   <div>
-                    <label className="text-xs font-medium text-gray-500">
+                    <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em] text-fog">
+                      <span className="h-px w-4 bg-fog/60" />
                       Page link
                     </label>
-                    <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
-                      <LinkIcon className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                      <span className="flex-1 truncate text-sm text-gray-600">
+                    <div className="mt-3 flex items-center gap-2 border border-rule bg-ink px-3 py-2.5">
+                      <LinkIcon className="h-4 w-4 flex-shrink-0 text-fog" />
+                      <span className="flex-1 truncate font-mono text-xs text-paper/80">
                         {currentUrl}
                       </span>
                       <button
-                        onClick={() => handleCopy(currentUrl)}
-                        className="flex-shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
+                        onClick={() => handleCopy(currentUrl, 'current')}
+                        className="flex-shrink-0 rounded-sm p-1 text-fog transition-colors hover:bg-graphite hover:text-signal"
+                        aria-label="Copy page link"
                       >
-                        {copied ? (
-                          <CheckIcon className="h-4 w-4 text-green-500" />
+                        {copied === 'current' ? (
+                          <CheckIcon className="h-4 w-4 text-signal" />
                         ) : (
                           <ClipboardDocumentIcon className="h-4 w-4" />
                         )}
@@ -135,24 +154,26 @@ export default function ShareDialog({
                     </div>
                   </div>
 
-                  {/* Generate shareable link (owner mode only) */}
+                  {/* Shareable link (owner only) */}
                   {mode === 'owner' && diagramId && (
                     <div>
                       {shareableLink ? (
                         <div>
-                          <label className="text-xs font-medium text-gray-500">
+                          <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+                            <span className="h-px w-4 bg-signal/60" />
                             Public shareable link
                           </label>
-                          <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2.5">
-                            <LinkIcon className="h-4 w-4 flex-shrink-0 text-green-500" />
-                            <span className="flex-1 truncate text-sm text-green-700">
+                          <div className="mt-3 flex items-center gap-2 border border-signal/40 bg-signal/5 px-3 py-2.5">
+                            <LinkIcon className="h-4 w-4 flex-shrink-0 text-signal" />
+                            <span className="flex-1 truncate font-mono text-xs text-signal">
                               {shareableLink}
                             </span>
                             <button
-                              onClick={() => handleCopy(shareableLink)}
-                              className="flex-shrink-0 rounded-md p-1 text-green-500 transition-colors hover:bg-green-100"
+                              onClick={() => handleCopy(shareableLink, 'share')}
+                              className="flex-shrink-0 rounded-sm p-1 text-signal transition-colors hover:bg-signal/10"
+                              aria-label="Copy shareable link"
                             >
-                              {copied ? (
+                              {copied === 'share' ? (
                                 <CheckIcon className="h-4 w-4" />
                               ) : (
                                 <ClipboardDocumentIcon className="h-4 w-4" />
@@ -164,15 +185,24 @@ export default function ShareDialog({
                         <button
                           onClick={handleGenerateLink}
                           disabled={generatingLink}
-                          className="w-full rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                          className="group flex w-full items-center justify-between gap-3 rounded-sm bg-signal px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper disabled:opacity-50"
                         >
-                          {generatingLink
-                            ? 'Generating...'
-                            : 'Generate shareable link'}
+                          <span>
+                            {generatingLink
+                              ? 'Generating…'
+                              : '+ Generate shareable link'}
+                          </span>
+                          <span className="transition-transform duration-300 group-hover:translate-x-1.5">
+                            →
+                          </span>
                         </button>
                       )}
                     </div>
                   )}
+                </div>
+
+                <div className="relative border-t border-rule px-6 py-4 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                  ▸ Anyone with the link can read this draft
                 </div>
               </Dialog.Panel>
             </Transition.Child>

@@ -171,12 +171,13 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-        {/* Dot grid background */}
+        {/* Dot grid background — editorial sheet */}
         <div
-          className="pointer-events-none absolute inset-0 z-0 opacity-30"
+          className="pointer-events-none absolute inset-0 z-0 opacity-60"
           style={{
-            backgroundImage: 'radial-gradient(#d1d5db 1px, transparent 1px)',
-            backgroundSize: '20px 20px',
+            backgroundImage:
+              'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
           }}
         />
 
@@ -205,7 +206,7 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden rounded-xl bg-white shadow-2xl shadow-black/10 ring-1 ring-black/5"
+              className="relative overflow-hidden rounded-sm bg-white shadow-2xl shadow-black/60 ring-1 ring-rule"
             >
               <div className="min-h-[300px] min-w-[300px] p-8 md:p-12">
                 {svgCode && (
