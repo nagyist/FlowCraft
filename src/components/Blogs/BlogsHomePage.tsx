@@ -1,58 +1,27 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase-auth/client'
-import { BlogPost } from './schema'
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import {
-  ArrowRightIcon,
-  PlusIcon,
-  CalendarIcon,
-  UserIcon,
-} from '@heroicons/react/24/outline'
-import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase-auth/client'
+import { BlogPost } from './schema'
 
-// --- Components ---
-
-const BlogSkeleton = () => (
-  <div className="animate-pulse">
-    <div className="aspect-[16/9] w-full rounded-2xl bg-gray-100" />
-    <div className="mt-4 h-4 w-1/4 rounded bg-gray-100" />
-    <div className="mt-2 h-6 w-3/4 rounded bg-gray-100" />
-    <div className="mt-2 h-4 w-full rounded bg-gray-100" />
-  </div>
-)
-
-const EmptyState = ({ isAdmin }: { isAdmin: boolean }) => (
-  <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-gray-300 bg-gray-50 py-24 text-center">
-    <h3 className="text-lg font-semibold text-gray-900">No posts yet</h3>
-    <p className="mt-2 text-sm text-gray-500">
-      Stay tuned for updates from the team.
-    </p>
-    {isAdmin && (
-      <Link
-        href="/blogs/create"
-        className="mt-6 inline-flex items-center rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-      >
-        <PlusIcon className="mr-2 h-4 w-4" />
-        Create first post
-      </Link>
-    )}
-  </div>
-)
+/* ──────────────────────────────────────────── */
+/* Page                                         */
+/* ──────────────────────────────────────────── */
 
 export default function BlogsHomePage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [blogs, setBlogs] = useState<BlogPost[]>([])
   const [featuredPost, setFeaturedPost] = useState<BlogPost | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [time, setTime] = useState('')
 
   useEffect(() => {
-    const initData = async () => {
+    const init = async () => {
       const supabase = createClient()
 
-      // 1. Check Admin Status
       const { data: userData } = await supabase.auth.getUser()
       if (
         !!process.env.NEXT_PUBLIC_BLOG_ADMIN_ID &&
@@ -62,204 +31,528 @@ export default function BlogsHomePage() {
         setIsAdmin(true)
       }
 
-      // 2. Fetch Blogs
-      const { data: blogData, error } = await supabase
+      const { data, error } = await supabase
         .from('blog_posts')
         .select('*')
         .order('published_at', { ascending: false })
 
-      if (!error && blogData) {
-        if (blogData.length > 0) {
-          setFeaturedPost(blogData[0] as BlogPost)
-          setBlogs(blogData.slice(1) as BlogPost[])
-        }
+      if (!error && data && data.length > 0) {
+        setFeaturedPost(data[0] as BlogPost)
+        setBlogs(data.slice(1) as BlogPost[])
       }
       setIsLoading(false)
     }
+    init()
+  }, [])
 
-    initData()
+  useEffect(() => {
+    const update = () => {
+      const d = new Date()
+      setTime(
+        `${d.getUTCHours().toString().padStart(2, '0')}:${d
+          .getUTCMinutes()
+          .toString()
+          .padStart(2, '0')} UTC`,
+      )
+    }
+    update()
+    const i = setInterval(update, 1000 * 30)
+    return () => clearInterval(i)
   }, [])
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-24">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-12 flex items-end justify-between border-b border-gray-200 pb-8">
-          <div className="max-w-2xl">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              FlowCraft Blog
-            </h1>
-            <p className="mt-4 text-lg text-gray-500">
-              Insights, updates, and thoughts on design and engineering.
-            </p>
-          </div>
-          {isAdmin && (
-            <Link
-              href="/blogs/create"
-              className="hidden items-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-black sm:inline-flex"
-            >
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Manage Posts
-            </Link>
-          )}
-        </div>
+    <div className="min-h-screen overflow-x-hidden bg-ink text-paper selection:bg-signal selection:text-ink">
+      <main className="relative">
+        {/* ═══ MASTHEAD ═══ */}
+        <section className="relative overflow-hidden border-b border-rule pb-16 pt-12 lg:pb-24 lg:pt-20">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-60"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-[-10%] top-[20%] h-[460px] w-[600px] rounded-full"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(196,255,61,0.10), transparent 60%)',
+            }}
+          />
 
-        {isLoading ? (
-          <div className="space-y-12">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <div className="aspect-[16/9] animate-pulse rounded-2xl bg-gray-100" />
-              <div className="space-y-4">
-                <div className="h-8 w-3/4 animate-pulse rounded bg-gray-100" />
-                <div className="h-4 w-full animate-pulse rounded bg-gray-100" />
-                <div className="h-4 w-full animate-pulse rounded bg-gray-100" />
+          <div className="relative mx-auto max-w-[1280px] px-6 lg:px-8">
+            {/* sheet header */}
+            <div className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-rule pb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inset-0 animate-ping rounded-full bg-signal/60" />
+                    <span className="relative h-1.5 w-1.5 rounded-full bg-signal" />
+                  </span>
+                  <span className="text-paper">Sheet 03</span>
+                </span>
+                <span>/</span>
+                <span>Dispatch · Field Notes</span>
+                <span>/</span>
+                <span className="hidden sm:inline">Edition 2026.04</span>
+              </div>
+              <div className="hidden items-center gap-3 md:flex">
+                <span>{time || '—:—'}</span>
+                <span className="text-signal">◆</span>
+                <span>Editor in</span>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-              {[...Array(3)].map((_, i) => (
-                <BlogSkeleton key={i} />
-              ))}
-            </div>
-          </div>
-        ) : !featuredPost ? (
-          <EmptyState isAdmin={isAdmin} />
-        ) : (
-          <div className="space-y-16">
-            {/* Featured Hero Section */}
-            <section aria-label="Featured Post">
-              <article className="relative isolate flex flex-col gap-8 lg:flex-row">
-                <div className="lg:aspect-square relative aspect-[16/9] overflow-hidden rounded-2xl bg-gray-100 sm:aspect-[2/1] lg:w-1/2 lg:shrink-0">
-                  {featuredPost.image_url ? (
-                    <Image
-                      src={featuredPost.image_url}
-                      alt={featuredPost.title}
-                      fill
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+
+            <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-12">
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="lg:col-span-8"
+              >
+                <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+                  <span className="h-px w-12 bg-signal/50" />
+                  <span className="text-fog">The Flowcraft dispatch</span>
+                </div>
+                <h1 className="mt-6 font-serif text-[56px] leading-[0.95] tracking-[-0.01em] text-paper md:text-[96px] lg:text-[112px]">
+                  <span className="block">Notes from</span>
+                  <span className="block">
+                    <span className="italic text-signal">the drafting</span>
+                    <span className="text-fog">,</span>
+                  </span>
+                  <span className="block">room.</span>
+                </h1>
+                <p className="mt-10 max-w-xl text-lg leading-relaxed text-paper/70 md:text-xl">
+                  Essays, process dispatches, and product signals from the team
+                  teaching machines to draft beautiful diagrams.
+                </p>
+              </motion.div>
+
+              <motion.aside
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                className="lg:col-span-4"
+              >
+                <div className="relative overflow-hidden rounded-sm border border-rule bg-graphite">
+                  <CornerTicks />
+                  <div className="relative border-b border-rule px-5 py-3 font-mono text-[9px] uppercase tracking-[0.25em] text-fog">
+                    <div className="flex items-center justify-between">
+                      <span>Title block</span>
+                      <span className="text-signal">◆</span>
+                    </div>
+                  </div>
+                  <dl className="divide-y divide-rule font-mono text-[10px] uppercase tracking-[0.22em]">
+                    <Meta k="Volume" v="V · 2026" />
+                    <Meta k="Contributors" v="04" />
+                    <Meta k="Frequency" v="Irregular" />
+                    <Meta
+                      k="Filed"
+                      v={featuredPost ? `${blogs.length + 1} entries` : '—'}
                     />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-gray-50 text-gray-300">
-                      <span className="text-lg font-medium">
-                        No Cover Image
-                      </span>
+                  </dl>
+                  {isAdmin && (
+                    <div className="border-t border-rule p-4">
+                      <Link
+                        href="/blogs/create"
+                        className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-signal transition-opacity hover:opacity-80"
+                      >
+                        <span className="h-px w-6 bg-current" />
+                        New entry
+                      </Link>
                     </div>
                   )}
                 </div>
+                <div className="mt-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                  <span>Ref. 00</span>
+                  <span>Masthead</span>
+                </div>
+              </motion.aside>
+            </div>
+          </div>
+        </section>
 
-                <div className="flex flex-col justify-center">
-                  <div className="flex items-center gap-x-4 text-xs">
-                    <time
-                      dateTime={featuredPost.published_at}
-                      className="text-gray-500"
-                    >
-                      {new Date(featuredPost.published_at).toLocaleDateString(
-                        'en-US',
-                        {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric',
-                        },
-                      )}
-                    </time>
-                    <span className="relative z-10 rounded-full bg-gray-50 px-3 py-1.5 font-medium text-gray-600 hover:bg-gray-100">
-                      Featured
-                    </span>
-                  </div>
-                  <div className="group relative max-w-xl">
-                    <h3 className="mt-3 text-2xl font-bold leading-tight text-gray-900 group-hover:text-gray-600">
-                      <Link href={`/blogs/${featuredPost.id}`}>
-                        <span className="absolute inset-0" />
+        {/* ═══ FEATURED ═══ */}
+        {isLoading ? (
+          <LoadingState />
+        ) : !featuredPost ? (
+          <EmptyState isAdmin={isAdmin} />
+        ) : (
+          <>
+            <section className="relative py-24 lg:py-32">
+              <div className="mx-auto max-w-[1280px] px-6 lg:px-8">
+                <div className="mb-16 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em]">
+                  <span className="h-px w-12 bg-signal/50" />
+                  <span className="text-fog">Lead dispatch</span>
+                  <span className="text-signal">◆</span>
+                </div>
+
+                <motion.article
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-80px' }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                  className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14"
+                >
+                  <div className="order-2 lg:order-1 lg:col-span-5">
+                    <div className="flex items-baseline gap-4">
+                      <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-signal">
+                        Entry 01
+                      </span>
+                      <span className="h-px flex-1 bg-rule" />
+                      <time
+                        dateTime={featuredPost.published_at}
+                        className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog"
+                      >
+                        {formatDate(featuredPost.published_at)}
+                      </time>
+                    </div>
+
+                    <h2 className="mt-8 font-serif text-4xl leading-[1.02] tracking-[-0.01em] text-paper md:text-6xl">
+                      <Link
+                        href={`/blogs/${featuredPost.id}`}
+                        className="transition-colors hover:text-signal"
+                      >
                         {featuredPost.title}
                       </Link>
-                    </h3>
-                    <p className="mt-5 text-lg leading-8 text-gray-600">
+                    </h2>
+
+                    <p className="mt-6 max-w-lg text-lg leading-relaxed text-paper/70">
                       {featuredPost.description}
                     </p>
-                  </div>
-                  <div className="mt-6 flex border-t border-gray-100 pt-6">
-                    <div className="relative flex items-center gap-x-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-                        <UserIcon className="h-5 w-5 text-gray-400" />
-                      </div>
-                      <div className="text-sm leading-6">
-                        <p className="font-semibold text-gray-900">
-                          <span className="absolute inset-0" />
-                          {featuredPost.author}
-                        </p>
-                        <p className="text-gray-500">Author</p>
-                      </div>
+
+                    <div className="mt-8 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-fog">
+                      <span>By</span>
+                      <span className="text-paper">
+                        {featuredPost.author || 'Flowcraft'}
+                      </span>
                     </div>
+
+                    <Link
+                      href={`/blogs/${featuredPost.id}`}
+                      className="group mt-10 inline-flex items-center gap-3 rounded-sm bg-signal px-6 py-4 font-mono text-[12px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper"
+                    >
+                      <span>Read dispatch</span>
+                      <span className="transition-transform duration-300 group-hover:translate-x-1.5">
+                        →
+                      </span>
+                    </Link>
                   </div>
-                </div>
-              </article>
+
+                  <div className="order-1 lg:order-2 lg:col-span-7">
+                    <Link
+                      href={`/blogs/${featuredPost.id}`}
+                      className="group relative block"
+                    >
+                      <CornerTicks />
+                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm border border-rule bg-graphite">
+                        <div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 z-10 opacity-30 mix-blend-overlay"
+                          style={{
+                            backgroundImage:
+                              'linear-gradient(135deg, transparent 45%, rgba(196,255,61,0.25) 50%, transparent 55%)',
+                          }}
+                        />
+                        <div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 z-10 opacity-30"
+                          style={{
+                            backgroundImage:
+                              'radial-gradient(rgba(196,255,61,0.12) 1px, transparent 1px)',
+                            backgroundSize: '14px 14px',
+                          }}
+                        />
+                        {featuredPost.image_url ? (
+                          <Image
+                            src={featuredPost.image_url}
+                            alt={featuredPost.title}
+                            fill
+                            className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <SchematicPlaceholder />
+                        )}
+                      </div>
+                      <div className="mt-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                        <span>Fig. 01</span>
+                        <span>Lead dispatch · featured</span>
+                      </div>
+                    </Link>
+                  </div>
+                </motion.article>
+              </div>
             </section>
 
-            {/* Grid for Older Posts */}
+            {/* ═══ ARCHIVE GRID ═══ */}
             {blogs.length > 0 && (
-              <section
-                aria-label="Recent Posts"
-                className="border-t border-gray-200 pt-16"
-              >
-                <h2 className="mb-8 text-2xl font-bold tracking-tight text-gray-900">
-                  Recent Stories
-                </h2>
-                <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-12 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-                  {blogs.map((post) => (
-                    <article
-                      key={post.id}
-                      className="group flex flex-col items-start justify-between"
-                    >
-                      <div className="relative w-full">
-                        <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl bg-gray-100 sm:aspect-[3/2]">
-                          {post.image_url && (
-                            <Image
-                              src={post.image_url}
-                              alt={post.title}
-                              fill
-                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              <section className="border-t border-rule bg-graphite/30 py-24 lg:py-32">
+                <div className="mx-auto max-w-[1280px] px-6 lg:px-8">
+                  <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+                    <div className="lg:col-span-5">
+                      <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em]">
+                        <span className="h-px w-12 bg-signal/50" />
+                        <span className="text-fog">Archive</span>
+                      </div>
+                      <h2 className="mt-6 font-serif text-5xl leading-[0.95] tracking-[-0.01em] text-paper md:text-7xl">
+                        Earlier
+                        <br />
+                        <span className="italic text-signal">entries.</span>
+                      </h2>
+                    </div>
+                    <div className="lg:col-span-6 lg:col-start-7 lg:pt-10">
+                      <p className="max-w-md text-lg leading-relaxed text-paper/60">
+                        Every dispatch filed. Scroll the stack, pull a thread,
+                        follow it wherever it goes.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-20 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
+                    {blogs.map((post, i) => (
+                      <motion.article
+                        key={post.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: '-80px' }}
+                        transition={{
+                          delay: (i % 3) * 0.08,
+                          duration: 0.6,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className="group relative flex flex-col gap-5 bg-ink p-7 transition-colors duration-300 hover:bg-graphite"
+                      >
+                        <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                          <span>Entry {String(i + 2).padStart(2, '0')}</span>
+                          <span className="transition-transform duration-500 group-hover:rotate-90">
+                            ┼
+                          </span>
+                        </div>
+
+                        <Link href={`/blogs/${post.id}`} className="block">
+                          <div className="relative aspect-[4/3] overflow-hidden rounded-sm border border-rule bg-graphite">
+                            <div
+                              aria-hidden
+                              className="pointer-events-none absolute inset-0 z-10 opacity-30"
+                              style={{
+                                backgroundImage:
+                                  'radial-gradient(rgba(196,255,61,0.10) 1px, transparent 1px)',
+                                backgroundSize: '12px 12px',
+                              }}
                             />
-                          )}
-                        </div>
-                        <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/5" />
-                      </div>
-                      <div className="max-w-xl">
-                        <div className="mt-4 flex items-center gap-x-4 text-xs">
-                          <time
-                            dateTime={post.published_at}
-                            className="flex items-center gap-1 text-gray-500"
-                          >
-                            <CalendarIcon className="h-3.5 w-3.5" />
-                            {new Date(post.published_at).toLocaleDateString(
-                              'en-US',
-                              {
-                                month: 'short',
-                                day: 'numeric',
-                              },
+                            {post.image_url ? (
+                              <Image
+                                src={post.image_url}
+                                alt={post.title}
+                                fill
+                                className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                              />
+                            ) : (
+                              <SchematicPlaceholder mini />
                             )}
-                          </time>
-                        </div>
-                        <div className="group relative">
-                          <h3 className="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
-                            <Link href={`/blogs/${post.id}`}>
-                              <span className="absolute inset-0" />
-                              {post.title}
-                            </Link>
-                          </h3>
-                          <p className="mt-3 line-clamp-3 text-sm leading-6 text-gray-600">
-                            {post.description}
-                          </p>
-                        </div>
-                        <div className="relative mt-4 flex items-center gap-x-2 text-sm font-medium text-gray-900 group-hover:text-gray-600">
-                          Read article{' '}
-                          <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </div>
-                      </div>
-                    </article>
-                  ))}
+                            <span className="absolute bottom-2 right-2 z-20 font-mono text-[9px] uppercase tracking-[0.22em] text-fog">
+                              Fig. {String(i + 2).padStart(2, '0')}
+                            </span>
+                          </div>
+                        </Link>
+
+                        <time
+                          dateTime={post.published_at}
+                          className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog"
+                        >
+                          {formatDate(post.published_at)}
+                        </time>
+
+                        <h3 className="font-serif text-2xl leading-[1.1] text-paper transition-colors group-hover:text-signal">
+                          <Link href={`/blogs/${post.id}`}>{post.title}</Link>
+                        </h3>
+
+                        <p className="line-clamp-3 text-sm leading-relaxed text-paper/60">
+                          {post.description}
+                        </p>
+
+                        <Link
+                          href={`/blogs/${post.id}`}
+                          className="mt-auto inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-fog transition-colors hover:text-signal"
+                        >
+                          <span className="h-px w-6 bg-current" />
+                          Read
+                        </Link>
+                      </motion.article>
+                    ))}
+                  </div>
                 </div>
               </section>
             )}
+          </>
+        )}
+
+        {/* ═══ COLOPHON ═══ */}
+        <section className="relative overflow-hidden border-t border-rule py-20">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-40"
+          />
+          <div className="relative mx-auto max-w-[1280px] px-6 lg:px-8">
+            <div className="flex flex-wrap items-end justify-between gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+              <div>
+                <div className="text-signal">◆ End of sheet</div>
+                <div className="mt-2 text-paper">
+                  Flowcraft · Dispatch · MMXXVI
+                </div>
+              </div>
+              <Link
+                href="/"
+                className="group inline-flex items-center gap-3 text-paper transition-colors hover:text-signal"
+              >
+                <span className="transition-transform duration-300 group-hover:-translate-x-1">
+                  ←
+                </span>
+                <span>Return to drafting</span>
+              </Link>
+            </div>
           </div>
+        </section>
+      </main>
+    </div>
+  )
+}
+
+/* ──────────────────────────────────────────── */
+/* Subcomponents                                */
+/* ──────────────────────────────────────────── */
+
+function Meta({ k, v }: { k: string; v: string }) {
+  return (
+    <div className="flex items-center justify-between px-5 py-3">
+      <dt className="text-fog">{k}</dt>
+      <dd className="text-paper">{v}</dd>
+    </div>
+  )
+}
+
+function CornerTicks() {
+  return (
+    <>
+      <span className="pointer-events-none absolute -left-px -top-px z-20 h-3 w-3 border-l border-t border-signal" />
+      <span className="pointer-events-none absolute -right-px -top-px z-20 h-3 w-3 border-r border-t border-signal" />
+      <span className="pointer-events-none absolute -bottom-px -left-px z-20 h-3 w-3 border-b border-l border-signal" />
+      <span className="pointer-events-none absolute -bottom-px -right-px z-20 h-3 w-3 border-b border-r border-signal" />
+    </>
+  )
+}
+
+function formatDate(iso: string) {
+  if (!iso) return '—'
+  try {
+    return new Date(iso)
+      .toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+      })
+      .toUpperCase()
+  } catch {
+    return '—'
+  }
+}
+
+function SchematicPlaceholder({ mini = false }: { mini?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 200 150"
+      className="absolute inset-0 h-full w-full"
+      preserveAspectRatio="xMidYMid slice"
+      fill="none"
+    >
+      <g stroke="rgba(243,239,228,0.25)" strokeWidth="0.8">
+        <rect x="20" y="30" width="50" height="24" rx="1" />
+        <rect x="130" y="30" width="50" height="24" rx="1" />
+        <rect x="75" y="80" width="50" height="24" rx="1" />
+      </g>
+      <g
+        stroke="#C4FF3D"
+        strokeWidth="1"
+        strokeDasharray="3 3"
+        opacity="0.7"
+      >
+        <path d="M70 42 Q 90 42 100 80" />
+        <path d="M130 42 Q 110 42 100 80" />
+      </g>
+      {!mini && (
+        <g
+          fill="#76766F"
+          fontFamily="JetBrains Mono, monospace"
+          fontSize="6"
+        >
+          <text x="26" y="46">NODE · A</text>
+          <text x="136" y="46">NODE · B</text>
+          <text x="81" y="96">DRAFT</text>
+        </g>
+      )}
+    </svg>
+  )
+}
+
+function LoadingState() {
+  return (
+    <section className="py-24 lg:py-32">
+      <div className="mx-auto max-w-[1280px] px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+          <div className="space-y-4 lg:col-span-5">
+            <div className="h-4 w-24 animate-pulse bg-rule" />
+            <div className="h-14 w-full animate-pulse bg-rule" />
+            <div className="h-14 w-3/4 animate-pulse bg-rule" />
+            <div className="h-4 w-full animate-pulse bg-rule" />
+            <div className="h-4 w-5/6 animate-pulse bg-rule" />
+          </div>
+          <div className="lg:col-span-7">
+            <div className="aspect-[4/3] w-full animate-pulse border border-rule bg-graphite/50" />
+          </div>
+        </div>
+        <div className="mt-24 grid grid-cols-1 gap-px border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="space-y-4 bg-ink p-7"
+            >
+              <div className="aspect-[4/3] animate-pulse bg-graphite/60" />
+              <div className="h-4 w-2/3 animate-pulse bg-rule" />
+              <div className="h-4 w-full animate-pulse bg-rule" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function EmptyState({ isAdmin }: { isAdmin: boolean }) {
+  return (
+    <section className="py-28 lg:py-40">
+      <div className="mx-auto max-w-[720px] px-6 text-center lg:px-8">
+        <div className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em] text-fog">
+          <span className="h-px w-8 bg-fog" />
+          <span>Blank sheet</span>
+          <span className="h-px w-8 bg-fog" />
+        </div>
+        <h2 className="mt-8 font-serif text-5xl text-paper md:text-6xl">
+          The press is
+          <br />
+          <span className="italic text-signal">idle.</span>
+        </h2>
+        <p className="mt-6 text-lg leading-relaxed text-paper/60">
+          No dispatches filed yet. Check back soon — the drafting room is never
+          quiet for long.
+        </p>
+        {isAdmin && (
+          <Link
+            href="/blogs/create"
+            className="mt-10 inline-flex items-center gap-3 rounded-sm bg-signal px-6 py-4 font-mono text-[12px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper"
+          >
+            <span>File first entry</span>
+            <span>→</span>
+          </Link>
         )}
       </div>
-    </main>
+    </section>
   )
 }
