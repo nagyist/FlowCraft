@@ -93,6 +93,8 @@ export default function NewDiagramPage() {
   const [imageUrl, setImageUrl] = useState('')
   const [diagramId, setDiagramId] = useState<string | null>(null)
   const [validationWarnings, setValidationWarnings] = useState<string[]>([])
+  const [mermaidError, setMermaidError] = useState(false)
+  const [retrying, setRetrying] = useState(false)
 
   const [zoomLevel, setZoomLevel] = useState(1)
   const [usageData, setUsageData] = useState<any>(null)
@@ -132,6 +134,7 @@ export default function NewDiagramPage() {
     if (!mermaidCode || !mermaidContainerRef.current) return
     let cancelled = false
     mermaidContainerRef.current.innerHTML = ''
+    setMermaidError(false)
     ;(async () => {
       try {
         const ok = await mermaid
@@ -143,7 +146,7 @@ export default function NewDiagramPage() {
           mermaidContainerRef.current.innerHTML = svg
         }
       } catch {
-        if (!cancelled) setError('Failed to render chart.')
+        if (!cancelled) setMermaidError(true)
       } finally {
         document.getElementById('dmermaid-diagram')?.remove()
       }
@@ -153,6 +156,31 @@ export default function NewDiagramPage() {
       document.getElementById('dmermaid-diagram')?.remove()
     }
   }, [mermaidCode, zoomLevel])
+
+  const handleRetryMermaid = async () => {
+    if (retrying || !diagramId) return
+    setRetrying(true)
+    try {
+      const res = await fetch('/api/regenerate-diagram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ diagramId }),
+      })
+      if (!res.ok) {
+        console.error('Retry failed', await res.json().catch(() => null))
+        return
+      }
+      const { result } = await res.json()
+      if (result) {
+        setValidationWarnings([])
+        setMermaidCode(sanitizeMermaid(result))
+      }
+    } catch (err) {
+      console.error('Retry error', err)
+    } finally {
+      setRetrying(false)
+    }
+  }
 
   useEffect(() => {
     if (
@@ -281,6 +309,7 @@ export default function NewDiagramPage() {
     setMermaidCode('')
     setDiagramId(null)
     setValidationWarnings([])
+    setMermaidError(false)
     setImageUrl('')
     setZoomLevel(1)
     setPosition({ x: 0, y: 0 })
@@ -504,10 +533,32 @@ export default function NewDiagramPage() {
                     />
                   )}
                   {mermaidCode && (
-                    <div
-                      ref={mermaidContainerRef}
-                      className="rounded-sm bg-graphite p-8"
-                    />
+                    <>
+                      <div
+                        ref={mermaidContainerRef}
+                        className={`rounded-sm bg-graphite p-8 ${mermaidError ? 'hidden' : ''}`}
+                      />
+                      {mermaidError && (
+                        <div className="flex min-h-[260px] w-full max-w-md flex-col items-center justify-center gap-4 rounded-sm border border-rule bg-graphite p-8 text-center">
+                          <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-red-300">
+                            Render failed
+                          </div>
+                          <p className="max-w-sm text-sm text-paper/70">
+                            Unable to render diagram — the generated mermaid
+                            syntax was invalid.
+                          </p>
+                          {diagramId && (
+                            <button
+                              onClick={handleRetryMermaid}
+                              disabled={retrying}
+                              className="rounded-sm bg-signal px-4 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {retrying ? 'Retrying…' : 'Retry with original prompt'}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </>
                   )}
                   {imageUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
