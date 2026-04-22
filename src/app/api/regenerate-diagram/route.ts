@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   }
 
   const API_URL = process.env.NEXT_PUBLIC_FLOWCRAFT_API
-  const res = await fetch(`${API_URL}/diagrams/generate`, {
+  const res = await fetch(`${API_URL}/v2/diagrams/generate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
