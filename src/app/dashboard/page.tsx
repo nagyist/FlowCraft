@@ -86,9 +86,13 @@ export default async function Dashboard() {
 
   if (!user) return redirect(errorMessagePage)
 
+  const freeLimit = user.free_limit || 5
   const remaining = user.subscribed
     ? '∞'
-    : Math.max((user.free_limit || 5) - (user.diagrams_created || 0), 0)
+    : Math.max(freeLimit - (user.diagrams_created || 0), 0)
+  const atLimit = !user.subscribed && remaining === 0
+  const lowQuota =
+    !user.subscribed && typeof remaining === 'number' && remaining > 0 && remaining <= 1
 
   const stats = [
     { name: 'Total drafts', value: diagrams.length.toString() },
@@ -147,6 +151,111 @@ export default async function Dashboard() {
             </span>
           </div>
         </div>
+
+        {/* Quota notice — shown before the user attempts to draft */}
+        {atLimit && (
+          <section
+            aria-label="Monthly limit reached"
+            className="relative mb-10 overflow-hidden rounded-sm border border-red-400/40 bg-gradient-to-br from-red-500/[0.08] via-red-500/[0.04] to-transparent"
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-50"
+              style={{
+                backgroundImage:
+                  'radial-gradient(rgba(248,113,113,0.14) 1px, transparent 1px)',
+                backgroundSize: '16px 16px',
+              }}
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute left-3 top-3 h-2 w-2 border-l border-t border-red-400/70"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute right-3 top-3 h-2 w-2 border-r border-t border-red-400/70"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute bottom-3 left-3 h-2 w-2 border-b border-l border-red-400/70"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none absolute bottom-3 right-3 h-2 w-2 border-b border-r border-red-400/70"
+            />
+
+            <div className="relative grid grid-cols-1 items-center gap-8 p-8 md:grid-cols-12 md:p-10">
+              <div className="md:col-span-8">
+                <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-red-300/90">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inset-0 animate-ping rounded-full bg-red-400/60" />
+                    <span className="relative h-1.5 w-1.5 rounded-full bg-red-400" />
+                  </span>
+                  <span>Quota · Exhausted</span>
+                  <span className="text-red-300/40">/</span>
+                  <span className="text-red-300/70">
+                    {user.diagrams_created || 0} of {freeLimit} drafts used
+                  </span>
+                </div>
+                <h2 className="mt-5 font-serif text-4xl leading-[1.05] tracking-[-0.01em] text-paper md:text-5xl">
+                  You&apos;ve reached the{' '}
+                  <span className="italic text-red-300">free tier</span>{' '}
+                  <span className="text-paper/70">limit for this month.</span>
+                </h2>
+                <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-paper/60">
+                  New drafts are paused until your quota refreshes. Upgrade to Pro
+                  for unlimited drafts, priority generation, and full export
+                  formats — or keep browsing your existing work below.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 md:col-span-4 md:items-end">
+                <Link
+                  href="/pricing?sourcePage=dashboard-limit"
+                  className="group inline-flex items-center gap-3 rounded-sm bg-signal px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper"
+                >
+                  ★ Upgrade to Pro
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    →
+                  </span>
+                </Link>
+                <Link
+                  href="/dashboard/diagrams"
+                  className="group inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-fog transition-colors hover:text-paper"
+                >
+                  <span className="h-px w-6 bg-current" />
+                  Browse existing drafts
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Quota notice — low but not zero */}
+        {lowQuota && (
+          <section
+            aria-label="Low draft quota"
+            className="mb-10 flex flex-wrap items-center justify-between gap-4 rounded-sm border border-amber-300/25 bg-amber-200/[0.04] px-5 py-4"
+          >
+            <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.24em] text-amber-200/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
+              <span>Quota · Low</span>
+              <span className="text-amber-200/40">/</span>
+              <span className="text-paper/70">
+                {remaining} draft{remaining === 1 ? '' : 's'} left before limit
+              </span>
+            </div>
+            <Link
+              href="/pricing?sourcePage=dashboard-low-quota"
+              className="group inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-signal transition-colors hover:text-paper"
+            >
+              Upgrade to Pro
+              <span className="transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+          </section>
+        )}
 
         {/* Welcome block */}
         <section className="mb-12 grid grid-cols-1 items-end gap-8 lg:grid-cols-12">

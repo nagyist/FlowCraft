@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import clsx from 'clsx'
 import mermaid from 'mermaid'
+import toast from 'react-hot-toast'
 
 import { DiagramContext } from '@/lib/Contexts/DiagramContext'
 import { OptionType, sanitizeMermaid, sanitizeSVG } from '@/lib/utils'
@@ -354,6 +355,14 @@ export default function NewDiagramPage() {
 
     if (usageData && !usageData.can_create) {
       setError('Free limit reached. Upgrade to continue.')
+      toast.error('Free limit reached — upgrade to keep drafting', {
+        duration: 5000,
+      })
+      requestAnimationFrame(() => {
+        document
+          .getElementById('draft-error')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
       return
     }
 
@@ -635,10 +644,11 @@ export default function NewDiagramPage() {
         <AnimatePresence>
           {error && (
             <motion.div
+              id="draft-error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mb-8 flex items-start gap-3 rounded-sm border border-red-500/30 bg-red-500/5 p-4"
+              className="mb-8 flex items-start gap-3 rounded-sm border border-red-500/30 bg-red-500/5 p-4 scroll-mt-24"
             >
               <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-red-400" />
               <div>
