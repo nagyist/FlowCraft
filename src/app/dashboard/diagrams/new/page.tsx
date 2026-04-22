@@ -92,6 +92,7 @@ export default function NewDiagramPage() {
   const [mermaidCode, setMermaidCode] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [diagramId, setDiagramId] = useState<string | null>(null)
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([])
 
   const [zoomLevel, setZoomLevel] = useState(1)
   const [usageData, setUsageData] = useState<any>(null)
@@ -173,11 +174,13 @@ export default function NewDiagramPage() {
 
   useEffect(() => {
     if (streaming.finalResult) {
-      const { code, title, diagramId: streamDiagramId } = streaming.finalResult
+      const { code, title, diagramId: streamDiagramId, validationWarnings: warnings } =
+        streaming.finalResult
       const sanitized = sanitizeMermaid(code)
       setMermaidCode(sanitized)
       if (title) setGeneratedTitle(title)
       setDiagramId(streamDiagramId)
+      setValidationWarnings(warnings || [])
       setIsGenerated(true)
       setIsLoading(false)
       hideLoading()
@@ -277,6 +280,7 @@ export default function NewDiagramPage() {
     setSvgCode('')
     setMermaidCode('')
     setDiagramId(null)
+    setValidationWarnings([])
     setImageUrl('')
     setZoomLevel(1)
     setPosition({ x: 0, y: 0 })
@@ -381,6 +385,9 @@ export default function NewDiagramPage() {
 
       if (data.title) setGeneratedTitle(data.title)
       setDiagramId(data.diagram_id)
+      setValidationWarnings(
+        Array.isArray(data.validation_warnings) ? data.validation_warnings : [],
+      )
       setIsGenerated(true)
     } catch (e: any) {
       setError(e.message || 'An unexpected error occurred.')
@@ -426,6 +433,23 @@ export default function NewDiagramPage() {
               </p>
             </div>
           </div>
+
+          {validationWarnings.length > 0 && (
+            <div
+              role="status"
+              className="mb-6 rounded-sm border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-amber-200"
+            >
+              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-amber-300">
+                <span aria-hidden>⚠</span>
+                Generated with warnings
+              </div>
+              <ul className="mt-2 list-disc pl-5 font-mono text-[11px] leading-relaxed text-amber-100/90">
+                {validationWarnings.slice(0, 5).map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <section className="relative h-[72vh] w-full">
             <div className="relative h-full w-full overflow-hidden rounded-sm border border-rule bg-graphite">
@@ -592,7 +616,9 @@ export default function NewDiagramPage() {
                   <span className="relative h-2 w-2 rounded-full bg-signal" />
                 </span>
                 <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-signal">
-                  Drafting in progress
+                  {streaming.phase === 'retrying'
+                    ? 'Refining output…'
+                    : 'Drafting in progress'}
                 </span>
                 <button
                   type="button"

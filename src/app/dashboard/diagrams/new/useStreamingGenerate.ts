@@ -4,10 +4,14 @@ export type StreamingResult = {
   code: string
   title: string
   diagramId: string
+  validationWarnings: string[]
 }
+
+export type StreamingPhase = 'streaming' | 'retrying' | 'idle'
 
 export function useStreamingGenerate() {
   const [isStreaming, setIsStreaming] = useState(false)
+  const [phase, setPhase] = useState<StreamingPhase>('idle')
   const [partialCode, setPartialCode] = useState('')
   const [finalResult, setFinalResult] = useState<StreamingResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +34,7 @@ export function useStreamingGenerate() {
       abortRef.current = controller
 
       setIsStreaming(true)
+      setPhase('streaming')
       setPartialCode('')
       setFinalResult(null)
       setError(null)
@@ -87,12 +92,21 @@ export function useStreamingGenerate() {
               if (eventType === 'chunk' && parsed.code_delta) {
                 accumulated += parsed.code_delta
                 setPartialCode(accumulated)
+              } else if (eventType === 'retrying') {
+                setPhase('retrying')
+              } else if (eventType === 'replace' && typeof parsed.code === 'string') {
+                accumulated = parsed.code
+                setPartialCode(accumulated)
               } else if (eventType === 'complete' && parsed.done) {
                 setFinalResult({
                   code: parsed.code,
                   title: parsed.title || '',
                   diagramId: parsed.diagram_id || '',
+                  validationWarnings: Array.isArray(parsed.validation_warnings)
+                    ? parsed.validation_warnings
+                    : [],
                 })
+                setPhase('idle')
               } else if (eventType === 'error') {
                 throw new Error(parsed.error || 'Stream error')
               }
@@ -112,6 +126,7 @@ export function useStreamingGenerate() {
       } finally {
         if (!controller.signal.aborted) {
           setIsStreaming(false)
+          setPhase('idle')
         }
       }
     },
@@ -122,6 +137,7 @@ export function useStreamingGenerate() {
     if (abortRef.current) {
       abortRef.current.abort()
       setIsStreaming(false)
+      setPhase('idle')
     }
   }, [])
 
@@ -130,7 +146,8 @@ export function useStreamingGenerate() {
     setPartialCode('')
     setFinalResult(null)
     setError(null)
+    setPhase('idle')
   }, [cancel])
 
-  return { generate, isStreaming, partialCode, finalResult, error, cancel, reset }
+  return { generate, isStreaming, phase, partialCode, finalResult, error, cancel, reset }
 }
