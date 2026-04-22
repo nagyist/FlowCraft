@@ -27,6 +27,8 @@ export interface DiagramViewerShellProps {
   mode: 'owner' | 'viewer'
   onBack?: () => void
   diagramId?: string
+  onRetry?: () => Promise<void> | void
+  retrying?: boolean
 }
 
 export default function DiagramViewerShell({
@@ -42,6 +44,8 @@ export default function DiagramViewerShell({
   mode,
   onBack,
   diagramId,
+  onRetry,
+  retrying,
 }: DiagramViewerShellProps) {
   const [headerVisible, setHeaderVisible] = useState(true)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
@@ -252,6 +256,8 @@ export default function DiagramViewerShell({
           editableFlow={mode === 'owner'}
           diagramId={diagramId}
           title={title}
+          onRetry={mode === 'owner' ? onRetry : undefined}
+          retrying={retrying}
         />
       </main>
 

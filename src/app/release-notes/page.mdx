@@ -4,6 +4,23 @@ export { ReleaseNotesLayout as default } from '@/components/ReleaseNotesLayout'
 
 ![FlowCraft Logo](https://firebasestorage.googleapis.com/v0/b/shagunresume.appspot.com/o/FlowCraft%2FFlowCraftLogo_New.png?alt=media&token=1c8bf169-a2db-4498-bd7f-db27ad0977bb)
 
+## Version 6.1.0 — Retry on render failure
+
+Small but practical addition for anyone who's run into `Unable to render diagram.` in the viewer.
+
+### 🔁 Retry with original prompt
+
+When Mermaid can't parse a generated diagram, the viewer now shows an inline **"Retry with original prompt"** button instead of a dead-end message.
+
+- Hits a new `/api/regenerate-diagram` endpoint that re-runs generation with the diagram's original title, description, and type
+- Updates the diagram in place — no new row created, no lost link
+- Only available to the diagram owner; public share viewers are unaffected
+- Works for all mermaid-based diagram types (flow charts, sequence, class, ER, state, gitgraph, etc.)
+
+No more reloading the page, regenerating from scratch, or digging through the console.
+
+---
+
 ## Version 6.0.0 — The Drafting Studio
 
 Hello FlowCrafters!

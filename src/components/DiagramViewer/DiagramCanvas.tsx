@@ -35,6 +35,8 @@ interface DiagramCanvasProps {
   editableFlow?: boolean
   diagramId?: string
   title?: string
+  onRetry?: () => Promise<void> | void
+  retrying?: boolean
 }
 
 const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
@@ -53,6 +55,8 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
       editableFlow,
       diagramId,
       title,
+      onRetry,
+      retrying,
     },
     ref,
   ) {
@@ -61,6 +65,7 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
     const mermaidContainerRef = useRef<HTMLDivElement>(null)
     const [isDragging, setIsDragging] = useState(false)
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+    const [mermaidError, setMermaidError] = useState(false)
 
     useImperativeHandle(ref, () => ({
       get contentElement() {
@@ -93,6 +98,7 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
         })
 
         container.innerHTML = ''
+        setMermaidError(false)
         const id = `mermaid-${Date.now()}`
         try {
           const ok = await mermaid
@@ -104,7 +110,8 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
           container.innerHTML = svg
         } catch (e) {
           console.error('Mermaid render error', e)
-          container.innerHTML = `<div class="p-4 text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200">Unable to render diagram.</div>`
+          if (!cancelled) setMermaidError(true)
+          container.innerHTML = ''
         } finally {
           document.getElementById('d' + id)?.remove()
         }
@@ -222,10 +229,32 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
                 )}
 
                 {mermaidCode && (
-                  <div
-                    ref={mermaidContainerRef}
-                    className="flex w-full justify-center"
-                  />
+                  <>
+                    <div
+                      ref={mermaidContainerRef}
+                      className={`flex w-full justify-center ${mermaidError ? 'hidden' : ''}`}
+                    />
+                    {mermaidError && (
+                      <div className="flex min-h-[260px] w-full flex-col items-center justify-center gap-4 rounded-sm border border-gray-200 bg-gray-50 p-8 text-center">
+                        <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-gray-500">
+                          Render failed
+                        </div>
+                        <p className="max-w-sm text-sm text-gray-700">
+                          Unable to render diagram — the generated mermaid
+                          syntax was invalid.
+                        </p>
+                        {onRetry && (
+                          <button
+                            onClick={() => onRetry()}
+                            disabled={retrying}
+                            className="rounded-sm bg-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-paper transition-colors hover:bg-signal hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {retrying ? 'Retrying…' : 'Retry with original prompt'}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {imageUrl && (

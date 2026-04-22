@@ -46,6 +46,7 @@ export default function DiagramPage({
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [retrying, setRetrying] = useState(false)
 
   // Diagram data
   const [imageUrl, setImageUrl] = useState('')
@@ -120,6 +121,30 @@ export default function DiagramPage({
     fetchDiagram()
   }, [id])
 
+  const handleRetry = async () => {
+    if (retrying) return
+    setRetrying(true)
+    try {
+      const res = await fetch('/api/regenerate-diagram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ diagramId: id }),
+      })
+      if (!res.ok) {
+        console.error('Retry failed', await res.json().catch(() => null))
+        return
+      }
+      const { result } = await res.json()
+      if (result) {
+        setMermaidCode(sanitizeMermaid(result))
+      }
+    } catch (err) {
+      console.error('Retry error', err)
+    } finally {
+      setRetrying(false)
+    }
+  }
+
   if (loading) return <CanvasLoader />
 
   if (error) {
@@ -175,6 +200,8 @@ export default function DiagramPage({
       flowDiagramData={flowData}
       chartJsData={chartJsData}
       diagramId={id}
+      onRetry={handleRetry}
+      retrying={retrying}
     />
   )
 }
