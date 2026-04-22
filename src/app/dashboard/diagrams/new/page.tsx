@@ -128,19 +128,28 @@ export default function NewDiagramPage() {
   }, [])
 
   useEffect(() => {
-    if (mermaidCode && mermaidContainerRef.current) {
-      mermaidContainerRef.current.innerHTML = ''
-      mermaid
-        .render('mermaid-diagram', mermaidCode)
-        .then(({ svg }) => {
-          if (mermaidContainerRef.current)
-            mermaidContainerRef.current.innerHTML = svg
-          document.getElementById('dmermaid-diagram')?.remove()
-        })
-        .catch(() => {
-          document.getElementById('dmermaid-diagram')?.remove()
-          setError('Failed to render chart.')
-        })
+    if (!mermaidCode || !mermaidContainerRef.current) return
+    let cancelled = false
+    mermaidContainerRef.current.innerHTML = ''
+    ;(async () => {
+      try {
+        const ok = await mermaid
+          .parse(mermaidCode, { suppressErrors: true })
+          .catch(() => false)
+        if (!ok) throw new Error('Invalid mermaid syntax')
+        const { svg } = await mermaid.render('mermaid-diagram', mermaidCode)
+        if (!cancelled && mermaidContainerRef.current) {
+          mermaidContainerRef.current.innerHTML = svg
+        }
+      } catch {
+        if (!cancelled) setError('Failed to render chart.')
+      } finally {
+        document.getElementById('dmermaid-diagram')?.remove()
+      }
+    })()
+    return () => {
+      cancelled = true
+      document.getElementById('dmermaid-diagram')?.remove()
     }
   }, [mermaidCode, zoomLevel])
 
@@ -195,6 +204,10 @@ export default function NewDiagramPage() {
     ) {
       const tryRender = async () => {
         try {
+          const ok = await mermaid
+            .parse(streaming.partialCode, { suppressErrors: true })
+            .catch(() => false)
+          if (!ok) return
           const { svg } = await mermaid.render(
             'mermaid-stream-preview',
             streaming.partialCode,
@@ -203,8 +216,9 @@ export default function NewDiagramPage() {
             streamingContainerRef.current.innerHTML = svg
             lastRenderedRef.current = streaming.partialCode
           }
-          document.getElementById('dmermaid-stream-preview')?.remove()
         } catch {
+          // Partial code — likely an in-progress stream. Silently skip.
+        } finally {
           document.getElementById('dmermaid-stream-preview')?.remove()
         }
       }

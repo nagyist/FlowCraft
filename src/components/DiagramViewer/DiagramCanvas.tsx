@@ -95,13 +95,18 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
         container.innerHTML = ''
         const id = `mermaid-${Date.now()}`
         try {
+          const ok = await mermaid
+            .parse(mermaidCode, { suppressErrors: true })
+            .catch(() => false)
+          if (!ok) throw new Error('Invalid mermaid syntax')
           const { svg } = await mermaid.render(id, mermaidCode)
           if (cancelled) return
           container.innerHTML = svg
-          document.getElementById('d' + id)?.remove()
         } catch (e) {
           console.error('Mermaid render error', e)
           container.innerHTML = `<div class="p-4 text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200">Unable to render diagram.</div>`
+        } finally {
+          document.getElementById('d' + id)?.remove()
         }
       })()
 

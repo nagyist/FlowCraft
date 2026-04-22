@@ -1,3 +1,43 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Dark theme (default, preserves existing drafting-studio look) */
+  :root,
+  .dark {
+    --color-ink: 11 11 12;
+    --color-graphite: 20 20 23;
+    --color-paper: 243 239 228;
+    --color-signal: 196 255 61;
+    --color-fog: 118 118 111;
+    --color-rule: 255 255 255;
+    --color-rule-alpha: 0.08;
+    --color-dot: 255 255 255;
+    --color-dot-alpha: 0.08;
+    color-scheme: dark;
+  }
+
+  /* Light theme — inverts ink/paper roles for readable contrast
+     against existing class usage (bg-ink text-paper stays legible). */
+  .light {
+    --color-ink: 247 245 238;      /* soft paper white, was ~#F7F5EE */
+    --color-graphite: 255 255 255; /* pure white card surface */
+    --color-paper: 11 11 12;       /* near-black text on light bg */
+    --color-signal: 88 125 38;     /* muted olive — readable on white */
+    --color-fog: 107 114 128;      /* zinc-500 */
+    --color-rule: 17 24 39;        /* gray-900 */
+    --color-rule-alpha: 0.1;
+    --color-dot: 17 24 39;
+    --color-dot-alpha: 0.1;
+    color-scheme: light;
+  }
+
+  /* Safety net: Mermaid appends a temp render node (`d<id>`) directly
+     under <body>`. On render failure it can be left behind and block
+     the page. Hide any straggler regardless of cleanup logic. */
+  body > [id^="dmermaid-"],
+  body > [id^="dtpl-"] {
+    display: none !important;
+  }
+}

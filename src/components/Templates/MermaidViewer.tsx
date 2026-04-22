@@ -14,6 +14,7 @@ export default function MermaidViewer({ code }: { code: string }) {
 
   useEffect(() => {
     let cancelled = false
+    const id = `tpl-${Math.random().toString(36).slice(2, 10)}`
     ;(async () => {
       try {
         const { default: mermaid } = await import('mermaid')
@@ -26,7 +27,10 @@ export default function MermaidViewer({ code }: { code: string }) {
           })
           mermaidInited = true
         }
-        const id = `tpl-${Math.random().toString(36).slice(2, 10)}`
+        const ok = await mermaid
+          .parse(code, { suppressErrors: true })
+          .catch(() => false)
+        if (!ok) throw new Error('Invalid mermaid syntax')
         const { svg } = await mermaid.render(id, code)
         if (!cancelled) {
           setSvg(svg)
@@ -34,10 +38,13 @@ export default function MermaidViewer({ code }: { code: string }) {
         }
       } catch (e: any) {
         if (!cancelled) setError(e?.message ?? 'Failed to render diagram')
+      } finally {
+        document.getElementById('d' + id)?.remove()
       }
     })()
     return () => {
       cancelled = true
+      document.getElementById('d' + id)?.remove()
     }
   }, [code])
 

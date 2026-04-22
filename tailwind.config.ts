@@ -5,6 +5,7 @@ import { type Config } from 'tailwindcss'
 import defaultTheme from 'tailwindcss/defaultTheme'
 
 export default {
+  darkMode: 'class',
   content: [
     './src/**/*.{js,jsx,ts,tsx}',
     './node_modules/lumina-code-frame/**/*.{js,jsx,ts,tsx}',
@@ -17,16 +18,16 @@ export default {
         mono: ['"JetBrains Mono"', ...defaultTheme.fontFamily.mono],
       },
       colors: {
-        ink: '#0B0B0C',
-        graphite: '#141417',
-        paper: '#F3EFE4',
-        signal: '#C4FF3D',
-        fog: '#76766F',
-        rule: 'rgba(255,255,255,0.08)',
+        ink: 'rgb(var(--color-ink) / <alpha-value>)',
+        graphite: 'rgb(var(--color-graphite) / <alpha-value>)',
+        paper: 'rgb(var(--color-paper) / <alpha-value>)',
+        signal: 'rgb(var(--color-signal) / <alpha-value>)',
+        fog: 'rgb(var(--color-fog) / <alpha-value>)',
+        rule: 'rgb(var(--color-rule) / var(--color-rule-alpha, 0.08))',
       },
       backgroundImage: {
         'dot-grid':
-          'radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1px)',
+          'radial-gradient(rgb(var(--color-dot) / var(--color-dot-alpha, 0.08)) 1px, transparent 1px)',
         'dot-grid-dark':
           'radial-gradient(rgba(11,11,12,0.12) 1px, transparent 1px)',
       },

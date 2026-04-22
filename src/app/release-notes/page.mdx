@@ -4,6 +4,68 @@ export { ReleaseNotesLayout as default } from '@/components/ReleaseNotesLayout'
 
 ![FlowCraft Logo](https://firebasestorage.googleapis.com/v0/b/shagunresume.appspot.com/o/FlowCraft%2FFlowCraftLogo_New.png?alt=media&token=1c8bf169-a2db-4498-bd7f-db27ad0977bb)
 
+## Version 6.0.0 — The Drafting Studio
+
+Hello FlowCrafters!
+
+This is our biggest update yet. Over the last several weeks we rebuilt FlowCraft around a new editorial "drafting studio" aesthetic — grid paper, monospaced tickers, signal-lime accents — and shipped an entire templates library, a rewritten pricing stack, and a long-awaited **Light Mode**. Here's everything that landed.
+
+### ✨ Light Mode is here
+
+You can now flip the entire app between light and dark from the new toggle in the navbar. Your preference is saved across sessions, and every surface — landing page, dashboard, diagram viewer, templates, blogs, release notes — respects it.
+
+- Dark remains the default to preserve the signature drafting-studio look
+- Tokens live as CSS variables so the app stays consistent across routes
+- Toggle available on desktop (navbar) and in the mobile menu
+
+### 🎨 The "Drafting Studio" redesign
+
+We rewrote the visual language across the product: editorial serifs, monospace tickers, dotted grid sheets, corner ticks, and a single signal-lime accent.
+
+- **Landing, dashboard, pricing, FAQ, nav, and New Draft flow** all redesigned end-to-end
+- **Diagram viewer** restyled as a proper rendered "sheet" with zoom/pan toolbar
+- **Gallery** rebuilt into a curated showcase with the same aesthetic
+- **Blogs, release notes, and support** pages brought into the system
+- **Auth form, loading skeletons, and overlay** retooled to match
+- **Templates pages** now use the shared navbar and palette and preserve your intended template when you log in mid-flow
+
+### 📚 Templates Library
+
+A brand-new way to start: pre-made, SEO-rich diagram templates you can clone into your account in one click.
+
+- **14 diagram types** and **30 curated topics** (user auth, OAuth 2, CI/CD, ER modeling, state machines, and many more)
+- **Per-type hub pages**, **cross-type topic pages**, and a **Gallery hub** with filters and search
+- **Detail pages** with full SEO and cross-links between related templates
+- **Clone-to-user**: pick a template, land it in your dashboard as a fresh diagram (works through signup too)
+- **OG images** generated per template, templates included in the sitemap
+- Thumbnails served through an API route to keep pages fast
+
+### 💳 Rewritten Pricing
+
+- `/pricing` is now a **Server Component with 1-hour ISR** and pulls tiers directly from **Stripe** — no more drift between what's in the code and what's in your bill
+- **Auth-aware CTAs**: the button says the right thing whether you're signed out, on Free, or already a subscriber
+- Loading state and strict Stripe pricing fixes
+
+### 🛠️ /tools SEO landing pages
+
+We added **61 dedicated `/tools/[slug]` pages** (e.g. *AI Class Diagram Generator*, *AI ER Diagram Maker*, *AI Sequence Diagram Generator*) with pre-rendered SVG examples — so folks searching for a specific diagram generator can land directly on the right page.
+
+### 🐛 Bug fixes
+
+- **Session loss on refresh** — moved Supabase SSR to the `getAll`/`setAll` cookie adapter (`@supabase/ssr` 0.5.2) so you no longer get silently signed out after a page reload. Also relocated the middleware so session refresh actually runs.
+- **Stray "Unable to render diagram" overlay** — when Mermaid couldn't parse a diagram, a leftover render node was sometimes left attached to the page, blocking content on the side. Rendering now preflights the syntax, always cleans up its temporary nodes, and a global safeguard hides any straggler.
+- **Paste-mode classifier lock** — the paste flow no longer gets stuck on the AI-suggested diagram type once you override it.
+- **Gitgraph diagrams** — aligned the type name with the API so generation works reliably again.
+- **Self-heal subscription lookup** — subscription state now recovers automatically from transient inconsistencies instead of showing the wrong tier.
+
+We poured a lot into this release. Give Light Mode a try, browse the new Templates library, and let us know what you think.
+
+Happy drafting,
+
+**The FlowCraft Team**
+
+---
+
 ## Version 5.0.0 - Redesigned Diagram Creation Experience
 
 Hello FlowCrafters!

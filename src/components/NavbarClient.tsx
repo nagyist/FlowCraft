@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export type NavbarAuth = {
   isAuthenticated: boolean
@@ -249,6 +250,7 @@ export default function NavbarClient({ auth }: { auth: NavbarAuth }) {
 
           {/* Right actions */}
           <div className="flex items-center gap-x-3">
+            <ThemeToggle className="hidden lg:flex" />
             {isAuthenticated ? (
               <>
                 {!isSubscribed && (
@@ -545,10 +547,11 @@ export default function NavbarClient({ auth }: { auth: NavbarAuth }) {
                 )}
               </div>
 
-              <div className="relative flex items-center justify-between border-t border-rule px-6 py-4 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+              <div className="relative flex items-center justify-between gap-3 border-t border-rule px-6 py-4 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
                 <span>
                   <span className="text-signal">◆</span> v.2026.04
                 </span>
+                <ThemeToggle />
                 <span>N 40°42′ · W 74°00′</span>
               </div>
             </motion.div>

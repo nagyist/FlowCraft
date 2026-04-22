@@ -5,6 +5,7 @@ import '@/styles/tailwind.css'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import MicrosoftClarity from '@/components/MicrosoftClarity'
 import { LoadingProvider } from '@/lib/LoadingProvider'
+import ThemeProvider from '@/components/ThemeProvider'
 import { Toaster } from 'react-hot-toast'
 import { SITE_URL, SITE_NAME } from '@/lib/seo'
 
@@ -51,7 +52,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full bg-white antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <link
           rel="preconnect"
@@ -95,20 +96,22 @@ export default function RootLayout({
       </head>
       <GoogleAnalytics gaId="AW-16550420965" />
       <MicrosoftClarity />
-      <body className="flex min-h-full">
-        <LoadingProvider>
-          <div className="w-full">{children}</div>
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-            }}
-          />
-        </LoadingProvider>
+      <body className="flex min-h-full bg-ink text-paper">
+        <ThemeProvider>
+          <LoadingProvider>
+            <div className="w-full">{children}</div>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+              }}
+            />
+          </LoadingProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
