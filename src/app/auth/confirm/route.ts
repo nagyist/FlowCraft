@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       // it into their fresh account and drop them straight into the editor.
       const newDiagramId = await handleSignupTemplate(templateId)
       const dest = newDiagramId
-        ? `/dashboard/diagrams/${newDiagramId}`
+        ? `/dashboard/diagram/${newDiagramId}`
         : '/dashboard'
       return NextResponse.redirect(new URL(dest, request.nextUrl.origin))
     }
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
         // Same template hand-off as the OAuth-code branch above.
         const newDiagramId = await handleSignupTemplate(templateId)
         const dest = newDiagramId
-          ? `/dashboard/diagrams/${newDiagramId}`
+          ? `/dashboard/diagram/${newDiagramId}`
           : '/dashboard'
         return NextResponse.redirect(new URL(dest, request.nextUrl.origin))
       }

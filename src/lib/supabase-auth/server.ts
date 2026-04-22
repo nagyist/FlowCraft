@@ -1,8 +1,10 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getAuthCookieDomain } from './cookie-domain'
 
 export async function createClient() {
   const cookieStore = await cookies()
+  const cookieDomain = getAuthCookieDomain()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,7 +17,10 @@ export async function createClient() {
         setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, {
+                ...options,
+                ...(cookieDomain ? { domain: cookieDomain } : {}),
+              }),
             )
           } catch {
             // Called from a Server Component — safe to ignore since

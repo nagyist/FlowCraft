@@ -1,8 +1,10 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getAuthCookieDomain } from '@/lib/supabase-auth/cookie-domain'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
+  const cookieDomain = getAuthCookieDomain()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +20,10 @@ export async function middleware(request: NextRequest) {
           )
           response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(name, value, {
+              ...options,
+              ...(cookieDomain ? { domain: cookieDomain } : {}),
+            }),
           )
         },
       },

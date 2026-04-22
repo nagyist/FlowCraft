@@ -47,5 +47,5 @@ export async function useTemplate(formData: FormData) {
     .single()
   if (error) throw error
 
-  redirect(`/dashboard/diagrams/${data.id}`)
+  redirect(`/dashboard/diagram/${data.id}`)
 }

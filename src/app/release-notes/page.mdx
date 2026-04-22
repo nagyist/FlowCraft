@@ -2,6 +2,19 @@ export { ReleaseNotesLayout as default } from '@/components/ReleaseNotesLayout'
 
 # FlowCraft Release Notes
 
+## Version 6.1.1 — Template handoff fixes
+
+A handful of fixes for people using the Templates gallery.
+
+### 🔧 "Use this template" now works end-to-end
+
+- Clicking **Use this template** after signing in (or signing up) now lands you in the editor instead of a 404 — the post-auth redirect was pointing at `/dashboard/diagrams/:id` but the real route is `/dashboard/diagram/:id`. Fixed in the template action, email/OAuth confirm callback, and the login form.
+- If you were already signed in on `app.flowcraft.app` but clicked into a template from the root domain, the template page saw you as logged-out and bounced you to sign-up. Supabase auth cookies are now scoped to the parent domain, so your session is shared across `flowcraft.app` and `app.flowcraft.app`.
+
+Existing users may need to sign in once more after this rolls out so the new parent-domain cookie gets written.
+
+---
+
 ## Version 6.1.0 — Retry on render failure
 
 Small but practical addition for anyone who's run into `Unable to render diagram.` in the viewer.

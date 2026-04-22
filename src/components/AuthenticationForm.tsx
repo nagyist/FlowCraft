@@ -78,7 +78,7 @@ export default function AuthenticationForm({
         }
       } else {
         const dest = data.diagramId
-          ? `/dashboard/diagrams/${data.diagramId}`
+          ? `/dashboard/diagram/${data.diagramId}`
           : '/dashboard'
         router.push(dest)
         router.refresh()
