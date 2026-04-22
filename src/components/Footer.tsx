@@ -58,14 +58,6 @@ const Footer = () => {
           backgroundSize: '28px 28px',
         }}
       />
-      {/* top coordinate strip */}
-      <div className="pointer-events-none relative flex justify-between border-b border-rule px-6 py-2 font-mono text-[10px] uppercase tracking-[0.22em] text-fog lg:px-8">
-        <span>
-          <span className="text-signal">◆</span> flowcraft / colophon
-        </span>
-        <span>N 40°42′ · W 74°00′ · v.2026</span>
-      </div>
-
       <div className="relative mx-auto max-w-7xl px-6 py-14 lg:px-8 lg:py-20">
         <div className="xl:grid xl:grid-cols-3 xl:gap-12">
           {/* Brand Column */}

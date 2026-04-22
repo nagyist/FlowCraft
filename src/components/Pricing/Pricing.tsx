@@ -370,8 +370,6 @@ export default function PricingTemplate({
           className="mx-auto mt-16 max-w-3xl rounded-sm border border-rule bg-graphite/60 p-8"
         >
           <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
-            <span>Addendum</span>
-            <span className="h-px w-12 bg-signal/50" />
             <span className="text-fog">Included in every tier</span>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 md:grid-cols-4">

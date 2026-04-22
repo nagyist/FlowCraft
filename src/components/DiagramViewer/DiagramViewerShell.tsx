@@ -216,10 +216,6 @@ export default function DiagramViewerShell({
                 type={type}
               />
 
-              <div className="mx-2 h-4 w-px bg-rule" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal">
-                ◆ FlowCraft
-              </span>
             </div>
           </motion.header>
         )}

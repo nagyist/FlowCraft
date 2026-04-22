@@ -87,12 +87,8 @@ export default function BlogsHomePage() {
                     <span className="absolute inset-0 animate-ping rounded-full bg-signal/60" />
                     <span className="relative h-1.5 w-1.5 rounded-full bg-signal" />
                   </span>
-                  <span className="text-paper">Sheet 03</span>
+                  <span className="text-paper">Field Notes</span>
                 </span>
-                <span>/</span>
-                <span>Dispatch · Field Notes</span>
-                <span>/</span>
-                <span className="hidden sm:inline">Edition 2026.04</span>
               </div>
               <div className="hidden items-center gap-3 md:flex">
                 <span>{time || '—:—'}</span>
@@ -179,12 +175,6 @@ export default function BlogsHomePage() {
           <>
             <section className="relative py-24 lg:py-32">
               <div className="mx-auto max-w-[1280px] px-6 lg:px-8">
-                <div className="mb-16 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em]">
-                  <span className="h-px w-12 bg-signal/50" />
-                  <span className="text-fog">Lead dispatch</span>
-                  <span className="text-signal">◆</span>
-                </div>
-
                 <motion.article
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -273,8 +263,7 @@ export default function BlogsHomePage() {
                         )}
                       </div>
                       <div className="mt-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
-                        <span>Fig. 01</span>
-                        <span>Lead dispatch · featured</span>
+                        <span>Featured</span>
                       </div>
                     </Link>
                   </div>
@@ -392,13 +381,7 @@ export default function BlogsHomePage() {
             className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-40"
           />
           <div className="relative mx-auto max-w-[1280px] px-6 lg:px-8">
-            <div className="flex flex-wrap items-end justify-between gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
-              <div>
-                <div className="text-signal">◆ End of sheet</div>
-                <div className="mt-2 text-paper">
-                  Flowcraft · Dispatch · MMXXVI
-                </div>
-              </div>
+            <div className="flex flex-wrap items-end justify-end gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
               <Link
                 href="/"
                 className="group inline-flex items-center gap-3 text-paper transition-colors hover:text-signal"
@@ -406,7 +389,7 @@ export default function BlogsHomePage() {
                 <span className="transition-transform duration-300 group-hover:-translate-x-1">
                   ←
                 </span>
-                <span>Return to drafting</span>
+                <span>Back to home</span>
               </Link>
             </div>
           </div>
@@ -529,19 +512,11 @@ function EmptyState({ isAdmin }: { isAdmin: boolean }) {
   return (
     <section className="py-28 lg:py-40">
       <div className="mx-auto max-w-[720px] px-6 text-center lg:px-8">
-        <div className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em] text-fog">
-          <span className="h-px w-8 bg-fog" />
-          <span>Blank sheet</span>
-          <span className="h-px w-8 bg-fog" />
-        </div>
-        <h2 className="mt-8 font-serif text-5xl text-paper md:text-6xl">
-          The press is
-          <br />
-          <span className="italic text-signal">idle.</span>
+        <h2 className="font-serif text-5xl text-paper md:text-6xl">
+          No posts yet.
         </h2>
         <p className="mt-6 text-lg leading-relaxed text-paper/60">
-          No dispatches filed yet. Check back soon — the drafting room is never
-          quiet for long.
+          Check back soon — new articles are on the way.
         </p>
         {isAdmin && (
           <Link

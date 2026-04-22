@@ -143,15 +143,8 @@ export default function SupportPage() {
                     <span className="absolute inset-0 animate-ping rounded-full bg-signal/60" />
                     <span className="relative h-1.5 w-1.5 rounded-full bg-signal" />
                   </span>
-                  <span className="text-paper">Sheet 07</span>
+                  <span className="text-paper">Contact</span>
                 </span>
-                <span>/</span>
-                <span>Correspondence · Open channel</span>
-              </div>
-              <div className="hidden items-center gap-3 md:flex">
-                <span>{time || '—:—'}</span>
-                <span className="text-signal">◆</span>
-                <span>Receiver on</span>
               </div>
             </div>
 
@@ -238,8 +231,7 @@ export default function SupportPage() {
               <CornerTicks />
 
               <div className="flex items-center justify-between border-b border-rule px-5 py-3 font-mono text-[10px] uppercase tracking-[0.24em] text-fog md:px-8">
-                <span>Form · CX-01</span>
-                <span className="text-signal">◆ Draft</span>
+                <span>Contact form</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-rule">
@@ -374,13 +366,7 @@ export default function SupportPage() {
             className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-40"
           />
           <div className="relative mx-auto max-w-[1280px] px-6 lg:px-8">
-            <div className="flex flex-wrap items-end justify-between gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
-              <div>
-                <div className="text-signal">◆ End of form</div>
-                <div className="mt-2 text-paper">
-                  Flowcraft · Correspondence · MMXXVI
-                </div>
-              </div>
+            <div className="flex flex-wrap items-end justify-end gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
               <Link
                 href="/"
                 className="group inline-flex items-center gap-3 text-paper transition-colors hover:text-signal"
@@ -388,7 +374,7 @@ export default function SupportPage() {
                 <span className="transition-transform duration-300 group-hover:-translate-x-1">
                   ←
                 </span>
-                <span>Return to drafting</span>
+                <span>Back to home</span>
               </Link>
             </div>
           </div>
@@ -461,11 +447,11 @@ function SubmitButton({ loading }: { loading: boolean }) {
               strokeLinecap="round"
             />
           </svg>
-          <span>Transmitting</span>
+          <span>Sending</span>
         </>
       ) : (
         <>
-          <span>Transmit</span>
+          <span>Send message</span>
           <span className="transition-transform duration-300 group-hover:translate-x-1.5">
             →
           </span>

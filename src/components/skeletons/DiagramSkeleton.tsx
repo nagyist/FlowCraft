@@ -18,14 +18,6 @@ export default function DiagramSkeleton() {
       {/* scanline */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-40 animate-scan bg-gradient-to-r from-transparent via-signal/10 to-transparent" />
 
-      {/* corner labels */}
-      <div className="pointer-events-none absolute left-4 top-3 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
-        <span className="text-signal">◆</span> drafting
-      </div>
-      <div className="pointer-events-none absolute right-4 top-3 font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
-        rendering · diagram
-      </div>
-
       <div className="relative flex flex-col items-center gap-4">
         <svg
           viewBox="0 0 48 48"

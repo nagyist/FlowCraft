@@ -91,13 +91,6 @@ export default function NavbarClient({ auth }: { auth: NavbarAuth }) {
   return (
     <>
       {/* Top coordinate strip — visible at all times on large screens */}
-      <div className="pointer-events-none fixed left-0 right-0 top-0 z-[60] hidden select-none justify-between px-6 pt-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-fog/60 lg:flex">
-        <span>
-          <span className="text-signal">◆</span> flowcraft / drafting suite /
-          build 04.19
-        </span>
-        <span>N 40°42′ · W 74°00′ · v.2026</span>
-      </div>
 
       <motion.nav
         initial={{ y: -80, opacity: 0 }}

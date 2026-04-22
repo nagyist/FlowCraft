@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-auth/client'
 import Navbar from '../Navbar'
+import Footer from '../Footer'
 
 const rotatingWords = [
   'flowcharts',
@@ -179,17 +180,11 @@ export default function MainLanding() {
                     <span className="absolute inset-0 animate-ping rounded-full bg-signal/60" />
                     <span className="relative h-1.5 w-1.5 rounded-full bg-signal" />
                   </span>
-                  <span className="text-paper">Sheet 01</span>
+                  <span className="text-paper">FlowCraft</span>
                 </span>
-                <span>/</span>
-                <span>Flowcraft · Drafting Suite</span>
-                <span>/</span>
-                <span className="hidden sm:inline">Rev. 2026.04</span>
               </div>
               <div className="hidden items-center gap-3 md:flex">
                 <span>{time || '—:—'}</span>
-                <span className="text-signal">◆</span>
-                <span>Studio open</span>
               </div>
             </motion.div>
 
@@ -653,6 +648,8 @@ export default function MainLanding() {
           </div>
         </section>
       </main>
+
+      <Footer />
     </div>
   )
 }

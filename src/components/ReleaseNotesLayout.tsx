@@ -185,13 +185,7 @@ export function ReleaseNotesLayout({
             className="pointer-events-none absolute inset-0 bg-dot-grid bg-dot-24 opacity-40"
           />
           <div className="relative mx-auto max-w-[1280px] px-6 lg:px-8">
-            <div className="flex flex-wrap items-end justify-between gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
-              <div>
-                <div className="text-signal">◆ End of log</div>
-                <div className="mt-2 text-paper">
-                  Flowcraft · Changelog · MMXXVI
-                </div>
-              </div>
+            <div className="flex flex-wrap items-end justify-end gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/"
@@ -200,7 +194,7 @@ export function ReleaseNotesLayout({
                   <span className="transition-transform duration-300 group-hover:-translate-x-1">
                     ←
                   </span>
-                  <span>Drafting room</span>
+                  <span>Back to home</span>
                 </Link>
                 <Link
                   href="/support"

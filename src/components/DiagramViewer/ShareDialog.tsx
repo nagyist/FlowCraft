@@ -111,11 +111,8 @@ export default function ShareDialog({
                 <div className="relative border-b border-rule px-6 py-5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
-                        ◆ Transmit
-                      </div>
-                      <Dialog.Title className="mt-1.5 font-serif text-2xl leading-none text-paper">
-                        Share this draft
+                      <Dialog.Title className="font-serif text-2xl leading-none text-paper">
+                        Share this diagram
                       </Dialog.Title>
                     </div>
                     <button

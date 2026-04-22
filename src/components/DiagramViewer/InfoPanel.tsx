@@ -53,10 +53,7 @@ export default function InfoPanel({
             {/* Header */}
             <div className="relative flex items-center justify-between border-b border-rule px-6 py-5">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
-                  ◆ Addendum
-                </div>
-                <h2 className="mt-1.5 font-serif text-2xl leading-none text-paper">
+                <h2 className="font-serif text-2xl leading-none text-paper">
                   Details
                 </h2>
               </div>

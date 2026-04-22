@@ -404,7 +404,7 @@ export default async function Dashboard() {
                 <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-signal/10 blur-3xl transition-opacity group-hover:opacity-80" />
                 <div className="relative">
                   <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-signal">
-                    Addendum · Showcase
+                    Showcase
                   </div>
                   <h3 className="mt-3 font-serif text-2xl text-paper">
                     See what others
