@@ -39,57 +39,106 @@ export default async function Page({
   const rows = await listTemplates({ type: t.id })
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
-      <header className="mb-10">
-        <Link
-          href="/templates"
-          className="text-sm text-slate-500 hover:text-slate-900"
-        >
-          ← All templates
-        </Link>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 md:text-4xl">
-          {t.title} Templates
-        </h1>
-        <p className="mt-3 max-w-3xl text-base text-slate-600">{t.whenToUse}</p>
-      </header>
+    <main className="relative">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 bg-dot-grid bg-dot-24 opacity-60"
+      />
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((r) => (
-          <li key={r.id}>
-            <Link
-              href={`/templates/${t.slug}/${r.topic_slug}`}
-              className="block overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
-            >
-              <img
-                src={`/api/templates/${r.id}/thumbnail`}
-                alt={`${r.topic_title} thumbnail`}
-                loading="lazy"
-                decoding="async"
-                className="h-40 w-full bg-slate-50 object-contain"
-              />
-              <div className="p-4">
-                <div className="text-sm font-medium text-slate-900">
-                  {r.topic_title}
-                </div>
-                <div className="mt-1 line-clamp-2 text-xs text-slate-500">
-                  {r.description}
-                </div>
-              </div>
+      <div className="relative mx-auto max-w-[1280px] px-6 py-16 lg:px-8 lg:py-20">
+        <div className="mb-10 flex items-center justify-between gap-4 border-b border-rule pb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+          <nav className="flex items-center gap-2">
+            <Link href="/templates" className="transition-colors hover:text-paper">
+              Templates
             </Link>
-          </li>
-        ))}
-      </ul>
-
-      {rows.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-200 p-12 text-center text-slate-500">
-          No templates yet for this type.
+            <span className="text-rule">/</span>
+            <span className="text-paper">{t.title}</span>
+          </nav>
+          <span className="hidden md:inline">
+            {rows.length} specimen{rows.length === 1 ? '' : 's'}
+          </span>
         </div>
-      )}
 
-      <div className="mt-12 border-t border-slate-200 pt-6 text-sm text-slate-500">
-        <Link href="/templates" className="hover:text-slate-900">
-          Browse by topic instead →
-        </Link>
+        <header className="mb-16 grid grid-cols-1 gap-8 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+              <span className="h-px w-12 bg-signal/50" />
+              <span className="text-fog">{t.title} catalogue</span>
+            </div>
+            <h1 className="mt-6 font-serif text-[44px] leading-[0.95] tracking-[-0.01em] text-paper md:text-[72px]">
+              {t.title}
+              <br />
+              <span className="italic text-signal">templates.</span>
+            </h1>
+          </div>
+          <div className="lg:col-span-4 lg:pt-12">
+            <p className="max-w-md text-lg leading-relaxed text-paper/70">
+              {t.whenToUse}
+            </p>
+          </div>
+        </header>
+
+        {rows.length > 0 ? (
+          <ul className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
+            {rows.map((r, i) => (
+              <li key={r.id}>
+                <Link
+                  href={`/templates/${t.slug}/${r.topic_slug}`}
+                  className="group flex h-full flex-col bg-ink transition-colors duration-300 hover:bg-graphite"
+                >
+                  <div className="relative overflow-hidden border-b border-rule bg-graphite/60">
+                    <img
+                      src={`/api/templates/${r.id}/thumbnail`}
+                      alt={`${r.topic_title} thumbnail`}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-44 w-full object-contain p-4"
+                    />
+                    <span className="absolute bottom-2 right-2 font-mono text-[9px] uppercase tracking-[0.22em] text-fog">
+                      Fig. {String(i + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 p-6">
+                    <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                      <span className="text-signal">{t.title}</span>
+                      <span className="transition-transform duration-300 group-hover:translate-x-1 group-hover:text-signal">
+                        →
+                      </span>
+                    </div>
+                    <div className="font-serif text-xl text-paper">
+                      {r.topic_title}
+                    </div>
+                    <div className="line-clamp-2 text-xs leading-relaxed text-paper/60">
+                      {r.description}
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="rounded-sm border border-dashed border-rule bg-graphite/40 p-16 text-center">
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+              ▸ No specimens yet
+            </div>
+            <p className="mt-4 text-paper/70">
+              Templates for this type are in the drafting room.
+            </p>
+          </div>
+        )}
+
+        <div className="mt-16 flex items-center justify-between border-t border-rule pt-6 font-mono text-[11px] uppercase tracking-[0.22em] text-fog">
+          <Link
+            href="/templates"
+            className="group inline-flex items-center gap-3 transition-colors hover:text-signal"
+          >
+            <span className="transition-transform duration-300 group-hover:-translate-x-1">
+              ←
+            </span>
+            <span>All templates</span>
+          </Link>
+          <span className="hidden md:inline">Browse by topic instead</span>
+        </div>
       </div>
     </main>
   )
