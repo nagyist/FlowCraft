@@ -243,14 +243,34 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
                           Unable to render diagram — the generated mermaid
                           syntax was invalid.
                         </p>
-                        {onRetry && (
-                          <button
-                            onClick={() => onRetry()}
-                            disabled={retrying}
-                            className="rounded-sm bg-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-paper transition-colors hover:bg-signal hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {retrying ? 'Retrying…' : 'Retry with original prompt'}
-                          </button>
+                        <div className="flex flex-wrap items-center justify-center gap-3">
+                          {onRetry && (
+                            <button
+                              onClick={() => onRetry()}
+                              disabled={retrying}
+                              className="rounded-sm bg-ink px-4 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-paper transition-colors hover:bg-signal hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {retrying ? 'Retrying…' : 'Retry with original prompt'}
+                            </button>
+                          )}
+                          {diagramId && (
+                            <a
+                              href={`/dashboard/diagrams/new?id=${diagramId}`}
+                              className="rounded-sm border border-gray-300 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.22em] text-gray-800 transition-colors hover:border-ink hover:text-ink"
+                            >
+                              Re-open in workbench
+                            </a>
+                          )}
+                        </div>
+                        {mermaidCode && (
+                          <details className="w-full max-w-lg text-left">
+                            <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.22em] text-gray-500 hover:text-gray-800">
+                              Show raw source
+                            </summary>
+                            <pre className="mt-2 max-h-64 overflow-auto rounded-sm bg-gray-100 p-3 text-left text-xs text-gray-800">
+                              {mermaidCode}
+                            </pre>
+                          </details>
                         )}
                       </div>
                     )}

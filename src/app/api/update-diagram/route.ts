@@ -13,7 +13,7 @@ export async function PATCH(req: NextRequest) {
     )
   }
 
-  const { diagramId, data, is_public } = await req.json()
+  const { diagramId, data, is_public, finalized } = await req.json()
 
   if (!diagramId) {
     return new Response(
@@ -25,6 +25,7 @@ export async function PATCH(req: NextRequest) {
   const patch: Record<string, unknown> = {}
   if (data !== undefined) patch.data = data
   if (typeof is_public === 'boolean') patch.private = !is_public
+  if (typeof finalized === 'boolean') patch.finalized = finalized
 
   if (Object.keys(patch).length === 0) {
     return new Response(

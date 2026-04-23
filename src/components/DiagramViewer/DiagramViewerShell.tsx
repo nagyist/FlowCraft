@@ -2,10 +2,13 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 import {
   ChevronLeftIcon,
   ShareIcon,
   InformationCircleIcon,
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline'
 import { Node, Edge } from 'reactflow'
 import FloatingToolbar from './FloatingToolbar'
@@ -47,10 +50,34 @@ export default function DiagramViewerShell({
   onRetry,
   retrying,
 }: DiagramViewerShellProps) {
+  const router = useRouter()
   const [headerVisible, setHeaderVisible] = useState(true)
   const [infoPanelOpen, setInfoPanelOpen] = useState(false)
   const [shareDialogOpen, setShareDialogOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [reopening, setReopening] = useState(false)
+
+  const handleReModify = useCallback(async () => {
+    if (!diagramId || reopening) return
+    setReopening(true)
+    try {
+      const res = await fetch('/api/update-diagram', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ diagramId, finalized: false }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        toast.error(body?.error || 'Could not reopen draft')
+        return
+      }
+      router.push(`/dashboard/diagrams/new?id=${diagramId}`)
+    } catch {
+      toast.error('Could not reopen draft')
+    } finally {
+      setReopening(false)
+    }
+  }, [diagramId, reopening, router])
 
   const [zoomLevel, setZoomLevel] = useState(100)
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -198,6 +225,17 @@ export default function DiagramViewerShell({
 
             {/* Right */}
             <div className="flex items-center gap-1">
+              {mode === 'owner' && diagramId && (
+                <button
+                  onClick={handleReModify}
+                  disabled={reopening}
+                  className="mr-1 inline-flex items-center gap-2 rounded-sm border border-rule bg-graphite/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-paper transition-colors hover:border-signal/40 hover:text-signal disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Re-open this draft in the workbench to iterate on it"
+                >
+                  <PencilSquareIcon className="h-3.5 w-3.5" />
+                  {reopening ? 'Opening…' : 'Re-modify'}
+                </button>
+              )}
               <HeaderButton
                 icon={InformationCircleIcon}
                 label="Details"

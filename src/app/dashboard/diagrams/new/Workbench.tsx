@@ -9,6 +9,15 @@ import ChatComposer from './ChatComposer'
 import CodePane from './CodePane'
 import PreviewPane from './PreviewPane'
 import type { ChatMessage } from './useDiagramChat'
+import { sanitizeMermaid } from '@/lib/utils'
+
+const NON_MERMAID_TYPES = new Set([
+  'illustration',
+  'generated_image',
+  'infographic',
+  'chart',
+  'flow diagram',
+])
 
 type Pane = 'chat' | 'code' | 'preview'
 
@@ -117,14 +126,32 @@ export default function Workbench({
     if (!diagramId || finalizing) return
     setFinalizing(true)
     try {
-      // Persist any un-debounced code edits before shipping.
+      // Mermaid-style diagrams get sanitized so we don't persist streamed
+      // artifacts like ```mermaid fences or LLM preamble — those cause the
+      // finalized viewer to render a blank canvas.
+      const isMermaidType = !NON_MERMAID_TYPES.has(
+        (diagramType || '').toLowerCase(),
+      )
+      let payloadData = code
+      if (isMermaidType) {
+        const sanitized = sanitizeMermaid(code)
+        if (!sanitized) {
+          toast.error(
+            'This draft does not contain a recognizable Mermaid diagram yet.',
+          )
+          return
+        }
+        payloadData = sanitized
+      }
+
       const res = await fetch('/api/update-diagram', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           diagramId,
-          data: code,
+          data: payloadData,
           is_public: isPaid ? !keepPrivate : true,
+          finalized: true,
         }),
       })
       if (!res.ok) {
@@ -138,7 +165,7 @@ export default function Workbench({
     } finally {
       setFinalizing(false)
     }
-  }, [diagramId, code, isPaid, keepPrivate, finalizing, router])
+  }, [diagramId, code, diagramType, isPaid, keepPrivate, finalizing, router])
 
   // ---- divider drag
   const beginDrag = (kind: 'chat' | 'code') => (e: React.MouseEvent) => {

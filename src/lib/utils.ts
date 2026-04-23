@@ -325,60 +325,58 @@ function escapeControlCharsInJsonStrings(s: string): string {
   return out
 }
 
+const MERMAID_HEADER_RE =
+  /^(?:\s*%%\{[^}]*\}%%\s*\n)?\s*(graph|flowchart|sequenceDiagram|classDiagram(?:-v2)?|stateDiagram(?:-v2)?|erDiagram|journey|gantt|pie|mindmap|timeline|quadrantChart|gitGraph|requirementDiagram|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment|xychart-beta|sankey-beta|block-beta)\b/m
+
 export function sanitizeMermaid(code: string): string {
-  // Remove leading/trailing whitespace and backticks
   let cleaned = code?.trim() || ''
+  if (!cleaned) return ''
 
   // Recovery path for legacy rows saved before the backend envelope fix:
-  // the stored "code" may actually be the whole ```json { "title": ..., "code": ... } ```
-  // response from the LLM. Peel the outer fence, parse the JSON, and pull out
-  // the mermaid — then fall through to the normal fence-stripping below.
+  // the stored "code" may actually be the whole ```json { "code": ... } ```
+  // response from the LLM.
   cleaned = extractFromJsonEnvelope(cleaned)
 
-  // Remove surrounding quotes if present
+  // Strip surrounding matching quotes.
   if (
     (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
     (cleaned.startsWith("'") && cleaned.endsWith("'"))
   ) {
-    cleaned = cleaned.slice(1, -1)
+    cleaned = cleaned.slice(1, -1).trim()
   }
 
-  // Remove code block markers if present
-  if (cleaned.startsWith('```')) {
-    const firstLineEnd = cleaned.indexOf('\n')
-    const firstLine = cleaned.substring(3, firstLineEnd).trim()
-
-    // Check if the first line is 'mermaid' or contains 'mermaid'
-    if (firstLine === 'mermaid' || firstLine.includes('mermaid')) {
-      // Remove the first line completely
-      cleaned = cleaned.substring(firstLineEnd + 1)
-    } else {
-      // Just remove the backticks
-      cleaned = cleaned.slice(3)
-    }
-
-    // Remove ending backticks if present
-    if (cleaned.endsWith('```')) {
-      cleaned = cleaned.slice(0, -3)
-    }
-  } else {
-    // No code block markers, but check if it starts with 'mermaid'
-    if (cleaned.startsWith('mermaid')) {
-      // Find the first newline
-      const firstLineEnd = cleaned.indexOf('\n')
-      if (firstLineEnd !== -1) {
-        cleaned = cleaned.substring(firstLineEnd + 1)
-      }
-    }
-  }
-
-  // Replace escaped characters
+  // Unescape common escape sequences that slip in when mermaid was routed
+  // through a JSON string at some point upstream.
   cleaned = cleaned
-    .replace(/\\`/g, '`') // Replace \` with `
-    .replace(/\\'/g, "'") // Replace \' with '
-    .replace(/\\\\/g, '\\') // Replace \\ with \
-    .replace(/\\n/g, '\n') // Replace \n with newline
-    .trim() // Final trim to remove any extra whitespace
+    .replace(/\\`/g, '`')
+    .replace(/\\'/g, "'")
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t')
+    .replace(/\\\\/g, '\\')
 
-  return cleaned
+  // If there's a ```mermaid ... ``` fence anywhere, extract its contents.
+  // Otherwise, if there's a bare ``` ... ``` fence, extract that.
+  const mermaidFence = cleaned.match(/```mermaid\s*\n([\s\S]*?)```/i)
+  if (mermaidFence) {
+    cleaned = mermaidFence[1].trim()
+  } else {
+    const bareFence = cleaned.match(/```\s*\n?([\s\S]*?)```/)
+    if (bareFence) cleaned = bareFence[1].trim()
+  }
+
+  // Drop a leading "mermaid" language marker if it wasn't inside a fence.
+  cleaned = cleaned.replace(/^\s*mermaid\s*\n/i, '').trim()
+
+  // Trim non-mermaid preamble: scan for the first mermaid header line and
+  // drop everything before it. Preserves optional %%{init}%% directive.
+  const headerMatch = cleaned.match(MERMAID_HEADER_RE)
+  if (!headerMatch) {
+    // No recognizable mermaid diagram type — let the caller treat this as
+    // unparseable instead of shipping garbage to mermaid.parse.
+    return ''
+  }
+  const headerStart = cleaned.indexOf(headerMatch[0])
+  if (headerStart > 0) cleaned = cleaned.slice(headerStart)
+
+  return cleaned.trim()
 }

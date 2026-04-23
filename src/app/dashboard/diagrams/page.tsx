@@ -81,6 +81,15 @@ export default function AllDiagramsPage() {
     return sorted
   }, [data, searchQuery, typeFilter, sort])
 
+  const finalizedDiagrams = useMemo(
+    () => filteredDiagrams.filter((d) => d.finalized),
+    [filteredDiagrams],
+  )
+  const draftDiagrams = useMemo(
+    () => filteredDiagrams.filter((d) => !d.finalized),
+    [filteredDiagrams],
+  )
+
   const headerDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -264,7 +273,7 @@ export default function AllDiagramsPage() {
         </div>
 
         {/* Grid */}
-        <div className="min-h-[400px]">
+        <div className="min-h-[400px] space-y-14">
           {isLoading ? (
             <div className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
@@ -272,20 +281,24 @@ export default function AllDiagramsPage() {
               ))}
             </div>
           ) : filteredDiagrams.length > 0 ? (
-            <motion.div
-              layout
-              className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3"
-            >
-              <AnimatePresence>
-                {filteredDiagrams.map((diagram, i) => (
-                  <DiagramCard
-                    key={diagram.id}
-                    diagram={diagram}
-                    index={i}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
+            <>
+              {finalizedDiagrams.length > 0 && (
+                <SectionGrid
+                  label="Finalized"
+                  count={finalizedDiagrams.length}
+                  diagrams={finalizedDiagrams}
+                  variant="finalized"
+                />
+              )}
+              {draftDiagrams.length > 0 && (
+                <SectionGrid
+                  label="Drafts"
+                  count={draftDiagrams.length}
+                  diagrams={draftDiagrams}
+                  variant="draft"
+                />
+              )}
+            </>
           ) : (
             <EmptyState
               isSearching={!!searchQuery || typeFilter !== 'all'}
@@ -314,16 +327,72 @@ export default function AllDiagramsPage() {
   )
 }
 
+// --- Section -------------------------------------------------------------
+function SectionGrid({
+  label,
+  count,
+  diagrams,
+  variant,
+}: {
+  label: string
+  count: number
+  diagrams: DiagramData[]
+  variant: 'finalized' | 'draft'
+}) {
+  return (
+    <section>
+      <div className="mb-5 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              variant === 'finalized' ? 'text-signal' : 'text-paper',
+            )}
+          >
+            {variant === 'finalized' ? '◆' : '◇'}
+          </span>
+          <span className="text-paper">{label}</span>
+          <span className="h-px w-8 bg-rule" />
+          <span>
+            {count} {count === 1 ? 'entry' : 'entries'}
+          </span>
+        </div>
+      </div>
+      <motion.div
+        layout
+        className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <AnimatePresence>
+          {diagrams.map((diagram, i) => (
+            <DiagramCard
+              key={diagram.id}
+              diagram={diagram}
+              index={i}
+              variant={variant}
+            />
+          ))}
+        </AnimatePresence>
+      </motion.div>
+    </section>
+  )
+}
+
 // --- Card ----------------------------------------------------------------
 function DiagramCard({
   diagram,
   index,
+  variant,
 }: {
   diagram: DiagramData
   index: number
+  variant: 'finalized' | 'draft'
 }) {
   const created = new Date(diagram.created_at)
   const entryNo = String(index + 1).padStart(3, '0')
+  const href =
+    variant === 'finalized'
+      ? `/dashboard/diagram/${diagram.id}?finalized=1`
+      : `/dashboard/diagrams/new?id=${diagram.id}`
+  const footerLabel = variant === 'finalized' ? 'View finalized' : 'Open draft'
 
   return (
     <motion.article
@@ -340,6 +409,11 @@ function DiagramCard({
           <span className="text-fog">№ {entryNo}</span>
           <span className="h-px w-4 bg-rule" />
           <span className="text-signal">{diagram.type || 'Draft'}</span>
+          {variant === 'finalized' && (
+            <span className="rounded-sm border border-signal/50 px-1.5 py-0.5 text-[9px] text-signal">
+              Finalized
+            </span>
+          )}
         </div>
         <time className="text-fog" dateTime={diagram.created_at}>
           {created.toLocaleDateString('en-US', {
@@ -353,7 +427,7 @@ function DiagramCard({
       {/* Title + description */}
       <div>
         <h3 className="line-clamp-2 font-serif text-2xl leading-tight tracking-[-0.01em] text-paper transition-colors group-hover:text-signal md:text-3xl">
-          <Link href={`/dashboard/diagrams/new?id=${diagram.id}`}>
+          <Link href={href}>
             <span className="absolute inset-0" aria-hidden />
             {diagram.title || 'Untitled draft'}
           </Link>
@@ -366,7 +440,7 @@ function DiagramCard({
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-rule pt-4">
         <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog transition-colors group-hover:text-signal">
-          Open draft
+          {footerLabel}
         </span>
         <span className="font-mono text-xs text-fog transition-transform duration-300 group-hover:translate-x-1 group-hover:text-signal">
           →

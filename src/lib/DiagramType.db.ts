@@ -14,4 +14,5 @@ export interface DiagramData {
   private: boolean
   description: string
   id: string
+  finalized?: boolean
 }
