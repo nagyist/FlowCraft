@@ -17,6 +17,26 @@ const ChartJsComponent = dynamic(
   { ssr: false, loading: () => <DiagramSkeleton /> },
 )
 
+let mermaidInitialized = false
+async function ensureMermaidInitialized() {
+  if (mermaidInitialized) return
+  const { default: mermaid } = await import('mermaid')
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#ffffff',
+      primaryTextColor: '#000000',
+      primaryBorderColor: '#000000',
+      lineColor: '#333333',
+      secondaryColor: '#f4f4f5',
+      tertiaryColor: '#fff',
+    },
+    securityLevel: 'loose',
+  })
+  mermaidInitialized = true
+}
+
 export interface DiagramCanvasHandle {
   contentElement: HTMLDivElement | null
 }
@@ -80,22 +100,10 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
       let cancelled = false
 
       ;(async () => {
+        await ensureMermaidInitialized()
+        if (cancelled) return
         const { default: mermaid } = await import('mermaid')
         if (cancelled) return
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'base',
-          themeVariables: {
-            primaryColor: '#ffffff',
-            primaryTextColor: '#000000',
-            primaryBorderColor: '#000000',
-            lineColor: '#333333',
-            secondaryColor: '#f4f4f5',
-            tertiaryColor: '#fff',
-          },
-          securityLevel: 'loose',
-          fontFamily: 'Inter, system-ui, sans-serif',
-        })
 
         container.innerHTML = ''
         setMermaidError(false)
