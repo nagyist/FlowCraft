@@ -2,6 +2,18 @@ export { ReleaseNotesLayout as default } from '@/components/ReleaseNotesLayout'
 
 # FlowCraft Release Notes
 
+## Version 6.1.4 — Finalized diagrams no longer render as a blank white card
+
+If you clicked into a finalized diagram and saw an empty white sheet with nothing drawn inside, this is the fix.
+
+### 🐛 Legacy finalized rows now surface an actionable error instead of a blank canvas
+
+- The viewer's `sanitizeMermaid` call can return an empty string for diagrams finalized before the sanitize-on-finalize fix in 6.1.3 (stored content was missing a recognizable Mermaid header). An empty string bypassed both the Mermaid render path *and* the error UI — so you got a silent white box with no console output.
+- The viewer now falls back to the raw stored content when sanitize comes back empty. Mermaid fails loudly, the existing error panel renders with "Show raw source" and a "Re-open in workbench" link so you can heal the draft in one click.
+- Drafts that simply had an unusual preamble Mermaid itself accepts will now render correctly, since we stopped discarding them pre-parse.
+
+---
+
 ## Version 6.1.3 — Fix "invalid syntax" on freshly drafted diagrams
 
 A generation-pipeline fix for anyone who saw their new draft render as "· invalid syntax" even though the Mermaid code looked valid.

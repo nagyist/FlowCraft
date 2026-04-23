@@ -125,7 +125,12 @@ export default function DiagramPage({
         } else if (lower === 'chart') {
           setChartJsData(JSON.parse(data.data))
         } else {
-          setMermaidCode(sanitizeMermaid(data.data))
+          // Fall back to the raw stored content when sanitize can't find a
+          // recognizable mermaid header — lets mermaid.parse fail loudly so
+          // the viewer's error UI (with raw source + re-open affordance)
+          // shows instead of a blank canvas.
+          const sanitized = sanitizeMermaid(data.data)
+          setMermaidCode(sanitized || data.data || '')
         }
       } catch (err) {
         console.error(err)
