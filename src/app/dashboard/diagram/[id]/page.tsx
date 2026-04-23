@@ -3,7 +3,7 @@
 import { useContext, useEffect, useState, use } from 'react'
 import { DiagramContext } from '@/lib/Contexts/DiagramContext'
 import { useRouter } from 'next/navigation'
-import { sanitizeMermaid, sanitizeSVG } from '@/lib/utils'
+import { sanitizeSVG } from '@/lib/utils'
 import Link from 'next/link'
 import { DiagramViewerShell } from '@/components/DiagramViewer'
 
@@ -46,12 +46,10 @@ export default function DiagramPage({
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [retrying, setRetrying] = useState(false)
 
   // Diagram data
   const [imageUrl, setImageUrl] = useState('')
   const [svgCode, setSvgCode] = useState('')
-  const [mermaidCode, setMermaidCode] = useState<string | null>(null)
   const [chartJsData, setChartJsData] = useState<any>(null)
   const [flowData, setFlowData] = useState<{
     nodes: any[]
@@ -82,6 +80,22 @@ export default function DiagramPage({
         }
 
         const data = diagram[0]
+        const type = data.type as string
+        const lower = type?.toLowerCase?.() ?? ''
+        const isNonMermaid =
+          ['illustration', 'generated_image', 'infographic', 'chart'].includes(
+            lower,
+          ) || lower === 'flow diagram'
+
+        // Mermaid-style diagrams open in the chat workbench so users can
+        // iterate on them conversationally. Non-mermaid types (images, flow
+        // diagrams, charts, infographics) don't render in the workbench yet,
+        // so they stay on this legacy viewer.
+        if (!isNonMermaid) {
+          router.replace(`/dashboard/diagrams/new?id=${id}`)
+          return
+        }
+
         setDiagramMeta({
           title: data.title,
           type: data.type,
@@ -89,27 +103,23 @@ export default function DiagramPage({
           createdAt: data.created_at,
         })
 
-        // Context sync
         diagramContext.setTitle(data.title)
         diagramContext.setDiagramId(id)
         diagramContext.setType(data.type)
 
-        // Type-specific handling
-        if (['illustration', 'generated_image'].includes(data.type)) {
+        if (['illustration', 'generated_image'].includes(lower)) {
           setImageUrl(
-            data.type === 'illustration' ? data.image_url : data.data,
+            lower === 'illustration' ? data.image_url : data.data,
           )
-        } else if (data.type === 'infographic') {
+        } else if (lower === 'infographic') {
           setSvgCode(sanitizeSVG(data.data).svgContent)
-        } else if (data.type.toLowerCase() === 'flow diagram') {
+        } else if (lower === 'flow diagram') {
           const parsedData = JSON.parse(JSON.parse(data.data))
           setFlowData({ nodes: parsedData.nodes, edges: parsedData.edges })
           diagramContext.setEdges(parsedData.edges)
           diagramContext.setNodes(parsedData.nodes)
-        } else if (data.type === 'Chart') {
+        } else if (lower === 'chart') {
           setChartJsData(JSON.parse(data.data))
-        } else {
-          setMermaidCode(sanitizeMermaid(data.data))
         }
       } catch (err) {
         console.error(err)
@@ -120,30 +130,6 @@ export default function DiagramPage({
     }
     fetchDiagram()
   }, [id])
-
-  const handleRetry = async () => {
-    if (retrying) return
-    setRetrying(true)
-    try {
-      const res = await fetch('/api/regenerate-diagram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ diagramId: id }),
-      })
-      if (!res.ok) {
-        console.error('Retry failed', await res.json().catch(() => null))
-        return
-      }
-      const { result } = await res.json()
-      if (result) {
-        setMermaidCode(sanitizeMermaid(result))
-      }
-    } catch (err) {
-      console.error('Retry error', err)
-    } finally {
-      setRetrying(false)
-    }
-  }
 
   if (loading) return <CanvasLoader />
 
@@ -194,14 +180,12 @@ export default function DiagramPage({
       type={diagramMeta?.type || ''}
       description={diagramMeta?.description}
       createdAt={diagramMeta?.createdAt}
-      mermaidCode={mermaidCode}
+      mermaidCode={null}
       svgCode={svgCode || undefined}
       imageUrl={imageUrl || undefined}
       flowDiagramData={flowData}
       chartJsData={chartJsData}
       diagramId={id}
-      onRetry={handleRetry}
-      retrying={retrying}
     />
   )
 }

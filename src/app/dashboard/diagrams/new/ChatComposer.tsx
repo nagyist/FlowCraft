@@ -44,7 +44,7 @@ export default function ChatComposer({
   }, [autoFocus])
 
   const handleKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault()
       if (!disabled && value.trim()) onSubmit()
     }
@@ -80,7 +80,7 @@ export default function ChatComposer({
       <div className="flex items-center justify-between gap-3 border-t border-rule/50 px-4 py-2">
         <div className="flex min-w-0 items-center gap-3 font-mono text-[10px] uppercase tracking-[0.2em] text-fog">
           <span className="truncate">
-            {footerLeft ?? <span>⌘ · Enter to send</span>}
+            {footerLeft ?? <span>Enter to send · Shift + Enter for newline</span>}
           </span>
         </div>
         <div className="flex items-center gap-2">

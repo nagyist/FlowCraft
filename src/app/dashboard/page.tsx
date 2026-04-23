@@ -526,7 +526,7 @@ function DiagramCard({ diagram }: { diagram: any }) {
   const created = new Date(diagram.created_at)
   return (
     <Link
-      href={`/dashboard/diagram/${diagram.id}`}
+      href={`/dashboard/diagrams/new?id=${diagram.id}`}
       className="group relative flex flex-col justify-between gap-6 bg-graphite p-6 transition-colors duration-300 hover:bg-ink"
     >
       <div className="flex items-center justify-end font-mono text-[10px] uppercase tracking-[0.22em]">

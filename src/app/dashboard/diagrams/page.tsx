@@ -1,45 +1,43 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { DiagramData } from '@/lib/DiagramType.db'
-import {
-  MagnifyingGlassIcon,
-  XMarkIcon,
-  DocumentPlusIcon,
-  Squares2X2Icon,
-} from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 
-// --- Components ---
+type SortKey = 'recent' | 'oldest' | 'title'
 
-// 1. Skeleton Loader for "Instant" feel
+// --- Skeleton ------------------------------------------------------------
 const DiagramSkeleton = () => (
-  <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-    <div className="mb-4 flex items-center justify-between">
-      <div className="h-4 w-16 animate-pulse rounded bg-gray-100" />
-      <div className="h-4 w-16 animate-pulse rounded bg-gray-100" />
+  <div className="relative flex min-h-[240px] flex-col justify-between gap-6 bg-graphite p-6">
+    <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em]">
+      <span className="h-2 w-16 animate-pulse bg-rule" />
+      <span className="h-2 w-10 animate-pulse bg-rule" />
     </div>
-    <div className="mb-2 h-6 w-3/4 animate-pulse rounded bg-gray-100" />
-    <div className="h-4 w-1/2 animate-pulse rounded bg-gray-100" />
+    <div className="space-y-3">
+      <div className="h-3 w-20 animate-pulse bg-rule" />
+      <div className="h-7 w-3/4 animate-pulse bg-rule" />
+      <div className="h-7 w-1/2 animate-pulse bg-rule" />
+    </div>
+    <div className="h-3 w-24 animate-pulse bg-rule" />
   </div>
 )
 
-// 2. Main Page
+// --- Main Page -----------------------------------------------------------
 export default function AllDiagramsPage() {
   const [data, setData] = useState<DiagramData[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [sort, setSort] = useState<SortKey>('recent')
 
   useEffect(() => {
     const fetchDiagrams = async () => {
       try {
         const res = await fetch('/api/get-diagrams')
         const json = await res.json()
-        if (res.ok && json.diagrams) {
-          setData(json.diagrams)
-        }
+        if (res.ok && json.diagrams) setData(json.diagrams)
       } catch (error) {
         console.error('Failed to load diagrams', error)
       } finally {
@@ -49,56 +47,226 @@ export default function AllDiagramsPage() {
     fetchDiagrams()
   }, [])
 
-  // Optimized filtering
+  const types = useMemo(() => {
+    const set = new Set<string>()
+    data.forEach((d) => d.type && set.add(d.type))
+    return ['all', ...Array.from(set)]
+  }, [data])
+
   const filteredDiagrams = useMemo(() => {
-    if (!searchQuery) return data
-    return data.filter((d) =>
-      d.title.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-  }, [data, searchQuery])
+    let list = data
+    if (typeFilter !== 'all') list = list.filter((d) => d.type === typeFilter)
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      list = list.filter(
+        (d) =>
+          d.title?.toLowerCase().includes(q) ||
+          d.description?.toLowerCase().includes(q),
+      )
+    }
+    const sorted = [...list]
+    if (sort === 'recent') {
+      sorted.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      )
+    } else if (sort === 'oldest') {
+      sorted.sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      )
+    } else {
+      sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
+    }
+    return sorted
+  }, [data, searchQuery, typeFilter, sort])
+
+  const headerDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  })
 
   return (
-    <main className="min-h-screen bg-gray-50/50 pb-20 pt-24">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              All Diagrams
-            </h1>
-            <p className="mt-2 text-sm text-gray-500">
-              {data.length} {data.length === 1 ? 'file' : 'files'} in your
-              workspace
-            </p>
-          </div>
+    <main className="relative min-h-screen bg-ink pb-24 pt-12 text-paper">
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 top-[76px] bg-dot-grid bg-dot-24 opacity-60" />
 
-          {/* Search Bar */}
-          <div className="group relative w-full md:w-80">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 transition-colors group-focus-within:text-gray-900" />
-            </div>
-            <input
-              type="text"
-              className="block w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-10 text-sm leading-6 text-gray-900 shadow-sm transition-all placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-              placeholder="Search by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-900"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            )}
+      <div className="relative mx-auto max-w-[1400px] px-6 lg:px-8">
+        {/* Sheet header */}
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b border-rule pb-4 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard"
+              className="text-fog transition-colors hover:text-paper"
+            >
+              Sheet · Workspace
+            </Link>
+            <span>/</span>
+            <span className="text-paper">All drafts</span>
+            <span>/</span>
+            <span>{headerDate}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-signal">◆</span>
+            <span>
+              Archive ·{' '}
+              <span className="text-paper">
+                {data.length} {data.length === 1 ? 'entry' : 'entries'}
+              </span>
+            </span>
           </div>
         </div>
 
-        {/* Content Grid */}
+        {/* Masthead */}
+        <section className="mb-14 grid grid-cols-1 items-end gap-8 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+              <span className="h-px w-12 bg-signal/50" />
+              <span className="text-fog">Index · Vol. 01</span>
+            </div>
+            <h1 className="mt-6 font-serif text-6xl leading-[0.95] tracking-[-0.01em] text-paper md:text-7xl">
+              <span className="text-paper/70">Every draft,</span>{' '}
+              <span className="italic text-signal">catalogued</span>
+              <span className="text-paper/70">.</span>
+            </h1>
+            <p className="mt-6 max-w-xl text-lg leading-relaxed text-paper/60">
+              A complete ledger of your visual thinking. Search a phrase, filter
+              by form, or scan the grid for the one you can&apos;t quite place.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 lg:col-span-4 lg:items-end">
+            <Link
+              href="/dashboard/diagrams/new"
+              className="group relative inline-flex items-center gap-3 overflow-hidden rounded-sm bg-signal px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper"
+            >
+              <span className="relative z-10">+ New draft</span>
+              <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1.5">
+                →
+              </span>
+            </Link>
+            <Link
+              href="/dashboard"
+              className="group inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-fog transition-colors hover:text-paper"
+            >
+              <span className="h-px w-6 bg-current transition-all group-hover:w-10" />
+              Back to dashboard
+            </Link>
+          </div>
+        </section>
+
+        {/* Toolbar */}
+        <section
+          aria-label="Filters"
+          className="mb-10 flex flex-col gap-6 border-y border-rule py-5 lg:flex-row lg:items-center lg:justify-between"
+        >
+          {/* Search */}
+          <div className="group relative flex items-center gap-3 lg:w-[420px]">
+            <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+              ⌕ Find
+            </span>
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="title, description, or phrase…"
+                className="w-full border-b border-rule bg-transparent pb-2 pr-8 font-serif text-xl italic text-paper placeholder:text-fog/60 focus:border-signal focus:outline-none"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  className="absolute bottom-2 right-0 font-mono text-[10px] uppercase tracking-[0.22em] text-fog transition-colors hover:text-signal"
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Type filter */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.28em] text-fog">
+              Form
+            </span>
+            {types.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTypeFilter(t)}
+                className={cn(
+                  'rounded-sm border px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] transition-colors',
+                  typeFilter === t
+                    ? 'border-signal bg-signal text-ink'
+                    : 'border-rule bg-graphite/60 text-fog hover:border-signal/40 hover:text-paper',
+                )}
+              >
+                {t === 'all' ? '✱ All' : t}
+              </button>
+            ))}
+          </div>
+
+          {/* Sort */}
+          <div className="flex items-center gap-2">
+            <span className="mr-2 font-mono text-[10px] uppercase tracking-[0.28em] text-fog">
+              Order
+            </span>
+            {(
+              [
+                ['recent', 'New → Old'],
+                ['oldest', 'Old → New'],
+                ['title', 'A → Z'],
+              ] as [SortKey, string][]
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setSort(key)}
+                className={cn(
+                  'font-mono text-[10px] uppercase tracking-[0.22em] transition-colors',
+                  sort === key
+                    ? 'text-signal'
+                    : 'text-fog hover:text-paper',
+                )}
+              >
+                {label}
+              </button>
+            )).reduce<React.ReactNode[]>((acc, el, i) => {
+              if (i > 0)
+                acc.push(
+                  <span key={`s-${i}`} className="text-rule">
+                    ·
+                  </span>,
+                )
+              acc.push(el)
+              return acc
+            }, [])}
+          </div>
+        </section>
+
+        {/* Results meta */}
+        <div className="mb-6 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+          <span>
+            Showing{' '}
+            <span className="text-paper">{filteredDiagrams.length}</span> of{' '}
+            <span className="text-paper">{data.length}</span>
+          </span>
+          {(searchQuery || typeFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchQuery('')
+                setTypeFilter('all')
+              }}
+              className="text-fog transition-colors hover:text-signal"
+            >
+              Reset filters ↺
+            </button>
+          )}
+        </div>
+
+        {/* Grid */}
         <div className="min-h-[400px]">
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
                 <DiagramSkeleton key={i} />
               ))}
@@ -106,79 +274,119 @@ export default function AllDiagramsPage() {
           ) : filteredDiagrams.length > 0 ? (
             <motion.div
               layout
-              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              className="grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2 lg:grid-cols-3"
             >
               <AnimatePresence>
-                {filteredDiagrams.map((diagram) => (
-                  <DiagramCard key={diagram.id} diagram={diagram} />
+                {filteredDiagrams.map((diagram, i) => (
+                  <DiagramCard
+                    key={diagram.id}
+                    diagram={diagram}
+                    index={i}
+                  />
                 ))}
               </AnimatePresence>
             </motion.div>
           ) : (
             <EmptyState
-              isSearching={!!searchQuery}
-              onClear={() => setSearchQuery('')}
+              isSearching={!!searchQuery || typeFilter !== 'all'}
+              onClear={() => {
+                setSearchQuery('')
+                setTypeFilter('all')
+              }}
             />
           )}
         </div>
+
+        {/* Footer rule */}
+        {!isLoading && filteredDiagrams.length > 0 && (
+          <div className="mt-12 flex items-center justify-between border-t border-rule pt-6 font-mono text-[10px] uppercase tracking-[0.24em] text-fog">
+            <span>End of index</span>
+            <span className="flex items-center gap-2">
+              <span className="h-px w-10 bg-rule" />
+              <span className="text-signal">◆</span>
+              <span className="h-px w-10 bg-rule" />
+            </span>
+            <span>{headerDate}</span>
+          </div>
+        )}
       </div>
     </main>
   )
 }
 
-// 3. Diagram Card Component
-function DiagramCard({ diagram }: { diagram: DiagramData }) {
+// --- Card ----------------------------------------------------------------
+function DiagramCard({
+  diagram,
+  index,
+}: {
+  diagram: DiagramData
+  index: number
+}) {
+  const created = new Date(diagram.created_at)
+  const entryNo = String(index + 1).padStart(3, '0')
+
   return (
     <motion.article
       layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -2 }}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-gray-300 hover:shadow-md"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.02, 0.3) }}
+      className="group relative flex min-h-[260px] flex-col justify-between gap-6 bg-graphite p-6 transition-colors duration-300 hover:bg-ink"
     >
-      <div className="mb-4 flex items-center justify-between">
-        <span
-          className={cn(
-            'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset',
-            // Minimalist badge styling
-            'bg-gray-50 text-gray-600 ring-gray-500/10',
-          )}
-        >
-          {diagram.type}
-        </span>
-        <Squares2X2Icon className="h-5 w-5 text-gray-300" />
+      {/* Top row: entry number + type + date */}
+      <div className="flex items-start justify-between font-mono text-[10px] uppercase tracking-[0.22em]">
+        <div className="flex items-center gap-3">
+          <span className="text-fog">№ {entryNo}</span>
+          <span className="h-px w-4 bg-rule" />
+          <span className="text-signal">{diagram.type || 'Draft'}</span>
+        </div>
+        <time className="text-fog" dateTime={diagram.created_at}>
+          {created.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: '2-digit',
+          })}
+        </time>
       </div>
 
-      <div className="space-y-2">
-        <h3 className="line-clamp-1 font-semibold text-gray-900 group-hover:text-black">
-          <Link href={`/dashboard/diagram/${diagram.id}`}>
-            <span className="absolute inset-0" />
-            {diagram.title}
+      {/* Title + description */}
+      <div>
+        <h3 className="line-clamp-2 font-serif text-2xl leading-tight tracking-[-0.01em] text-paper transition-colors group-hover:text-signal md:text-3xl">
+          <Link href={`/dashboard/diagrams/new?id=${diagram.id}`}>
+            <span className="absolute inset-0" aria-hidden />
+            {diagram.title || 'Untitled draft'}
           </Link>
         </h3>
-        <p className="line-clamp-2 min-h-[2.5em] text-sm text-gray-500">
-          {diagram.description || 'No description provided.'}
+        <p className="mt-3 line-clamp-2 min-h-[2.75em] text-sm leading-relaxed text-paper/55">
+          {diagram.description || 'No description attached to this draft.'}
         </p>
       </div>
 
-      <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4 text-xs text-gray-400">
-        <time dateTime={diagram.created_at}>
-          {new Date(diagram.created_at).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-        </time>
-        <span className="font-medium text-gray-900 opacity-0 transition-opacity group-hover:opacity-100">
-          Open Project &rarr;
+      {/* Footer */}
+      <div className="flex items-center justify-between border-t border-rule pt-4">
+        <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog transition-colors group-hover:text-signal">
+          Open draft
+        </span>
+        <span className="font-mono text-xs text-fog transition-transform duration-300 group-hover:translate-x-1 group-hover:text-signal">
+          →
         </span>
       </div>
+
+      {/* Corner tick */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute right-3 top-3 h-2 w-2 border-r border-t border-rule transition-colors group-hover:border-signal"
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bottom-3 left-3 h-2 w-2 border-b border-l border-rule transition-colors group-hover:border-signal"
+      />
     </motion.article>
   )
 }
 
-// 4. Empty State Component
+// --- Empty State ---------------------------------------------------------
 function EmptyState({
   isSearching,
   onClear,
@@ -190,38 +398,79 @@ function EmptyState({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-gray-300 bg-gray-50/50 py-24 text-center"
+      className="relative overflow-hidden rounded-sm border border-dashed border-rule bg-graphite/40 px-8 py-24 text-center"
     >
-      <div className="rounded-full bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
-        <DocumentPlusIcon className="h-8 w-8 text-gray-400" />
-      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            'radial-gradient(rgba(196,255,61,0.10) 1px, transparent 1px)',
+          backgroundSize: '14px 14px',
+        }}
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute left-4 top-4 h-3 w-3 border-l border-t border-rule"
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute right-4 top-4 h-3 w-3 border-r border-t border-rule"
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bottom-4 left-4 h-3 w-3 border-b border-l border-rule"
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute bottom-4 right-4 h-3 w-3 border-b border-r border-rule"
+      />
 
-      <h3 className="mt-4 text-lg font-semibold text-gray-900">
-        {isSearching ? 'No results found' : 'No diagrams yet'}
-      </h3>
+      <div className="relative mx-auto max-w-md">
+        <div className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">
+          {isSearching ? '∅ No matches' : '◇ Empty shelf'}
+        </div>
+        <h3 className="mt-5 font-serif text-4xl leading-tight text-paper md:text-5xl">
+          {isSearching ? (
+            <>
+              Nothing{' '}
+              <span className="italic text-signal">on that shelf</span>.
+            </>
+          ) : (
+            <>
+              Your archive is <span className="italic text-signal">blank</span>.
+            </>
+          )}
+        </h3>
+        <p className="mt-4 text-sm leading-relaxed text-paper/60">
+          {isSearching
+            ? 'Try a different phrase, or clear the filters to see the whole catalogue.'
+            : 'Every great ledger starts with a single entry. Sketch your first diagram from a sentence.'}
+        </p>
 
-      <p className="mx-auto mt-2 max-w-sm text-sm text-gray-500">
-        {isSearching
-          ? "We couldn't find any diagrams matching your search. Try a different term."
-          : 'Create your first diagram to start visualizing your ideas.'}
-      </p>
-
-      <div className="mt-6">
-        {isSearching ? (
-          <button
-            onClick={onClear}
-            className="text-sm font-semibold text-gray-900 hover:underline"
-          >
-            Clear search
-          </button>
-        ) : (
-          <Link
-            href="/dashboard/diagrams/new"
-            className="inline-flex items-center rounded-full bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-          >
-            Create Diagram
-          </Link>
-        )}
+        <div className="mt-8 flex items-center justify-center gap-3">
+          {isSearching ? (
+            <button
+              onClick={onClear}
+              className="group inline-flex items-center gap-2 rounded-sm border border-rule bg-graphite px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-paper transition-colors hover:border-signal/40 hover:text-signal"
+            >
+              Reset filters
+              <span className="transition-transform duration-300 group-hover:rotate-180">
+                ↺
+              </span>
+            </button>
+          ) : (
+            <Link
+              href="/dashboard/diagrams/new"
+              className="group inline-flex items-center gap-3 rounded-sm bg-signal px-5 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink transition-colors hover:bg-paper"
+            >
+              + Start first draft
+              <span className="transition-transform duration-300 group-hover:translate-x-1.5">
+                →
+              </span>
+            </Link>
+          )}
+        </div>
       </div>
     </motion.div>
   )
