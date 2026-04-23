@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest) {
 
   const patch: Record<string, unknown> = {}
   if (data !== undefined) patch.data = data
-  if (typeof is_public === 'boolean') patch.is_public = is_public
+  if (typeof is_public === 'boolean') patch.private = !is_public
 
   if (Object.keys(patch).length === 0) {
     return new Response(
