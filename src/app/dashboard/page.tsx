@@ -94,25 +94,22 @@ export default async function Dashboard() {
   const lowQuota =
     !user.subscribed && typeof remaining === 'number' && remaining > 0 && remaining <= 1
 
+  const sortedDiagrams = [...diagrams].sort(
+    (a: any, b: any) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  )
+  const finalizedDiagrams = sortedDiagrams.filter((d: any) => d.finalized)
+  const draftDiagrams = sortedDiagrams.filter((d: any) => !d.finalized)
+
   const stats = [
-    { name: 'Total drafts', value: diagrams.length.toString() },
+    { name: 'In draft', value: draftDiagrams.length.toString() },
+    { name: 'Finalized', value: finalizedDiagrams.length.toString() },
     { name: 'Active shares', value: shares.length.toString() },
-    {
-      name: 'Flow diagrams',
-      value: diagrams
-        .filter((d: any) => d.type === 'Flow Diagram')
-        .length.toString(),
-    },
     {
       name: user.subscribed ? 'Pro access' : 'Drafts left',
       value: remaining.toString(),
     },
   ]
-
-  const sortedDiagrams = [...diagrams].sort(
-    (a: any, b: any) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-  )
 
   const displayName =
     (authData.user.user_metadata?.display_name as string | undefined) ||
@@ -349,26 +346,58 @@ export default async function Dashboard() {
 
         {/* Two-column: recent + shared */}
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-8">
-            <DashSectionHeader
-              title="Recent drafts"
-              link="/dashboard/diagrams"
-              linkText="All drafts"
-            />
-
-            {sortedDiagrams.length > 0 ? (
-              <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2">
-                {sortedDiagrams.slice(0, 4).map((diagram: any) => (
-                  <DiagramCard key={diagram.id} diagram={diagram} />
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No drafts yet"
-                desc="Your first diagram is one sentence away."
-                cta={{ href: '/dashboard/diagrams/new', label: 'Start drafting' }}
+          <div className="space-y-14 lg:col-span-8">
+            <div>
+              <DashSectionHeader
+                title="Finalized"
+                link="/dashboard/diagrams"
+                linkText="All finalized"
               />
-            )}
+
+              {finalizedDiagrams.length > 0 ? (
+                <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2">
+                  {finalizedDiagrams.slice(0, 4).map((diagram: any) => (
+                    <DiagramCard
+                      key={diagram.id}
+                      diagram={diagram}
+                      variant="finalized"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-8 rounded-sm border border-dashed border-rule bg-graphite/40 p-8 text-center">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog">
+                    Nothing finalized yet · ship a draft to see it here
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <DashSectionHeader
+                title="In draft"
+                link="/dashboard/diagrams"
+                linkText="All drafts"
+              />
+
+              {draftDiagrams.length > 0 ? (
+                <div className="mt-8 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-rule bg-rule sm:grid-cols-2">
+                  {draftDiagrams.slice(0, 4).map((diagram: any) => (
+                    <DiagramCard
+                      key={diagram.id}
+                      diagram={diagram}
+                      variant="draft"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No drafts yet"
+                  desc="Your first diagram is one sentence away."
+                  cta={{ href: '/dashboard/diagrams/new', label: 'Start drafting' }}
+                />
+              )}
+            </div>
           </div>
 
           <div className="lg:col-span-4">
@@ -522,14 +551,33 @@ function QuickActionCard({
   )
 }
 
-function DiagramCard({ diagram }: { diagram: any }) {
+function DiagramCard({
+  diagram,
+  variant = 'draft',
+}: {
+  diagram: any
+  variant?: 'finalized' | 'draft'
+}) {
   const created = new Date(diagram.created_at)
+  const href =
+    variant === 'finalized'
+      ? `/dashboard/diagram/${diagram.id}?finalized=1`
+      : `/dashboard/diagrams/new?id=${diagram.id}`
+  const footerLabel =
+    variant === 'finalized' ? 'View finalized' : 'Open draft'
   return (
     <Link
-      href={`/dashboard/diagrams/new?id=${diagram.id}`}
+      href={href}
       className="group relative flex flex-col justify-between gap-6 bg-graphite p-6 transition-colors duration-300 hover:bg-ink"
     >
-      <div className="flex items-center justify-end font-mono text-[10px] uppercase tracking-[0.22em]">
+      <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em]">
+        {variant === 'finalized' ? (
+          <span className="rounded-sm border border-signal/50 px-1.5 py-0.5 text-[9px] text-signal">
+            ◆ Finalized
+          </span>
+        ) : (
+          <span />
+        )}
         <time className="text-fog" dateTime={diagram.created_at}>
           {created.toLocaleDateString('en-US', {
             month: 'short',
@@ -549,7 +597,7 @@ function DiagramCard({ diagram }: { diagram: any }) {
 
       <div className="flex items-center justify-between">
         <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-fog transition-colors group-hover:text-signal">
-          Open draft
+          {footerLabel}
         </span>
         <span className="font-mono text-xs text-fog transition-transform duration-300 group-hover:translate-x-1 group-hover:text-signal">
           →

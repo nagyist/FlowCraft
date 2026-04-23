@@ -2,6 +2,19 @@ export { ReleaseNotesLayout as default } from '@/components/ReleaseNotesLayout'
 
 # FlowCraft Release Notes
 
+## Version 6.2.0 — Dashboard splits finalized diagrams from in-progress drafts
+
+Your dashboard now separates shipped work from work-in-progress so you can see what's done at a glance.
+
+### ✨ Two distinct sections: Finalized and In draft
+
+- The dashboard home now shows two separate sections in the main column: **Finalized** (opens the read-only viewer) and **In draft** (opens the workbench to keep editing).
+- Each section shows your four most recent entries with an "All finalized" / "All drafts" link into the full diagrams list.
+- Finalized cards carry a ◆ Finalized badge so the status is obvious without hovering.
+- The stats strip replaces the old "Flow diagrams" tile with a live **Finalized** count alongside **In draft**, **Active shares**, and your remaining quota.
+
+---
+
 ## Version 6.1.5 — Template flowcharts no longer fail with a dagre layout error
 
 If you opened `/templates/flowchart/[id]` and saw "Could not find a suitable point for the given distance" where the diagram should be, this is the fix.
