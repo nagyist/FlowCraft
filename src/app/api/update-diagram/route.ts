@@ -13,18 +13,29 @@ export async function PATCH(req: NextRequest) {
     )
   }
 
-  const { diagramId, data } = await req.json()
+  const { diagramId, data, is_public } = await req.json()
 
-  if (!diagramId || !data) {
+  if (!diagramId) {
     return new Response(
-      JSON.stringify({ error: 'Missing required fields: diagramId and data' }),
+      JSON.stringify({ error: 'Missing required field: diagramId' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+
+  const patch: Record<string, unknown> = {}
+  if (data !== undefined) patch.data = data
+  if (typeof is_public === 'boolean') patch.is_public = is_public
+
+  if (Object.keys(patch).length === 0) {
+    return new Response(
+      JSON.stringify({ error: 'No fields to update' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } },
     )
   }
 
   const { error } = await supabase
     .from('diagrams')
-    .update({ data })
+    .update(patch)
     .eq('id', diagramId)
     .eq('user_id', authResult.userId)
 

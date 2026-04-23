@@ -2,8 +2,8 @@
 
 import { useContext, useEffect, useState, use } from 'react'
 import { DiagramContext } from '@/lib/Contexts/DiagramContext'
-import { useRouter } from 'next/navigation'
-import { sanitizeSVG } from '@/lib/utils'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { sanitizeMermaid, sanitizeSVG } from '@/lib/utils'
 import Link from 'next/link'
 import { DiagramViewerShell } from '@/components/DiagramViewer'
 
@@ -42,6 +42,8 @@ export default function DiagramPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isFinalized = searchParams.get('finalized') === '1'
   const diagramContext = useContext(DiagramContext)
 
   const [loading, setLoading] = useState(true)
@@ -50,6 +52,7 @@ export default function DiagramPage({
   // Diagram data
   const [imageUrl, setImageUrl] = useState('')
   const [svgCode, setSvgCode] = useState('')
+  const [mermaidCode, setMermaidCode] = useState<string | null>(null)
   const [chartJsData, setChartJsData] = useState<any>(null)
   const [flowData, setFlowData] = useState<{
     nodes: any[]
@@ -89,9 +92,10 @@ export default function DiagramPage({
 
         // Mermaid-style diagrams open in the chat workbench so users can
         // iterate on them conversationally. Non-mermaid types (images, flow
-        // diagrams, charts, infographics) don't render in the workbench yet,
-        // so they stay on this legacy viewer.
-        if (!isNonMermaid) {
+        // diagrams, charts, infographics) render here. `?finalized=1` means
+        // the user explicitly asked to view the shipped diagram here, so
+        // don't bounce back to the workbench.
+        if (!isNonMermaid && !isFinalized) {
           router.replace(`/dashboard/diagrams/new?id=${id}`)
           return
         }
@@ -120,6 +124,8 @@ export default function DiagramPage({
           diagramContext.setNodes(parsedData.nodes)
         } else if (lower === 'chart') {
           setChartJsData(JSON.parse(data.data))
+        } else {
+          setMermaidCode(sanitizeMermaid(data.data))
         }
       } catch (err) {
         console.error(err)
@@ -129,7 +135,7 @@ export default function DiagramPage({
       }
     }
     fetchDiagram()
-  }, [id])
+  }, [id, isFinalized])
 
   if (loading) return <CanvasLoader />
 
@@ -180,7 +186,7 @@ export default function DiagramPage({
       type={diagramMeta?.type || ''}
       description={diagramMeta?.description}
       createdAt={diagramMeta?.createdAt}
-      mermaidCode={null}
+      mermaidCode={mermaidCode}
       svgCode={svgCode || undefined}
       imageUrl={imageUrl || undefined}
       flowDiagramData={flowData}

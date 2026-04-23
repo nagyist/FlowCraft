@@ -197,6 +197,7 @@ export default function NewDiagramPage() {
         onSend={handleChatSend}
         onCancel={chat.cancel}
         onNewDraft={handleNewDraft}
+        diagramId={diagramId}
       />
     )
   }

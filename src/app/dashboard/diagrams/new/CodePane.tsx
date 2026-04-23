@@ -17,6 +17,7 @@ export default function CodePane({
   streaming = false,
   debounceMs = 300,
   className,
+  onCollapse,
 }: {
   value: string
   onChange: (v: string) => void
@@ -24,6 +25,7 @@ export default function CodePane({
   streaming?: boolean
   debounceMs?: number
   className?: string
+  onCollapse?: () => void
 }) {
   const [local, setLocal] = useState(value)
   const textRef = useRef<HTMLTextAreaElement>(null)
@@ -86,6 +88,17 @@ export default function CodePane({
           >
             Copy
           </button>
+          {onCollapse && (
+            <button
+              type="button"
+              onClick={onCollapse}
+              aria-label="Collapse code pane"
+              title="Collapse"
+              className="rounded-sm border border-rule/60 px-2 py-1 uppercase tracking-[0.18em] text-fog hover:border-signal/60 hover:text-paper"
+            >
+              ⟨
+            </button>
+          )}
         </div>
       </div>
 
