@@ -257,9 +257,83 @@ export function sanitizeSVG(svgString: string): {
   }
 }
 
+function extractFromJsonEnvelope(input: string): string {
+  let s = input.trim()
+  if (!s) return s
+
+  // Peel outer ```json ... ``` (or bare ``` ... ```) fence, greedy to the last ```.
+  const outerFence = s.match(/^```(?:json)?\s*([\s\S]*)```\s*$/)
+  if (outerFence) s = outerFence[1].trim()
+
+  // Must look like a JSON object to attempt parse.
+  if (!s.startsWith('{')) return input.trim()
+
+  // Try strict JSON first, then a lenient pass that escapes raw newlines
+  // inside string values (LLMs routinely emit these, which strict JSON rejects).
+  const parseAttempts: string[] = [s, escapeControlCharsInJsonStrings(s)]
+  for (const attempt of parseAttempts) {
+    try {
+      const obj = JSON.parse(attempt)
+      const code =
+        typeof obj?.code === 'string'
+          ? obj.code
+          : typeof obj?.mermaid === 'string'
+            ? obj.mermaid
+            : null
+      if (code) return code.trim()
+    } catch {
+      /* try next */
+    }
+  }
+  return input.trim()
+}
+
+function escapeControlCharsInJsonStrings(s: string): string {
+  let out = ''
+  let inString = false
+  let escape = false
+  for (const ch of s) {
+    if (escape) {
+      out += ch
+      escape = false
+      continue
+    }
+    if (ch === '\\') {
+      out += ch
+      escape = true
+      continue
+    }
+    if (ch === '"') {
+      inString = !inString
+      out += ch
+      continue
+    }
+    if (inString && ch === '\n') {
+      out += '\\n'
+      continue
+    }
+    if (inString && ch === '\r') {
+      out += '\\r'
+      continue
+    }
+    if (inString && ch === '\t') {
+      out += '\\t'
+      continue
+    }
+    out += ch
+  }
+  return out
+}
+
 export function sanitizeMermaid(code: string): string {
   // Remove leading/trailing whitespace and backticks
   let cleaned = code?.trim() || ''
+
+  // Recovery path for legacy rows saved before the backend envelope fix:
+  // the stored "code" may actually be the whole ```json { "title": ..., "code": ... } ```
+  // response from the LLM. Peel the outer fence, parse the JSON, and pull out
+  // the mermaid — then fall through to the normal fence-stripping below.
+  cleaned = extractFromJsonEnvelope(cleaned)
 
   // Remove surrounding quotes if present
   if (

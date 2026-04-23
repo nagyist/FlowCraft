@@ -2,6 +2,22 @@ export { ReleaseNotesLayout as default } from '@/components/ReleaseNotesLayout'
 
 # FlowCraft Release Notes
 
+## Version 6.1.3 — Fix "invalid syntax" on freshly drafted diagrams
+
+A generation-pipeline fix for anyone who saw their new draft render as "· invalid syntax" even though the Mermaid code looked valid.
+
+### 🐛 Envelope parsing now survives nested fences and multi-line strings
+
+- The backend validator that extracts `{ title, code }` from the model's response was choking on two things: a non-greedy fence regex that stopped at the *first* inner ` ``` ` (the opening of the nested `mermaid` block), and strict JSON rejecting the literal newlines LLMs embed in multi-line code. When both failed, the raw JSON envelope was being saved to the database and streamed into the editor — hence the wrapper showing up in the Mermaid pane.
+- The validator now greedily matches the outer fence, parses with `strict=False` so embedded newlines are accepted, and strips any residual ` ```mermaid … ``` ` wrapper from the `code` field before saving.
+- Chat iteration on existing diagrams uses the same validator, so follow-up edits are covered too.
+
+### ♻️ Legacy rows heal on reopen
+
+If you had a draft saved with the broken wrapper, reopening it now unwraps the envelope on the fly via a hardened `sanitizeMermaid`. Editing or finalizing writes the cleaned Mermaid back to your diagram — no manual recovery needed.
+
+---
+
 ## Version 6.1.2 — Templates match the drafting studio
 
 The Templates gallery now speaks the same visual language as the rest of FlowCraft.
