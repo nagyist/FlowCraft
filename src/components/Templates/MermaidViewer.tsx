@@ -7,6 +7,17 @@ import { useEffect, useRef, useState } from 'react'
 
 let mermaidInited = false
 
+async function ensureMermaidInitialized() {
+  if (mermaidInited) return
+  const { default: mermaid } = await import('mermaid')
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    securityLevel: 'loose',
+  })
+  mermaidInited = true
+}
+
 export default function MermaidViewer({ code }: { code: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -17,16 +28,8 @@ export default function MermaidViewer({ code }: { code: string }) {
     const id = `tpl-${Math.random().toString(36).slice(2, 10)}`
     ;(async () => {
       try {
+        await ensureMermaidInitialized()
         const { default: mermaid } = await import('mermaid')
-        if (!mermaidInited) {
-          mermaid.initialize({
-            startOnLoad: false,
-            theme: 'default',
-            securityLevel: 'loose',
-            fontFamily: 'inherit',
-          })
-          mermaidInited = true
-        }
         const ok = await mermaid
           .parse(code, { suppressErrors: true })
           .catch(() => false)

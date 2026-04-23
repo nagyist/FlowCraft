@@ -2,6 +2,17 @@ export { ReleaseNotesLayout as default } from '@/components/ReleaseNotesLayout'
 
 # FlowCraft Release Notes
 
+## Version 6.1.5 — Template flowcharts no longer fail with a dagre layout error
+
+If you opened `/templates/flowchart/[id]` and saw "Could not find a suitable point for the given distance" where the diagram should be, this is the fix.
+
+### 🐛 Dropped the `fontFamily: 'inherit'` override in the template Mermaid viewer
+
+- `'inherit'` isn't a real font name, so when dagre tried to measure label widths before a resolvable font was ready, edge routing failed and threw "Could not find a suitable point for the given distance" instead of rendering.
+- The template viewer now lets Mermaid fall back to its default font (which measures reliably) and hoists initialization into an `ensureMermaidInitialized()` singleton, matching the pattern the drafting-studio preview already uses.
+
+---
+
 ## Version 6.1.4 — Finalized diagrams no longer render as a blank white card
 
 If you clicked into a finalized diagram and saw an empty white sheet with nothing drawn inside, this is the fix.
