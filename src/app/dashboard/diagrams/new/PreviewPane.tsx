@@ -1,29 +1,21 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import mermaid from 'mermaid'
 import clsx from 'clsx'
+import { parseMermaid, renderMermaid } from '@/lib/mermaidClient'
 
-let mermaidInitialized = false
-
-function ensureMermaidInitialized() {
-  if (mermaidInitialized) return
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: 'dark',
-    securityLevel: 'loose',
-    themeVariables: {
-      darkMode: true,
-      background: '#141417',
-      primaryColor: '#141417',
-      primaryTextColor: '#F3EFE4',
-      primaryBorderColor: '#C4FF3D',
-      lineColor: '#76766F',
-      secondaryColor: '#0B0B0C',
-      tertiaryColor: '#141417',
-    },
-  })
-  mermaidInitialized = true
+const PREVIEW_MERMAID_CONFIG = {
+  theme: 'dark' as const,
+  themeVariables: {
+    darkMode: true,
+    background: '#141417',
+    primaryColor: '#141417',
+    primaryTextColor: '#F3EFE4',
+    primaryBorderColor: '#C4FF3D',
+    lineColor: '#76766F',
+    secondaryColor: '#0B0B0C',
+    tertiaryColor: '#141417',
+  },
 }
 
 const MIN_ZOOM = 0.3
@@ -47,10 +39,6 @@ export default function PreviewPane({
   const dragState = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null)
   const idRef = useRef(`mmd-${Math.random().toString(36).slice(2, 9)}`)
   const userHasZoomedRef = useRef(false)
-
-  useEffect(() => {
-    ensureMermaidInitialized()
-  }, [])
 
   const computeFit = useCallback(() => {
     const host = containerRef.current
@@ -92,14 +80,16 @@ export default function PreviewPane({
 
     ;(async () => {
       try {
-        const ok = await mermaid
-          .parse(code, { suppressErrors: true })
-          .catch(() => false)
+        const ok = await parseMermaid(code)
         if (!ok) {
           if (!cancelled) setRenderError(true)
           return
         }
-        const { svg } = await mermaid.render(idRef.current, code)
+        const { svg } = await renderMermaid(
+          idRef.current,
+          code,
+          PREVIEW_MERMAID_CONFIG,
+        )
         if (cancelled) return
         host.innerHTML = svg
         setRenderError(false)

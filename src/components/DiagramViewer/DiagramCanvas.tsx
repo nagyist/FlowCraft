@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHand
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { sanitizeMermaid, sanitizeSVG, DiagramOrChartType } from '@/lib/utils'
+import { renderMermaid, parseMermaid } from '@/lib/mermaidClient'
 import dynamic from 'next/dynamic'
 import { Node, Edge } from 'reactflow'
 import DiagramSkeleton from '@/components/skeletons/DiagramSkeleton'
@@ -17,24 +18,16 @@ const ChartJsComponent = dynamic(
   { ssr: false, loading: () => <DiagramSkeleton /> },
 )
 
-let mermaidInitialized = false
-async function ensureMermaidInitialized() {
-  if (mermaidInitialized) return
-  const { default: mermaid } = await import('mermaid')
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: 'base',
-    themeVariables: {
-      primaryColor: '#ffffff',
-      primaryTextColor: '#000000',
-      primaryBorderColor: '#000000',
-      lineColor: '#333333',
-      secondaryColor: '#f4f4f5',
-      tertiaryColor: '#fff',
-    },
-    securityLevel: 'loose',
-  })
-  mermaidInitialized = true
+const VIEWER_MERMAID_CONFIG = {
+  theme: 'base' as const,
+  themeVariables: {
+    primaryColor: '#ffffff',
+    primaryTextColor: '#000000',
+    primaryBorderColor: '#000000',
+    lineColor: '#333333',
+    secondaryColor: '#f4f4f5',
+    tertiaryColor: '#fff',
+  },
 }
 
 export interface DiagramCanvasHandle {
@@ -100,20 +93,19 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
       let cancelled = false
 
       ;(async () => {
-        await ensureMermaidInitialized()
-        if (cancelled) return
-        const { default: mermaid } = await import('mermaid')
         if (cancelled) return
 
         container.innerHTML = ''
         setMermaidError(false)
         const id = `mermaid-${Date.now()}`
         try {
-          const ok = await mermaid
-            .parse(mermaidCode, { suppressErrors: true })
-            .catch(() => false)
+          const ok = await parseMermaid(mermaidCode)
           if (!ok) throw new Error('Invalid mermaid syntax')
-          const { svg } = await mermaid.render(id, mermaidCode)
+          const { svg } = await renderMermaid(
+            id,
+            mermaidCode,
+            VIEWER_MERMAID_CONFIG,
+          )
           if (cancelled) return
           container.innerHTML = svg
         } catch (e) {
