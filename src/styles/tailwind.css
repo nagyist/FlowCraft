@@ -33,11 +33,4 @@
     color-scheme: light;
   }
 
-  /* Safety net: Mermaid appends a temp render node (`d<id>`) directly
-     under <body>`. On render failure it can be left behind and block
-     the page. Hide any straggler regardless of cleanup logic. */
-  body > [id^="dmermaid-"],
-  body > [id^="dtpl-"] {
-    display: none !important;
-  }
 }

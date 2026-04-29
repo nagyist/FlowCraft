@@ -2,14 +2,23 @@ export { ReleaseNotesLayout as default } from '@/components/ReleaseNotesLayout'
 
 # FlowCraft Release Notes
 
-## Version 6.2.1 — Finalize & View no longer fails with "Render failed" after iterating in the workbench
+## Version 6.2.1 — Finalize & View no longer fails with "Render failed"
 
-If you drafted a diagram in the workbench and clicked **Finalize & View** only to land on a "Render failed — Unable to render diagram, the generated mermaid syntax was invalid" panel (with a `Could not find a suitable point for the given distance` error in the console), this is the fix. The Mermaid source was always valid — the layout pass was breaking on a stale config, not the syntax.
+If you drafted a diagram, clicked **Finalize & View**, and landed on a "Render failed — Unable to render diagram, the generated mermaid syntax was invalid" panel (with `Could not find a suitable point for the given distance` in the console), this is the fix. The Mermaid source was always valid — a global CSS rule was hiding the temp DOM node Mermaid uses to measure text, so every node came out with zero width.
 
-### 🐛 Single Mermaid initializer, per-render theme via the `%%{init}%%` directive
+### 🐛 The page's own CSS was nuking measurement
 
-- The workbench preview and the finalized viewer were each calling `mermaid.initialize()` on the same module-global singleton with a different theme (dark for the preview, light for the viewer). On client-side navigation from one to the other, the second `initialize()` mutated layout config mid-session — node sizes were measured under one config and edges routed under another, which is the documented trigger for dagre's "Could not find a suitable point for the given distance" on otherwise-valid diagrams.
-- Both render paths now go through a shared `lib/mermaidClient.ts` that calls `mermaid.initialize()` exactly once with neutral defaults. Each call site passes its theme as render-scoped config, injected into the source via Mermaid's `%%{init}%%` directive, so the singleton is never re-mutated.
+- A "safety net" rule in `styles/tailwind.css` (`body > [id^="dmermaid-"], body > [id^="dtpl-"] { display: none !important; }`) was meant to clean up failed-render stragglers, but it also matched the *in-progress* render's temp container. Mermaid measures node text via `getComputedTextLength()` and `getBBox()` on an SVG inside that container; with `display: none`, both return 0. Dagre then laid out nodes on top of each other, edges collapsed to polylines shorter than the label distance, and `calculatePoint` threw "Could not find a suitable point for the given distance".
+- The workbench preview wasn't hit because it uses temp-IDs starting with `dmmd-`, which the selector didn't match. Only the finalized viewer (`dmermaid-*`) and template viewer (`dtpl-*`) were affected.
+- The rule has been removed. Mermaid's own `removeExistingElements` clears prior temp nodes at the start of every render, and our `finally` block removes the temp node on every code-path — the safety net wasn't pulling its weight.
+
+### 🛡️ Belt-and-braces in the shared client
+
+- The shared mermaid client (`lib/mermaidClient.ts`) now also `await`s `document.fonts.ready` before the first init and before each render. This isn't what caused this bug, but it forecloses a separate font-load race that would have surfaced eventually.
+
+### 🩺 Better diagnostics next time
+
+- If a render still fails, the console now logs the failing message, code length and preview, and `document.fonts.status` alongside the error so we can tell at a glance whether fonts were ready or whether the source itself was the problem.
 
 ---
 

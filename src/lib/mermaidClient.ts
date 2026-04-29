@@ -1,26 +1,44 @@
-// Shared mermaid client. Mermaid is a singleton across the whole SPA, so
-// calling mermaid.initialize() from multiple components with different themes
-// corrupts dagre layout state on the second render — manifesting as
-// "Could not find a suitable point for the given distance" on a diagram
-// that parses cleanly.
+// Shared mermaid client. Two reasons it has to live behind one module:
 //
-// We initialize ONCE with neutral defaults, then have each call site pass its
-// preferred theme through the per-render %%{init}%% directive. The directive
-// is scoped to that render and does not mutate global state.
+// 1. mermaid is a singleton across the SPA. Calling mermaid.initialize() twice
+//    with different themes corrupts dagre layout state on the second render.
+//    We initialize ONCE with neutral defaults; each call site passes theme via
+//    the per-render %%{init}%% directive (scoped to that render only).
+//
+// 2. mermaid measures text via getComputedTextLength() against an SVG temp div
+//    appended to document.body. If the page's custom fonts (Satoshi / Instrument
+//    Serif / JetBrains Mono) haven't loaded yet, measurements come back wrong,
+//    nodes get bogus dimensions, and dagre's calculatePoint throws
+//    "Could not find a suitable point for the given distance" on otherwise-valid
+//    diagrams. Awaiting document.fonts.ready before the first parse/render
+//    eliminates the race.
 
 import type { MermaidConfig } from 'mermaid'
+
+async function waitForFonts(): Promise<void> {
+  if (typeof document === 'undefined') return
+  const ready = document.fonts?.ready
+  if (!ready) return
+  try {
+    await ready
+  } catch {
+    /* fonts.ready rejecting shouldn't block render */
+  }
+}
 
 let initPromise: Promise<typeof import('mermaid').default> | null = null
 
 export function getMermaid() {
   if (!initPromise) {
-    initPromise = import('mermaid').then(({ default: mermaid }) => {
+    initPromise = (async () => {
+      const { default: mermaid } = await import('mermaid')
+      await waitForFonts()
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: 'loose',
       })
       return mermaid
-    })
+    })()
   }
   return initPromise
 }
@@ -45,6 +63,7 @@ export async function renderMermaid(
   config?: MermaidConfig,
 ): Promise<{ svg: string }> {
   const mermaid = await getMermaid()
+  await waitForFonts()
   const source = config
     ? buildInitDirective(config) + stripExistingInitDirective(code)
     : code

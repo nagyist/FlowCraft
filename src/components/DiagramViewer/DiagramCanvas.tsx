@@ -109,7 +109,16 @@ const DiagramCanvas = forwardRef<DiagramCanvasHandle, DiagramCanvasProps>(
           if (cancelled) return
           container.innerHTML = svg
         } catch (e) {
-          console.error('Mermaid render error', e)
+          console.error('Mermaid render error', {
+            error: e,
+            message: (e as Error)?.message,
+            codeLength: mermaidCode?.length,
+            codePreview: mermaidCode?.slice(0, 200),
+            fontsStatus:
+              typeof document !== 'undefined'
+                ? document.fonts?.status
+                : undefined,
+          })
           if (!cancelled) setMermaidError(true)
           container.innerHTML = ''
         } finally {
