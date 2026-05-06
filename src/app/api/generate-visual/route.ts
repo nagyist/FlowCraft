@@ -54,6 +54,7 @@ export async function POST(req: Request) {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${session.access_token}`,
+        'X-FlowCraft-Client': 'web',
       },
       credentials: 'include',
       body: JSON.stringify({
