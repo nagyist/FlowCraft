@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest) {
     )
   }
 
-  const { data, error } = await supabase
+  const { data: updated, error } = await supabase
     .from('diagrams')
     .update(patch)
     .eq('id', diagramId)
@@ -48,7 +48,7 @@ export async function PATCH(req: NextRequest) {
     })
   }
 
-  if (!data || data.length === 0) {
+  if (!updated || updated.length === 0) {
     return new Response(
       JSON.stringify({ error: 'Diagram not found or not owned by user' }),
       { status: 404, headers: { 'Content-Type': 'application/json' } },
