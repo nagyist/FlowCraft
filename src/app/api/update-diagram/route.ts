@@ -46,25 +46,51 @@ export async function PATCH(req: NextRequest) {
     )
   }
 
-  const { data: updated, error } = await adminClient()
+  const admin = adminClient()
+
+  // Look the row up first so we can return precise errors and avoid the
+  // silent zero-row update path. The previous combined `.eq('id').eq('user_id')`
+  // update masked ownership mismatches as 404s.
+  const { data: existing, error: lookupError } = await admin
+    .from('diagrams')
+    .select('id, user_id')
+    .eq('id', diagramId)
+    .maybeSingle()
+
+  if (lookupError) {
+    return new Response(JSON.stringify({ error: lookupError.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  if (!existing) {
+    return new Response(
+      JSON.stringify({ error: 'Diagram not found' }),
+      { status: 404, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+
+  if (existing.user_id !== authResult.userId) {
+    console.warn(
+      `[update-diagram] ownership mismatch: diagram ${diagramId} owned by ${existing.user_id}, requester ${authResult.userId}`,
+    )
+    return new Response(
+      JSON.stringify({ error: 'Diagram not owned by user' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+
+  const { error } = await admin
     .from('diagrams')
     .update(patch)
     .eq('id', diagramId)
-    .eq('user_id', authResult.userId)
-    .select('id')
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
-  }
-
-  if (!updated || updated.length === 0) {
-    return new Response(
-      JSON.stringify({ error: 'Diagram not found or not owned by user' }),
-      { status: 404, headers: { 'Content-Type': 'application/json' } },
-    )
   }
 
   return new Response(JSON.stringify({ success: true }), {
