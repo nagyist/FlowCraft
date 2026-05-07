@@ -1,10 +1,22 @@
-import { createClient } from '@/lib/supabase-auth/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
 import { authenticateRequest } from '@/lib/api-key-auth'
 
-export async function PATCH(req: NextRequest) {
-  const supabase = await createClient()
+// Service-role client. RLS on `diagrams` exposes SELECT to owners but no
+// UPDATE policy exists, so a user-session client silently updates 0 rows.
+// `authenticateRequest` + `eq('user_id', ...)` below preserve ownership.
+function adminClient() {
+  const url = process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_PRIVATE_KEY
+  if (!url || !key) {
+    throw new Error(
+      'Missing SUPABASE_URL or SUPABASE_PRIVATE_KEY env for update-diagram',
+    )
+  }
+  return createAdminClient(url, key, { auth: { persistSession: false } })
+}
 
+export async function PATCH(req: NextRequest) {
   const authResult = await authenticateRequest(req)
   if (!authResult.authenticated || !authResult.userId) {
     return new Response(
@@ -34,7 +46,7 @@ export async function PATCH(req: NextRequest) {
     )
   }
 
-  const { data: updated, error } = await supabase
+  const { data: updated, error } = await adminClient()
     .from('diagrams')
     .update(patch)
     .eq('id', diagramId)
