@@ -1,20 +1,6 @@
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
+import { createClient } from '@/lib/supabase-auth/server'
 import { authenticateRequest } from '@/lib/api-key-auth'
-
-// Service-role client. RLS on `diagrams` exposes SELECT to owners but no
-// UPDATE policy exists, so a user-session client silently updates 0 rows.
-// `authenticateRequest` + `eq('user_id', ...)` below preserve ownership.
-function adminClient() {
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_PRIVATE_KEY
-  if (!url || !key) {
-    throw new Error(
-      'Missing SUPABASE_URL or SUPABASE_PRIVATE_KEY env for update-diagram',
-    )
-  }
-  return createAdminClient(url, key, { auth: { persistSession: false } })
-}
 
 export async function PATCH(req: NextRequest) {
   const authResult = await authenticateRequest(req)
@@ -46,12 +32,12 @@ export async function PATCH(req: NextRequest) {
     )
   }
 
-  const admin = adminClient()
+  // SSR session client — carries the user's JWT so RLS applies as the owner.
+  // The matching SELECT and UPDATE policies on `diagrams` enforce ownership;
+  // the explicit `.eq('user_id', …)` is belt-and-suspenders.
+  const supabase = await createClient()
 
-  // Look the row up first so we can return precise errors and avoid the
-  // silent zero-row update path. The previous combined `.eq('id').eq('user_id')`
-  // update masked ownership mismatches as 404s.
-  const { data: existing, error: lookupError } = await admin
+  const { data: existing, error: lookupError } = await supabase
     .from('diagrams')
     .select('id, user_id')
     .eq('id', diagramId)
@@ -72,25 +58,36 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (existing.user_id !== authResult.userId) {
-    console.warn(
-      `[update-diagram] ownership mismatch: diagram ${diagramId} owned by ${existing.user_id}, requester ${authResult.userId}`,
-    )
     return new Response(
       JSON.stringify({ error: 'Diagram not owned by user' }),
       { status: 403, headers: { 'Content-Type': 'application/json' } },
     )
   }
 
-  const { error } = await admin
+  const { data: updated, error } = await supabase
     .from('diagrams')
     .update(patch)
     .eq('id', diagramId)
+    .eq('user_id', authResult.userId)
+    .select('id')
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     })
+  }
+
+  if (!updated || updated.length === 0) {
+    // Reached only if the UPDATE RLS policy is missing — surface that
+    // explicitly instead of pretending the row vanished.
+    return new Response(
+      JSON.stringify({
+        error:
+          'Update blocked by RLS. Ensure an UPDATE policy exists on public.diagrams allowing auth.uid() = user_id.',
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )
   }
 
   return new Response(JSON.stringify({ success: true }), {
